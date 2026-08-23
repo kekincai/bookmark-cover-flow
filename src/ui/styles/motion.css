@@ -1,0 +1,22 @@
+.cover-card {
+  transition: box-shadow var(--motion-normal) var(--motion-ease);
+}
+
+.cover-card:hover[aria-current='true'] {
+  box-shadow: 0 20px 46px rgb(0 0 0 / 29%), 0 4px 11px rgb(0 0 0 / 18%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 80ms !important;
+    animation-duration: 80ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .cover-card {
+    -webkit-box-reflect: unset;
+  }
+}

@@ -1,0 +1,8 @@
+@import './reset.css' layer(reset);
+@import './tokens.css' layer(tokens);
+@import './base.css' layer(base);
+@import './layout.css' layer(layout);
+@import './cover-flow.css' layer(components);
+@import './motion.css' layer(utilities);
+
+@layer reset, tokens, base, layout, components, utilities;
