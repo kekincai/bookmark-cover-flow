@@ -2,7 +2,11 @@ import type { BookmarkFolder } from '../../domain/bookmark'
 
 export interface FolderNavigationView {
   readonly element: HTMLElement
-  render(folders: readonly BookmarkFolder[], activeFolderId: string | undefined): void
+  render(
+    rootFolders: readonly BookmarkFolder[],
+    breadcrumbs: readonly BookmarkFolder[],
+    activeFolderId: string | undefined,
+  ): void
   onSelect(listener: (folderId: string) => void): void
 }
 
@@ -14,8 +18,23 @@ export function createFolderNavigation(): FolderNavigationView {
 
   return {
     element,
-    render(folders, activeFolderId): void {
+    render(rootFolders, breadcrumbs, activeFolderId): void {
       element.replaceChildren()
+      const activeFolder = breadcrumbs.at(-1)
+      const parentFolder = breadcrumbs.at(-2)
+
+      if (parentFolder !== undefined) {
+        const back = document.createElement('button')
+        back.type = 'button'
+        back.className = 'folder-navigation__back'
+        back.setAttribute('aria-label', `Back to ${parentFolder.title}`)
+        back.innerHTML =
+          '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5 5.5 5 5.5"/></svg>'
+        back.addEventListener('click', () => select(parentFolder.id))
+        element.append(back)
+      }
+
+      const folders = parentFolder === undefined ? rootFolders : breadcrumbs
       folders.forEach((folder) => {
         const button = document.createElement('button')
         button.type = 'button'
@@ -26,6 +45,22 @@ export function createFolderNavigation(): FolderNavigationView {
         button.addEventListener('click', () => select(folder.id))
         element.append(button)
       })
+
+      if (activeFolder !== undefined && activeFolder.folders.length > 0) {
+        const separator = document.createElement('span')
+        separator.className = 'folder-navigation__separator'
+        separator.setAttribute('aria-hidden', 'true')
+        element.append(separator)
+        activeFolder.folders.forEach((folder) => {
+          const button = document.createElement('button')
+          button.type = 'button'
+          button.className = 'folder-navigation__item folder-navigation__child'
+          button.textContent = folder.title
+          button.dataset.active = 'false'
+          button.addEventListener('click', () => select(folder.id))
+          element.append(button)
+        })
+      }
     },
     onSelect(listener): void {
       select = listener

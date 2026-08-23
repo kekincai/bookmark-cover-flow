@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mapChromeTree } from '../../src/infrastructure/chrome/bookmark-repository'
 
 describe('mapChromeTree', () => {
-  it('maps top-level folders and recursively flattens nested bookmarks', () => {
+  it('preserves bookmark folder hierarchy', () => {
     const result = mapChromeTree([
       {
         id: '0',
@@ -16,9 +16,7 @@ describe('mapChromeTree', () => {
               {
                 id: '3',
                 title: 'Nested',
-                children: [
-                  { id: '4', parentId: '3', title: 'Deep', url: 'https://example.org' },
-                ],
+                children: [{ id: '4', parentId: '3', title: 'Deep', url: 'https://example.org' }],
               },
             ],
           },
@@ -28,6 +26,9 @@ describe('mapChromeTree', () => {
 
     expect(result).toHaveLength(1)
     expect(result[0]?.title).toBe('Bookmarks bar')
-    expect(result[0]?.children.map((bookmark) => bookmark.title)).toEqual(['Example', 'Deep'])
+    expect(result[0]?.children.map((bookmark) => bookmark.title)).toEqual(['Example'])
+    expect(result[0]?.folders[0]?.title).toBe('Nested')
+    expect(result[0]?.folders[0]?.parentId).toBe('1')
+    expect(result[0]?.folders[0]?.children.map((bookmark) => bookmark.title)).toEqual(['Deep'])
   })
 })

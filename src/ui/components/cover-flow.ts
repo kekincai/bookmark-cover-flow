@@ -56,10 +56,13 @@ export function createCoverFlow(): CoverFlowView {
   return {
     element,
     setItems(nextItems): void {
+      const preservesPosition =
+        nextItems.length === items.length &&
+        nextItems.every((item, index) => item.bookmarkId === items[index]?.bookmarkId)
       items = nextItems
       cards.forEach((card) => card.remove())
       cards = new Map()
-      currentPosition = 0
+      if (!preservesPosition) currentPosition = 0
       reconcile()
     },
     render(position): void {

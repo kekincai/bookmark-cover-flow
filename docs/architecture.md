@@ -12,7 +12,7 @@ Domain → Application → Infrastructure → UI
 - `src/ui` owns DOM components, input controllers, the observable store, and CSS.
 - `src/app/bootstrap.ts` is the composition root. It wires ports to adapters and translates events into commands.
 
-The UI never calls `chrome.bookmarks` directly. In a normal browser development session, the repository supplies a small local demo collection; when loaded as an extension it reads the user's real bookmarks.
+The UI never calls `chrome.bookmarks` directly. In a normal browser development session, the repository supplies a small local demo collection; when loaded as an extension it reads the user's real, nested bookmark tree.
 
 ## Data flow
 
@@ -30,4 +30,4 @@ Motion uses a fractional `position` and a discrete `targetPosition`. A `requestA
 
 ## Privacy boundary
 
-Bookmarks remain inside Chrome. The project has no network client, backend, analytics, account, or telemetry. Favicon URLs are served by Chrome's local `_favicon` endpoint.
+Bookmarks remain inside Chrome and are never uploaded to a project backend. A Manifest V3 background worker fetches nearby bookmarked pages without credentials, extracts Open Graph/Twitter image metadata, and caches only the resolved image URL in `chrome.storage.local`. Failed lookups fall back to Chrome's local `_favicon` endpoint or a generated cover. The project has no backend, analytics, account, or telemetry.

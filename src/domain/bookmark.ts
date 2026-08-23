@@ -12,5 +12,7 @@ export interface BookmarkRepository {
 export interface BookmarkFolder {
   readonly id: string
   readonly title: string
+  readonly parentId?: string
   readonly children: readonly Bookmark[]
+  readonly folders: readonly BookmarkFolder[]
 }

@@ -2,18 +2,18 @@
 
 ![Bookmark Cover Flow running in dark mode](docs/assets/screenshot.png)
 
-A quiet, spatial Chrome bookmark browser inspired by the browsing rhythm of classic Cover Flow and redesigned for today's new-tab experience.
+A quiet, spatial Chrome bookmark browser inspired by the browsing rhythm of classic Cover Flow. It opens as a regular extension tab only when you click its toolbar button, so it never replaces Chrome's New Tab page.
 
 The active bookmark stays clear and centered while neighboring covers recede into a continuous 3D scene. Trackpad, mouse, keyboard, search, and folder navigation all feed the same motion model.
 
 ## Features
 
-- Chrome New Tab Override with a directly accessible extension page
-- real Chrome bookmark folders through the Bookmarks API
+- toolbar button that opens a normal, bookmarkable/pinnable extension tab
+- real Chrome bookmark hierarchy with nested-folder navigation and breadcrumbs
 - continuous fractional-position motion with inertia, velocity damping, and snap
 - trackpad, wheel, pointer drag, click, and keyboard navigation
 - instant title, hostname, and URL search without leaving Cover Flow
-- favicon covers with restrained generated fallbacks
+- webpage Open Graph/Twitter preview images, cached locally, with favicon and generated fallbacks
 - DOM virtualization (`selectedIndex ± 7`) for large libraries
 - system dark/light mode and `prefers-reduced-motion`
 - local-first operation with no account, backend, analytics, or bookmark uploads
@@ -66,32 +66,33 @@ The unpacked extension is written to `dist/`.
 2. Open `chrome://extensions`.
 3. Enable **Developer mode**.
 4. Choose **Load unpacked** and select the generated `dist` folder.
-5. Open a new tab.
+5. Pin **Bookmark Cover Flow** from Chrome's Extensions menu if desired.
+6. Click its toolbar button. Cover Flow opens in a normal new tab; Chrome's New Tab page is unchanged.
 
 ## Keyboard
 
-| Key | Action |
-| --- | --- |
-| `←` / `→` | Previous / next bookmark |
-| `Enter` | Open the active bookmark |
-| `/` or `⌘K` | Focus search |
-| `Esc` | Clear and leave search |
-| `Home` / `End` | First / last bookmark |
+| Key            | Action                   |
+| -------------- | ------------------------ |
+| `←` / `→`      | Previous / next bookmark |
+| `Enter`        | Open the active bookmark |
+| `/` or `⌘K`    | Focus search             |
+| `Esc`          | Clear and leave search   |
+| `Home` / `End` | First / last bookmark    |
 
 ## Permissions and privacy
 
 - `bookmarks`: read the bookmark tree shown in Cover Flow.
 - `storage`: remember local interface preferences.
 - `favicon`: ask Chrome's local favicon service for bookmark icons.
+- `http://*/*` and `https://*/*`: fetch bookmarked pages without cookies to read their Open Graph/Twitter preview-image metadata, then display that image in the cover.
 
-Your bookmarks never leave your browser. The extension contains no third-party analytics, network API, user account, or backend.
+Preview metadata and its resolved image URL are cached in Chrome's local extension storage for performance. The extension has no analytics, user account, bookmark upload, or backend. Opening the Cover Flow may contact bookmarked websites to obtain previews; requests omit credentials, time out after 8 seconds, and are limited to nearby covers rather than the entire library at once.
 
 ## Roadmap
 
-- **v0.1** — architecture, Chrome bookmarks, static Cover Flow, keyboard
-- **v0.2** — continuous motion, trackpad/wheel, inertia, snap
-- **v0.3** — favicon covers, reflection, folder navigation, themes
-- **v0.4** — search, recent items, custom sorting
+- **v0.1** — architecture, Chrome bookmarks, Cover Flow motion, search
+- **v0.2** — toolbar launch, hierarchical folders, webpage-image previews
+- **v0.3** — recent items and custom sorting
 - **v0.5** — further performance and accessibility tuning
 - **v1.0** — polished motion, stable APIs, store-ready release
 

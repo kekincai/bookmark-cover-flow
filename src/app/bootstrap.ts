@@ -1,10 +1,17 @@
 import { loadBookmarks } from '../application/load-bookmarks'
+import {
+  findFirstUsableFolder,
+  findFolder,
+  getFolderBreadcrumbs,
+} from '../application/bookmark-folders'
 import { openBookmark } from '../application/open-bookmark'
+import { applyPreviewImage, preloadBookmarkPreviews } from '../application/preview-bookmarks'
 import { resolveCovers } from '../application/resolve-cover'
 import { searchBookmarks } from '../application/search-bookmarks'
 import { selectBookmark } from '../application/select-bookmark'
 import type { NavigationCommand } from '../domain/navigation'
 import { createBookmarkRepository } from '../infrastructure/chrome/bookmark-repository'
+import { createPreviewProvider } from '../infrastructure/chrome/preview-provider'
 import { loadPreferences, savePreferences } from '../infrastructure/chrome/storage-service'
 import { createTabService } from '../infrastructure/chrome/tab-service'
 import { createAppShell } from '../ui/app-shell'
@@ -29,9 +36,13 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
   root.replaceChildren(shell.element)
   const store = createStore(initialState)
   const repository = createBookmarkRepository()
+  const previewProvider = createPreviewProvider()
   const tabService = createTabService()
   let previousFolderId: string | undefined
   let previousVisibleCovers = store.value.visibleCovers
+  let previewGeneration = 0
+  let requestedPreviewIds = new Set<string>()
+  let requestVisiblePreviews: (index: number) => void = () => undefined
 
   const motion = createMotionController(
     (position) => {
@@ -40,14 +51,17 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
       shell.meta.render(item, store.value.query === '' ? 'No bookmarks here' : 'No results found')
     },
     (selectedIndex) => {
+      requestVisiblePreviews(selectedIndex)
       if (selectedIndex === store.value.selectedIndex) return
       store.update((state) => ({ ...state, selectedIndex }))
     },
   )
 
   const setFolder = (folderId: string, persist = true): void => {
-    const folder = store.value.folders.find((candidate) => candidate.id === folderId)
+    const folder = findFolder(store.value.folders, folderId)
     if (folder === undefined) return
+    previewGeneration += 1
+    requestedPreviewIds = new Set()
     const covers = resolveCovers(folder.children)
     store.update((state) => ({
       ...state,
@@ -57,7 +71,39 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
       selectedIndex: 0,
       status: covers.length === 0 ? 'empty' : 'ready',
     }))
+    requestVisiblePreviews(0)
     if (persist) void savePreferences({ activeFolderId: folder.id })
+  }
+
+  requestVisiblePreviews = (index): void => {
+    const generation = previewGeneration
+    const covers = store.value.visibleCovers
+    const first = Math.max(0, index - 8)
+    const candidates = covers.slice(first, Math.min(covers.length, index + 9)).filter((item) => {
+      if (requestedPreviewIds.has(item.bookmarkId)) return false
+      requestedPreviewIds.add(item.bookmarkId)
+      return true
+    })
+    if (candidates.length === 0) return
+
+    void preloadBookmarkPreviews(
+      candidates,
+      previewProvider,
+      (bookmarkId, imageUrl) => {
+        store.update((state) => {
+          if (generation !== previewGeneration) return state
+          const covers = state.covers.map((item) =>
+            item.bookmarkId === bookmarkId ? applyPreviewImage(item, imageUrl) : item,
+          )
+          return {
+            ...state,
+            covers,
+            visibleCovers: searchBookmarks(covers, state.query),
+          }
+        })
+      },
+      () => generation === previewGeneration,
+    )
   }
 
   const setQuery = (query: string): void => {
@@ -70,6 +116,7 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
       selectedIndex: 0,
       status: visibleCovers.length === 0 ? 'empty' : 'ready',
     }))
+    requestVisiblePreviews(0)
   }
 
   const dispatch = (command: NavigationCommand): void => {
@@ -110,11 +157,28 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
 
   cleanups.push(
     store.subscribe((state) => {
-      shell.folders.render(state.folders, state.activeFolderId)
-      if (state.activeFolderId !== previousFolderId || state.visibleCovers !== previousVisibleCovers) {
+      shell.folders.render(
+        state.folders,
+        getFolderBreadcrumbs(state.folders, state.activeFolderId),
+        state.activeFolderId,
+      )
+      if (
+        state.activeFolderId !== previousFolderId ||
+        state.visibleCovers !== previousVisibleCovers
+      ) {
+        const preservesSelection =
+          state.activeFolderId === previousFolderId &&
+          state.visibleCovers.length === previousVisibleCovers.length &&
+          state.visibleCovers.every(
+            (item, index) => item.bookmarkId === previousVisibleCovers[index]?.bookmarkId,
+          )
         shell.coverFlow.setItems(state.visibleCovers)
         motion.setItemCount(state.visibleCovers.length)
-        motion.setTarget(selectBookmark(state.selectedIndex, state.visibleCovers.length), true)
+        if (!preservesSelection) {
+          motion.setTarget(selectBookmark(state.selectedIndex, state.visibleCovers.length), true)
+        } else {
+          shell.coverFlow.render(motion.position)
+        }
         previousFolderId = state.activeFolderId
         previousVisibleCovers = state.visibleCovers
       }
@@ -124,7 +188,8 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
 
   try {
     const [folders, preferences] = await Promise.all([loadBookmarks(repository), loadPreferences()])
-    const preferredFolder = folders.find((folder) => folder.id === preferences.activeFolderId) ?? folders[0]
+    const preferredFolder =
+      findFolder(folders, preferences.activeFolderId) ?? findFirstUsableFolder(folders)
     store.update((state) => ({
       ...state,
       folders,

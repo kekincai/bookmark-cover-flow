@@ -2,9 +2,14 @@
   "manifest_version": 3,
   "name": "Bookmark Cover Flow",
   "description": "Browse Chrome bookmarks in a quiet, spatial Cover Flow.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "permissions": ["bookmarks", "storage", "favicon"],
-  "chrome_url_overrides": {
-    "newtab": "index.html"
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "action": {
+    "default_title": "Open Bookmark Cover Flow"
+  },
+  "background": {
+    "service_worker": "assets/background.js",
+    "type": "module"
   }
 }

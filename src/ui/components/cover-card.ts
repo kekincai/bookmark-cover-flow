@@ -13,6 +13,7 @@ export function createCoverCard(item: CoverItem, index: number): HTMLButtonEleme
   card.className = 'cover-card'
   card.type = 'button'
   card.dataset.index = String(index)
+  card.dataset.imageKind = item.imageKind
   card.setAttribute('aria-label', `${item.title}, ${item.subtitle}`)
   card.style.setProperty('--cover-accent', item.accent)
 
@@ -20,7 +21,7 @@ export function createCoverCard(item: CoverItem, index: number): HTMLButtonEleme
   mark.className = 'cover-card__mark'
   mark.textContent = initials(item)
 
-  if (item.image !== undefined) {
+  if (item.image !== undefined && item.imageKind === 'favicon') {
     const image = document.createElement('img')
     image.className = 'cover-card__favicon'
     image.src = item.image
@@ -48,6 +49,28 @@ export function createCoverCard(item: CoverItem, index: number): HTMLButtonEleme
   hostname.className = 'cover-card__hostname'
   hostname.textContent = item.subtitle
 
-  card.append(mark, title, visual, hostname)
+  card.append(mark, title)
+
+  if (item.image !== undefined && item.imageKind === 'preview') {
+    const preview = document.createElement('img')
+    preview.className = 'cover-card__preview'
+    preview.src = item.image
+    preview.alt = ''
+    preview.loading = 'lazy'
+    preview.referrerPolicy = 'no-referrer'
+    preview.addEventListener(
+      'error',
+      () => {
+        preview.replaceWith(visual)
+        card.dataset.imageKind = item.fallbackKind
+      },
+      { once: true },
+    )
+    card.append(preview)
+  } else {
+    card.append(visual)
+  }
+
+  card.append(hostname)
   return card
 }

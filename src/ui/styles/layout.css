@@ -36,6 +36,42 @@
   transition: color var(--motion-fast) ease;
 }
 
+.folder-navigation__back {
+  display: grid;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: 50%;
+  color: var(--text-secondary);
+}
+
+.folder-navigation__back:hover {
+  color: var(--text-primary);
+}
+
+.folder-navigation__back svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.folder-navigation__separator {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 20px;
+  background: var(--border-subtle);
+}
+
+.folder-navigation__child {
+  color: color-mix(in srgb, var(--text-secondary) 82%, var(--accent));
+}
+
 .folder-navigation__item::after {
   position: absolute;
   right: 0;
@@ -46,7 +82,9 @@
   content: '';
   opacity: 0;
   transform: scaleX(0.35);
-  transition: opacity var(--motion-fast) ease, transform var(--motion-fast) ease;
+  transition:
+    opacity var(--motion-fast) ease,
+    transform var(--motion-fast) ease;
 }
 
 .folder-navigation__item:hover,

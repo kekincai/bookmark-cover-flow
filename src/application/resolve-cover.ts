@@ -27,6 +27,7 @@ export function resolveCover(bookmark: Bookmark, index = 0): CoverItem {
     subtitle,
     url: bookmark.url,
     ...(image === undefined ? {} : { image }),
+    imageKind: image === undefined ? 'generated' : 'favicon',
     fallbackKind: image === undefined ? 'generated' : 'favicon',
     accent: accents[index % accents.length] ?? accents[0],
   }
