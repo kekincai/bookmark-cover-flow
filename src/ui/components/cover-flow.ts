@@ -11,10 +11,22 @@ export interface CoverFlowView {
 
 const VIRTUAL_RADIUS = 7
 
+export function getVirtualRange(
+  itemCount: number,
+  position: number,
+): { readonly first: number; readonly last: number } {
+  const selected = Math.round(position)
+  return {
+    first: Math.max(0, selected - VIRTUAL_RADIUS),
+    last: Math.min(itemCount - 1, selected + VIRTUAL_RADIUS),
+  }
+}
+
 export function createCoverFlow(): CoverFlowView {
   const element = document.createElement('section')
   element.className = 'cover-flow'
   element.setAttribute('aria-label', 'Bookmark cover flow')
+  element.setAttribute('aria-roledescription', 'carousel')
   const stage = document.createElement('div')
   stage.className = 'cover-flow__stage'
   element.append(stage)
@@ -26,9 +38,7 @@ export function createCoverFlow(): CoverFlowView {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
   const reconcile = (): void => {
-    const selected = Math.round(currentPosition)
-    const first = Math.max(0, selected - VIRTUAL_RADIUS)
-    const last = Math.min(items.length - 1, selected + VIRTUAL_RADIUS)
+    const { first, last } = getVirtualRange(items.length, currentPosition)
     const needed = new Set<number>()
 
     for (let index = first; index <= last; index += 1) {
@@ -36,7 +46,7 @@ export function createCoverFlow(): CoverFlowView {
       if (!cards.has(index)) {
         const item = items[index]
         if (item === undefined) continue
-        const card = createCoverCard(item, index)
+        const card = createCoverCard(item, index, items.length)
         card.addEventListener('click', () => {
           if (element.dataset.suppressClick !== 'true') activate(index)
         })

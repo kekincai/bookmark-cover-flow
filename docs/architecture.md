@@ -12,6 +12,8 @@ Domain → Application → Infrastructure → UI
 - `src/ui` owns DOM components, input controllers, the observable store, and CSS.
 - `src/app/bootstrap.ts` is the composition root. It wires ports to adapters and translates events into commands.
 
+The supported v1 port and persistence contracts are documented in [Stable application APIs](api.md).
+
 The UI never calls `chrome.bookmarks` directly. In a normal browser development session, the repository supplies a small local demo collection; when loaded as an extension it reads the user's real, nested bookmark tree.
 
 ## Data flow
@@ -27,6 +29,8 @@ keyboard / wheel / pointer / search
 ```
 
 Motion uses a fractional `position` and a discrete `targetPosition`. A `requestAnimationFrame` loop advances velocity damping plus target attraction and stops entirely after settling.
+
+Only the selected cover plus seven neighbors on either side can enter the DOM. Sorting and searching operate on immutable arrays; preview requests are bounded to the visible neighborhood with four workers and generation cancellation.
 
 ## Privacy boundary
 

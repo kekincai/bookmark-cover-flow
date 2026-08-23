@@ -1,6 +1,6 @@
 {
   "name": "bookmark-cover-flow",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
   "description": "A quiet, spatial Chrome bookmark browser inspired by Cover Flow.",
   "type": "module",
@@ -13,7 +13,10 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "npm run build && playwright test"
+    "test:e2e": "npm run build && playwright test",
+    "test:extension": "npm run build && node scripts/verify-extension.mjs",
+    "capture:demo": "npm run build && node scripts/capture-demo.mjs",
+    "package:extension": "npm run build && cd dist && zip -FSr ../bookmark-cover-flow.zip ."
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",

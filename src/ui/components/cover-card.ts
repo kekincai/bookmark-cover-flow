@@ -8,13 +8,15 @@ function initials(item: CoverItem): string {
     .join('')
 }
 
-export function createCoverCard(item: CoverItem, index: number): HTMLButtonElement {
+export function createCoverCard(item: CoverItem, index: number, total: number): HTMLButtonElement {
   const card = document.createElement('button')
   card.className = 'cover-card'
   card.type = 'button'
   card.dataset.index = String(index)
   card.dataset.imageKind = item.imageKind
   card.setAttribute('aria-label', `${item.title}, ${item.subtitle}`)
+  card.setAttribute('aria-posinset', String(index + 1))
+  card.setAttribute('aria-setsize', String(total))
   card.style.setProperty('--cover-accent', item.accent)
 
   const mark = document.createElement('span')

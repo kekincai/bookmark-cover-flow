@@ -5,7 +5,7 @@ export default defineConfig({
   base: './',
   build: {
     target: 'chrome120',
-    sourcemap: true,
+    sourcemap: false,
     outDir: 'dist',
     rollupOptions: {
       input: {

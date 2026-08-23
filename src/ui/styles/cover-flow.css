@@ -75,7 +75,7 @@
 }
 
 .cover-card__mark.is-hidden {
-  display: none;
+  visibility: hidden;
 }
 
 .cover-card__favicon {
@@ -138,6 +138,34 @@
 .cover-flow[data-dragging='true'],
 .cover-flow[data-dragging='true'] .cover-card {
   cursor: grabbing;
+}
+
+html[data-reflection='false'] .cover-card {
+  -webkit-box-reflect: unset;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cover-card,
+  .folder-navigation__item,
+  .preferences-menu__trigger {
+    transition-duration: 1ms !important;
+  }
+
+  .cover-card {
+    -webkit-box-reflect: unset;
+  }
+}
+
+@media (forced-colors: active) {
+  .cover-card,
+  .preferences-menu__panel,
+  .preferences-menu__field select {
+    border: 1px solid CanvasText;
+  }
+
+  .cover-card {
+    -webkit-box-reflect: unset;
+  }
 }
 
 @media (max-height: 720px) {

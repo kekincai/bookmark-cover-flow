@@ -20,7 +20,8 @@ export function attachWheelController(
   }
 
   const onWheel = (event: WheelEvent): void => {
-    const primaryDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
+    const primaryDelta =
+      Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
     accumulatedDelta += primaryDelta
     if (frame === 0) frame = requestAnimationFrame(flush)
     event.preventDefault()

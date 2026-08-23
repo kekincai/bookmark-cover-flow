@@ -22,6 +22,8 @@ export function attachKeyboardController(
       if (event.key === 'Enter') return { type: 'open' }
       if (event.key === 'Home') return { type: 'first' }
       if (event.key === 'End') return { type: 'last' }
+      if (event.key === 'PageUp') return { type: 'page-previous' }
+      if (event.key === 'PageDown') return { type: 'page-next' }
       return undefined
     })()
 

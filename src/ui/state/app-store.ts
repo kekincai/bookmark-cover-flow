@@ -1,7 +1,9 @@
 import type { BookmarkFolder } from '../../domain/bookmark'
 import type { CoverItem } from '../../domain/cover'
+import type { Preferences } from '../../domain/preferences'
+import type { RecentBookmark } from '../../domain/recent-bookmark'
 
-export interface AppState {
+export interface AppState extends Preferences {
   readonly folders: readonly BookmarkFolder[]
   readonly activeFolderId?: string
   readonly covers: readonly CoverItem[]
@@ -9,6 +11,7 @@ export interface AppState {
   readonly selectedIndex: number
   readonly query: string
   readonly isSearching: boolean
+  readonly recentBookmarks: readonly RecentBookmark[]
   readonly status: 'loading' | 'ready' | 'empty' | 'error'
   readonly errorMessage?: string
 }

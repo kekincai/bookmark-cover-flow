@@ -78,7 +78,12 @@ export function createMotionController(
     scrubTo(position): void {
       stop()
       const nextPosition = clamp(position, 0, maximum())
-      state = { position: nextPosition, targetPosition: nextPosition, velocity: 0, lastTimestamp: 0 }
+      state = {
+        position: nextPosition,
+        targetPosition: nextPosition,
+        velocity: 0,
+        lastTimestamp: 0,
+      }
       render(nextPosition)
     },
     snap(velocity = 0): void {

@@ -9,6 +9,12 @@ export default tseslint.config(
   ...tseslint.configs.recommendedTypeChecked.map((config) => ({ ...config, files: ['**/*.ts'] })),
   eslintConfigPrettier,
   {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser, ...globals.webextensions },
+    },
+  },
+  {
     files: ['**/*.ts'],
     languageOptions: {
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },

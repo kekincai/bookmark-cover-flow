@@ -6,6 +6,8 @@ export type NavigationCommand =
   | { readonly type: 'search'; readonly query: string }
   | { readonly type: 'first' }
   | { readonly type: 'last' }
+  | { readonly type: 'page-previous' }
+  | { readonly type: 'page-next' }
 
 export interface MotionState {
   readonly position: number

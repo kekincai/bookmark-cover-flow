@@ -9,9 +9,17 @@ import { applyPreviewImage, preloadBookmarkPreviews } from '../application/previ
 import { resolveCovers } from '../application/resolve-cover'
 import { searchBookmarks } from '../application/search-bookmarks'
 import { selectBookmark } from '../application/select-bookmark'
+import { sortBookmarks } from '../application/sort-bookmarks'
+import type { Bookmark } from '../domain/bookmark'
 import type { NavigationCommand } from '../domain/navigation'
+import { defaultPreferences, type Preferences } from '../domain/preferences'
+import { RECENT_COLLECTION_ID } from '../domain/recent-bookmark'
 import { createBookmarkRepository } from '../infrastructure/chrome/bookmark-repository'
 import { createPreviewProvider } from '../infrastructure/chrome/preview-provider'
+import {
+  loadRecentBookmarks,
+  recordRecentBookmark,
+} from '../infrastructure/chrome/recent-bookmark-service'
 import { loadPreferences, savePreferences } from '../infrastructure/chrome/storage-service'
 import { createTabService } from '../infrastructure/chrome/tab-service'
 import { createAppShell } from '../ui/app-shell'
@@ -28,7 +36,15 @@ const initialState: AppState = {
   selectedIndex: 0,
   query: '',
   isSearching: false,
+  recentBookmarks: [],
+  ...defaultPreferences,
   status: 'loading',
+}
+
+function applyAppearance(preferences: Preferences): void {
+  if (preferences.theme === 'system') delete document.documentElement.dataset.theme
+  else document.documentElement.dataset.theme = preferences.theme
+  document.documentElement.dataset.reflection = String(preferences.showReflection)
 }
 
 export async function bootstrap(root: HTMLElement): Promise<() => void> {
@@ -44,11 +60,23 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
   let requestedPreviewIds = new Set<string>()
   let requestVisiblePreviews: (index: number) => void = () => undefined
 
+  const persistPreferences = (preferences: Preferences): void => {
+    void savePreferences(preferences).catch((error: unknown) => {
+      console.warn('Unable to save view preferences.', error)
+    })
+  }
+
   const motion = createMotionController(
     (position) => {
       shell.coverFlow.render(position)
       const item = store.value.visibleCovers[Math.round(position)]
-      shell.meta.render(item, store.value.query === '' ? 'No bookmarks here' : 'No results found')
+      const emptyMessage =
+        store.value.query !== ''
+          ? 'No results found'
+          : store.value.activeFolderId === RECENT_COLLECTION_ID
+            ? 'No recent bookmarks yet'
+            : 'No bookmarks here'
+      shell.meta.render(item, emptyMessage)
     },
     (selectedIndex) => {
       requestVisiblePreviews(selectedIndex)
@@ -57,22 +85,35 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     },
   )
 
-  const setFolder = (folderId: string, persist = true): void => {
-    const folder = findFolder(store.value.folders, folderId)
-    if (folder === undefined) return
+  const setCollection = (folderId: string, persist = true): void => {
+    const state = store.value
+    const folder = findFolder(state.folders, folderId)
+    if (folder === undefined && folderId !== RECENT_COLLECTION_ID) return
     previewGeneration += 1
     requestedPreviewIds = new Set()
-    const covers = resolveCovers(folder.children)
+    const bookmarks: readonly Bookmark[] =
+      folderId === RECENT_COLLECTION_ID ? state.recentBookmarks : (folder?.children ?? [])
+    const recentOpenedAt = new Map(
+      state.recentBookmarks.map((bookmark) => [bookmark.id, bookmark.openedAt]),
+    )
+    const covers = resolveCovers(sortBookmarks(bookmarks, state.sortMode, recentOpenedAt))
     store.update((state) => ({
       ...state,
-      activeFolderId: folder.id,
+      activeFolderId: folderId,
       covers,
       visibleCovers: searchBookmarks(covers, state.query),
       selectedIndex: 0,
       status: covers.length === 0 ? 'empty' : 'ready',
     }))
     requestVisiblePreviews(0)
-    if (persist) void savePreferences({ activeFolderId: folder.id })
+    if (persist) {
+      persistPreferences({
+        activeFolderId: folderId,
+        sortMode: store.value.sortMode,
+        theme: store.value.theme,
+        showReflection: store.value.showReflection,
+      })
+    }
   }
 
   requestVisiblePreviews = (index): void => {
@@ -130,12 +171,30 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     if (command.type === 'move') motion.moveTarget(command.delta)
     if (command.type === 'first') motion.setTarget(0)
     if (command.type === 'last') motion.setTarget(Math.max(0, count - 1))
+    if (command.type === 'page-previous') motion.moveTarget(-5)
+    if (command.type === 'page-next') motion.moveTarget(5)
     if (command.type === 'open') {
       const item = store.value.visibleCovers[Math.round(motion.position)]
       if (item !== undefined) {
-        void openBookmark(tabService, item.url).catch((error: unknown) => {
-          shell.setStatus(error instanceof Error ? error.message : 'Unable to open bookmark')
-        })
+        void openBookmark(tabService, item.url)
+          .then(async () => {
+            const recentBookmarks = await recordRecentBookmark({
+              id: item.bookmarkId,
+              title: item.title,
+              url: item.url,
+            })
+            store.update((state) => ({ ...state, recentBookmarks }))
+            const activeFolderId = store.value.activeFolderId
+            if (
+              activeFolderId !== undefined &&
+              (activeFolderId === RECENT_COLLECTION_ID || store.value.sortMode === 'recent')
+            ) {
+              setCollection(activeFolderId, false)
+            }
+          })
+          .catch((error: unknown) => {
+            shell.setStatus(error instanceof Error ? error.message : 'Unable to open bookmark')
+          })
       }
     }
   }
@@ -145,8 +204,23 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     else motion.setTarget(index)
   }
 
-  shell.folders.onSelect(setFolder)
+  shell.folders.onSelect(setCollection)
   shell.search.onSearch((query) => dispatch({ type: 'search', query }))
+  shell.preferences.onChange((change) => {
+    const current = store.value
+    const preferences: Preferences = {
+      ...(current.activeFolderId === undefined ? {} : { activeFolderId: current.activeFolderId }),
+      sortMode: change.sortMode ?? current.sortMode,
+      theme: change.theme ?? current.theme,
+      showReflection: change.showReflection ?? current.showReflection,
+    }
+    store.update((state) => ({ ...state, ...preferences }))
+    applyAppearance(preferences)
+    persistPreferences(preferences)
+    if (change.sortMode !== undefined && current.activeFolderId !== undefined) {
+      setCollection(current.activeFolderId, false)
+    }
+  })
   shell.coverFlow.onActivate(activateCover)
 
   const cleanups = [
@@ -162,6 +236,7 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
         getFolderBreadcrumbs(state.folders, state.activeFolderId),
         state.activeFolderId,
       )
+      shell.preferences.render(state)
       if (
         state.activeFolderId !== previousFolderId ||
         state.visibleCovers !== previousVisibleCovers
@@ -187,15 +262,25 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
   )
 
   try {
-    const [folders, preferences] = await Promise.all([loadBookmarks(repository), loadPreferences()])
-    const preferredFolder =
-      findFolder(folders, preferences.activeFolderId) ?? findFirstUsableFolder(folders)
+    const [folders, preferences, recentBookmarks] = await Promise.all([
+      loadBookmarks(repository),
+      loadPreferences(),
+      loadRecentBookmarks(),
+    ])
+    applyAppearance(preferences)
+    const preferredFolder = findFolder(folders, preferences.activeFolderId)
+    const preferredFolderId =
+      preferences.activeFolderId === RECENT_COLLECTION_ID
+        ? RECENT_COLLECTION_ID
+        : (preferredFolder ?? findFirstUsableFolder(folders))?.id
     store.update((state) => ({
       ...state,
       folders,
-      status: preferredFolder === undefined ? 'empty' : 'ready',
+      recentBookmarks,
+      ...preferences,
+      status: preferredFolderId === undefined ? 'empty' : 'ready',
     }))
-    if (preferredFolder !== undefined) setFolder(preferredFolder.id, false)
+    if (preferredFolderId !== undefined) setCollection(preferredFolderId, false)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unable to load Chrome bookmarks.'
     store.update((state) => ({ ...state, status: 'error', errorMessage: message }))
@@ -203,6 +288,7 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
 
   return () => {
     cleanups.forEach((cleanup) => cleanup())
+    shell.preferences.destroy()
     motion.destroy()
   }
 }

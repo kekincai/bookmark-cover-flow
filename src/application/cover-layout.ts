@@ -10,9 +10,7 @@ export function getCoverTransform(offset: number, reducedMotion = false): CoverT
   }
 
   const direction = Math.sign(offset)
-  const x =
-    direction *
-    (ACTIVE_GAP * Math.min(1, distance) + Math.max(0, distance - 1) * SIDE_STEP)
+  const x = direction * (ACTIVE_GAP * Math.min(1, distance) + Math.max(0, distance - 1) * SIDE_STEP)
   return {
     x,
     z: -80 - distance * 54,

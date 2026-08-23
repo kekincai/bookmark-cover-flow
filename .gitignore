@@ -1,5 +1,6 @@
 node_modules/
 dist/
+bookmark-cover-flow.zip
 coverage/
 playwright-report/
 test-results/

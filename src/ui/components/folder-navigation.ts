@@ -1,4 +1,5 @@
 import type { BookmarkFolder } from '../../domain/bookmark'
+import { RECENT_COLLECTION_ID } from '../../domain/recent-bookmark'
 
 export interface FolderNavigationView {
   readonly element: HTMLElement
@@ -22,6 +23,25 @@ export function createFolderNavigation(): FolderNavigationView {
       element.replaceChildren()
       const activeFolder = breadcrumbs.at(-1)
       const parentFolder = breadcrumbs.at(-2)
+
+      if (parentFolder === undefined) {
+        const recent = document.createElement('button')
+        recent.type = 'button'
+        recent.className = 'folder-navigation__item folder-navigation__recent'
+        recent.textContent = 'Recent'
+        recent.dataset.active = String(activeFolderId === RECENT_COLLECTION_ID)
+        recent.setAttribute(
+          'aria-current',
+          activeFolderId === RECENT_COLLECTION_ID ? 'page' : 'false',
+        )
+        recent.addEventListener('click', () => select(RECENT_COLLECTION_ID))
+        element.append(recent)
+
+        const recentSeparator = document.createElement('span')
+        recentSeparator.className = 'folder-navigation__separator'
+        recentSeparator.setAttribute('aria-hidden', 'true')
+        element.append(recentSeparator)
+      }
 
       if (parentFolder !== undefined) {
         const back = document.createElement('button')
