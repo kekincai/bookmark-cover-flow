@@ -52,10 +52,10 @@ test('switches bookmark folders without leaving Cover Flow', async ({ page }) =>
 test('sorts bookmarks and persists appearance settings', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('button', { name: 'View options' }).click()
-  await page.getByLabel('Sort bookmarks').selectOption('title')
+  await page.getByRole('radio', { name: 'Title', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Apple Developer' })).toBeVisible()
 
-  await page.getByLabel('Color theme').selectOption('dark')
+  await page.getByRole('radio', { name: 'Dark', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await page.getByLabel('Show reflection').uncheck()
   await expect(page.locator('html')).toHaveAttribute('data-reflection', 'false')

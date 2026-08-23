@@ -14,6 +14,7 @@ export function createCoverCard(item: CoverItem, index: number, total: number): 
   card.type = 'button'
   card.dataset.index = String(index)
   card.dataset.imageKind = item.imageKind
+  card.dataset.visualVariant = String(index % 4)
   card.setAttribute('aria-label', `${item.title}, ${item.subtitle}`)
   card.setAttribute('aria-posinset', String(index + 1))
   card.setAttribute('aria-setsize', String(total))
@@ -41,11 +42,20 @@ export function createCoverCard(item: CoverItem, index: number, total: number): 
   const visual = document.createElement('span')
   visual.className = 'cover-card__visual'
   visual.setAttribute('aria-hidden', 'true')
-  for (let line = 0; line < 4; line += 1) {
+  const visualCopy = document.createElement('span')
+  visualCopy.className = 'cover-card__visual-copy'
+  for (let line = 0; line < 5; line += 1) {
     const rule = document.createElement('i')
     rule.style.setProperty('--line', String(line))
-    visual.append(rule)
+    visualCopy.append(rule)
   }
+  const visualArt = document.createElement('span')
+  visualArt.className = 'cover-card__visual-art'
+  visualArt.append(document.createElement('i'), document.createElement('i'))
+  visual.append(visualCopy, visualArt)
+
+  const media = document.createElement('span')
+  media.className = 'cover-card__media'
 
   const hostname = document.createElement('span')
   hostname.className = 'cover-card__hostname'
@@ -68,11 +78,11 @@ export function createCoverCard(item: CoverItem, index: number, total: number): 
       },
       { once: true },
     )
-    card.append(preview)
+    media.append(preview)
   } else {
-    card.append(visual)
+    media.append(visual)
   }
 
-  card.append(hostname)
+  card.append(media, hostname)
   return card
 }

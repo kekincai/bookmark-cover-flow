@@ -11,8 +11,21 @@ body::before {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(circle at 50% 44%, rgb(255 255 255 / 4%), transparent 34%),
-    linear-gradient(180deg, var(--background-deep), var(--background) 68%);
+    radial-gradient(ellipse 58% 52% at 50% 46%, rgb(255 255 255 / 6%), transparent 64%),
+    radial-gradient(ellipse 88% 70% at 50% 54%, transparent 38%, rgb(0 0 0 / 36%) 100%),
+    linear-gradient(180deg, var(--background-deep), var(--background) 64%, #0a0b0d);
+  content: '';
+  pointer-events: none;
+}
+
+body::after {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  height: 43%;
+  background: linear-gradient(180deg, transparent, rgb(0 0 0 / 22%));
   content: '';
   pointer-events: none;
 }

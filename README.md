@@ -1,77 +1,69 @@
+<div align="center">
+  <img src="public/icons/icon-128.png" width="96" height="96" alt="Bookmark Cover Flow icon">
+
 # Bookmark Cover Flow
 
-![Bookmark Cover Flow running in dark mode](docs/assets/screenshot.png)
+**Your Chrome bookmarks, arranged like an editorial Cover Flow.**
 
-[Watch the interaction demo](docs/assets/demo.gif)
+[![CI](https://github.com/kekincai/bookmark-cover-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/kekincai/bookmark-cover-flow/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/kekincai/bookmark-cover-flow?display_name=tag&sort=semver)](https://github.com/kekincai/bookmark-cover-flow/releases/latest)
+[![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4?logo=googlechrome&logoColor=white)](public/manifest.json)
+[![License: MIT](https://img.shields.io/badge/License-MIT-f4f3ef.svg)](LICENSE)
 
-A quiet, spatial Chrome bookmark browser inspired by the browsing rhythm of classic Cover Flow. It opens as a regular extension tab only when you click its toolbar button, so it never replaces Chrome's New Tab page.
+[Install](#install) · [Features](#features) · [Architecture](docs/architecture.md) · [Privacy](docs/privacy-policy.md) · [Contributing](docs/contributing.md)
 
-The active bookmark stays clear and centered while neighboring covers recede into a continuous 3D scene. Trackpad, mouse, keyboard, search, and folder navigation all feed the same motion model.
+</div>
+
+![Bookmark Cover Flow showing real public bookmarks](docs/assets/screenshot.png)
+
+Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click the extension button and it opens in a normal tab—never over your New Tab page. Real bookmark folders remain intact, while webpage previews turn each bookmark into a tactile editorial cover.
+
+<div align="center">
+  <a href="docs/assets/demo.gif"><strong>Watch the interaction demo →</strong></a>
+</div>
+
+## Why it feels different
+
+| Editorial covers                                                                                          | Spatial motion                                                                                | Your folders, unchanged                                                                                 |
+| --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Open Graph images, favicons, and deterministic fallbacks make bookmarks recognizable before opening them. | Trackpad, wheel, pointer drag, keyboard, inertia, and snap share one continuous motion model. | Nested Chrome folders become a stable breadcrumb rail with no uploads, account, or proprietary library. |
 
 ## Features
 
-- toolbar button that opens a normal, bookmarkable/pinnable extension tab
-- real Chrome bookmark hierarchy with nested-folder navigation and breadcrumbs
-- continuous fractional-position motion with inertia, velocity damping, and snap
-- trackpad, wheel, pointer drag, click, and keyboard navigation
-- instant title, hostname, and URL search without leaving Cover Flow
-- a local Recent collection plus bookmark-order, title, website, and recently-opened sorting
-- webpage Open Graph/Twitter preview images, cached locally, with favicon and generated fallbacks
-- DOM virtualization (`selectedIndex ± 7`) for large libraries
-- system/light/dark themes, optional reflection, `prefers-reduced-motion`, and forced-colors support
-- local-first operation with no account, backend, analytics, or bookmark uploads
+- opens from the toolbar as a regular bookmarkable or pinnable extension tab
+- navigates the real Chrome bookmark hierarchy with stable breadcrumbs and back navigation
+- previews webpage imagery inside large, paper-like editorial covers
+- supports trackpad, wheel, pointer drag, click, and keyboard navigation
+- searches titles, hostnames, and URLs instantly without leaving Cover Flow
+- includes a local Recent collection and four sorting modes
+- offers dark, light, and system themes plus optional floor reflection
+- virtualizes the scene to `selectedIndex ± 7` for large libraries
+- respects reduced motion, forced colors, focus navigation, and screen-reader metadata
+- stays local-first with no analytics, account, backend, or bookmark uploads
 
-## Design philosophy
+## Install
 
-Quiet, refined, editorial, spatial, premium, and minimal. The cover is the interface: navigation and metadata stay deliberately low-key, gradients and reflections are restrained, and the scene avoids card-grid dashboard chrome.
+### From a release
 
-## Architecture
+1. Download `bookmark-cover-flow.zip` from the [latest release](https://github.com/kekincai/bookmark-cover-flow/releases/latest).
+2. Unzip it.
+3. Open `chrome://extensions`.
+4. Enable **Developer mode**.
+5. Choose **Load unpacked** and select the unzipped folder.
+6. Pin **Bookmark Cover Flow**, then click its toolbar icon.
 
-The project uses native TypeScript and Web APIs with a lightweight Clean Architecture:
+### From source
 
-```text
-Domain → Application → Infrastructure → UI
-```
-
-Pure functions own search, sorting, transform calculation, bookmark mapping, selection, and motion physics. Chrome APIs, storage, events, animation frames, and DOM rendering remain at the edge. See [Architecture](docs/architecture.md), [Stable APIs](docs/api.md), [Motion design](docs/motion-design.md), and [Performance validation](docs/performance.md).
-
-## Getting started
-
-Requirements: Node.js 22 or newer and Chrome 120 or newer.
+Requirements: Node.js 22+ and Chrome 120+.
 
 ```bash
-npm install
-npm run dev
-```
-
-Outside an extension context, development mode provides a small demo library so the full interface and tests work without exposing personal bookmarks.
-
-## Development
-
-```bash
-npm run typecheck
-npm run lint
-npm run test
-npm run test:e2e
-npm run package:extension
-```
-
-## Build
-
-```bash
+git clone https://github.com/kekincai/bookmark-cover-flow.git
+cd bookmark-cover-flow
+npm ci
 npm run build
 ```
 
-The unpacked extension is written to `dist/`.
-
-## Install the extension
-
-1. Run `npm run build`.
-2. Open `chrome://extensions`.
-3. Enable **Developer mode**.
-4. Choose **Load unpacked** and select the generated `dist` folder.
-5. Pin **Bookmark Cover Flow** from Chrome's Extensions menu if desired.
-6. Click its toolbar button. Cover Flow opens in a normal new tab; Chrome's New Tab page is unchanged.
+Load the generated `dist` folder from `chrome://extensions`. Running `npm run dev` opens a public demo library and never reads personal bookmarks.
 
 ## Keyboard
 
@@ -84,29 +76,48 @@ The unpacked extension is written to `dist/`.
 | `Home` / `End`        | First / last bookmark    |
 | `PageUp` / `PageDown` | Move five bookmarks      |
 
+## Architecture
+
+```text
+Domain → Application → Infrastructure → UI
+```
+
+Native TypeScript and browser APIs keep the extension small. Pure functions own search, sorting, cover transforms, selection, and motion physics; Chrome APIs, storage, events, animation frames, and DOM rendering stay at the edge.
+
+Read the [architecture](docs/architecture.md), [stable APIs](docs/api.md), [motion design](docs/motion-design.md), and [performance validation](docs/performance.md).
+
+## Verified quality
+
+```bash
+npm run typecheck
+npm run lint
+npm run test
+npm run test:e2e
+npm run test:extension
+```
+
+The isolated extension test seeds 15 public bookmarks plus a 5,000-item stress folder, verifies real preview retrieval, opens a bookmark, checks Recent, exercises view settings, and confirms DOM virtualization without reading the user's Chrome profile.
+
 ## Permissions and privacy
 
-- `bookmarks`: read the bookmark tree shown in Cover Flow.
-- `storage`: remember local interface preferences.
-- `favicon`: ask Chrome's local favicon service for bookmark icons.
-- `http://*/*` and `https://*/*`: fetch bookmarked pages without cookies to read their Open Graph/Twitter preview-image metadata, then display that image in the cover.
+| Permission                  | Why it is needed                                                         |
+| --------------------------- | ------------------------------------------------------------------------ |
+| `bookmarks`                 | Read the bookmark tree displayed in Cover Flow                           |
+| `storage`                   | Remember local view preferences and preview metadata                     |
+| `favicon`                   | Resolve icons through Chrome's local favicon service                     |
+| `http://*/*`, `https://*/*` | Fetch public page metadata without credentials for nearby cover previews |
 
-Preview metadata and its resolved image URL are cached in Chrome's local extension storage for performance. The extension has no analytics, user account, bookmark upload, or backend. Opening the Cover Flow may contact bookmarked websites to obtain previews; requests omit credentials, time out after 8 seconds, and are limited to nearby covers rather than the entire library at once.
+Requests omit credentials, time out after eight seconds, and are limited to nearby covers. See the full [privacy policy](docs/privacy-policy.md).
 
-## Roadmap — complete
+## Roadmap
 
-- **v0.1 ✓** — architecture, Chrome bookmarks, static Cover Flow, keyboard
-- **v0.2 ✓** — continuous motion, trackpad/wheel, inertia, snap
-- **v0.3 ✓** — favicon covers, reflection, folder navigation, themes
-- **v0.4 ✓** — search, recent items, custom sorting
-- **v0.5 ✓** — virtualization, performance tuning, accessibility, E2E tests
-- **v1.0 ✓** — polished motion, stable APIs, documentation, demo, store-ready release
-
-See the [Chrome Web Store listing copy](docs/store-listing.md), [privacy policy](docs/privacy-policy.md), [release checklist](docs/release.md), and [changelog](CHANGELOG.md).
+- **v0.1–v0.5 ✓** — architecture, bookmarks, motion, folders, search, sorting, performance, accessibility
+- **v1.0 ✓** — stable APIs, packaging, documentation, and store-ready release
+- **v1.1 ✓** — editorial cover system, fixed breadcrumb header, spatial graphite stage, redesigned view options
 
 ## Contributing
 
-See [Contributing](docs/contributing.md). Pull requests should explain What, Why, How, Test, and include visual evidence where relevant.
+Issues and pull requests are welcome. See [Contributing](docs/contributing.md) and [Security](SECURITY.md).
 
 ## License
 

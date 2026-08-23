@@ -35,7 +35,7 @@ describe('getCoverTransform', () => {
     const halfway = getCoverTransform(0.5)
     const side = getCoverTransform(1)
 
-    expect(nearCenter.x).toBeCloseTo(2.38)
+    expect(nearCenter.x).toBeCloseTo(side.x * 0.01)
     expect(halfway.x).toBeCloseTo(side.x / 2)
   })
 })

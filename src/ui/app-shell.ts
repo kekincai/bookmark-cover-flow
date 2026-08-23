@@ -20,12 +20,21 @@ export function createAppShell(): AppShell {
   const header = document.createElement('header')
   header.className = 'app-header'
   const folders = createFolderNavigation()
+  const brand = document.createElement('div')
+  brand.className = 'app-brand'
+  brand.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3.5 5.5c2.7-1.2 5.4-.9 8.5.9v13c-3.1-1.8-5.8-2.1-8.5-.9z" />
+      <path d="M20.5 5.5c-2.7-1.2-5.4-.9-8.5.9v13c3.1-1.8 5.8-2.1 8.5-.9z" />
+    </svg>
+    <span>Bookmarks</span>
+  `
   const search = createSearchBox()
   const preferences = createPreferencesMenu()
   const tools = document.createElement('div')
   tools.className = 'app-header__tools'
   tools.append(search.element, preferences.element)
-  header.append(folders.element, tools)
+  header.append(folders.backElement, brand, folders.element, tools)
 
   const coverFlow = createCoverFlow()
   const meta = createBookmarkMeta()

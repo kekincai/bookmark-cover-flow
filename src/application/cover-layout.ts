@@ -1,7 +1,7 @@
 import type { CoverTransform } from '../domain/cover'
 
-const ACTIVE_GAP = 238
-const SIDE_STEP = 170
+const ACTIVE_GAP = 292
+const SIDE_STEP = 154
 
 export function getCoverTransform(offset: number, reducedMotion = false): CoverTransform {
   const distance = Math.abs(offset)
@@ -13,9 +13,9 @@ export function getCoverTransform(offset: number, reducedMotion = false): CoverT
   const x = direction * (ACTIVE_GAP * Math.min(1, distance) + Math.max(0, distance - 1) * SIDE_STEP)
   return {
     x,
-    z: -80 - distance * 54,
-    rotateY: reducedMotion ? direction * -12 : direction * -48,
-    scale: Math.max(0.64, 0.86 - Math.max(0, distance - 1) * 0.06),
-    opacity: Math.max(0.28, 0.9 - Math.max(0, distance - 1) * 0.13),
+    z: -92 - distance * 58,
+    rotateY: reducedMotion ? direction * -10 : direction * -51,
+    scale: Math.max(0.6, 0.84 - Math.max(0, distance - 1) * 0.055),
+    opacity: Math.max(0.24, 0.92 - Math.max(0, distance - 1) * 0.12),
   }
 }

@@ -7,20 +7,36 @@ export interface PreferencesMenuView {
   destroy(): void
 }
 
-function option(value: string, label: string): HTMLOptionElement {
-  const element = document.createElement('option')
-  element.value = value
-  element.textContent = label
-  return element
-}
+type Choice<T extends string> = { readonly value: T; readonly label: string }
 
-function field(labelText: string, control: HTMLElement): HTMLLabelElement {
-  const label = document.createElement('label')
-  label.className = 'preferences-menu__field'
-  const text = document.createElement('span')
-  text.textContent = labelText
-  label.append(text, control)
-  return label
+function choiceGroup<T extends string>(
+  label: string,
+  choices: readonly Choice<T>[],
+  onSelect: (value: T) => void,
+): { readonly field: HTMLElement; readonly buttons: readonly HTMLButtonElement[] } {
+  const field = document.createElement('section')
+  field.className = 'preferences-menu__field'
+  const heading = document.createElement('p')
+  heading.className = 'preferences-menu__label'
+  heading.textContent = label
+  const group = document.createElement('div')
+  group.className = 'preferences-menu__choices'
+  group.setAttribute('role', 'radiogroup')
+  group.setAttribute('aria-label', label)
+  const buttons = choices.map((choice) => {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'preferences-menu__choice'
+    button.dataset.value = choice.value
+    button.setAttribute('role', 'radio')
+    button.setAttribute('aria-checked', 'false')
+    button.textContent = choice.label
+    button.addEventListener('click', () => onSelect(choice.value))
+    group.append(button)
+    return button
+  })
+  field.append(heading, group)
+  return { field, buttons }
 }
 
 export function createPreferencesMenu(): PreferencesMenuView {
@@ -41,38 +57,54 @@ export function createPreferencesMenu(): PreferencesMenuView {
   panel.setAttribute('aria-label', 'View options')
   panel.hidden = true
 
-  const sort = document.createElement('select')
-  sort.setAttribute('aria-label', 'Sort bookmarks')
-  sort.append(
-    option('bookmark', 'Bookmark order'),
-    option('title', 'Title'),
-    option('domain', 'Website'),
-    option('recent', 'Recently opened'),
-  )
+  const panelHeader = document.createElement('header')
+  panelHeader.className = 'preferences-menu__header'
+  panelHeader.innerHTML = '<strong>View options</strong><span>Tune the cover flow</span>'
 
-  const theme = document.createElement('select')
-  theme.setAttribute('aria-label', 'Color theme')
-  theme.append(option('system', 'System'), option('light', 'Light'), option('dark', 'Dark'))
+  let change: (next: Partial<Preferences>) => void = () => undefined
+  const sort = choiceGroup<SortMode>(
+    'Sort bookmarks',
+    [
+      { value: 'bookmark', label: 'Bookmark' },
+      { value: 'title', label: 'Title' },
+      { value: 'domain', label: 'Website' },
+      { value: 'recent', label: 'Recent' },
+    ],
+    (sortMode) => change({ sortMode }),
+  )
+  const theme = choiceGroup<ThemeMode>(
+    'Color theme',
+    [
+      { value: 'system', label: 'System' },
+      { value: 'light', label: 'Light' },
+      { value: 'dark', label: 'Dark' },
+    ],
+    (themeMode) => change({ theme: themeMode }),
+  )
 
   const reflection = document.createElement('input')
   reflection.type = 'checkbox'
   reflection.setAttribute('aria-label', 'Show reflection')
-  const reflectionField = field('Reflection', reflection)
-  reflectionField.classList.add('preferences-menu__field--toggle')
-  panel.append(field('Sort', sort), field('Theme', theme), reflectionField)
+  reflection.className = 'preferences-menu__toggle-input'
+  const reflectionField = document.createElement('label')
+  reflectionField.className = 'preferences-menu__reflection'
+  const reflectionCopy = document.createElement('span')
+  reflectionCopy.innerHTML =
+    '<strong>Reflection</strong><small>Mirror covers onto the stage</small>'
+  const toggle = document.createElement('span')
+  toggle.className = 'preferences-menu__toggle'
+  toggle.setAttribute('aria-hidden', 'true')
+  reflectionField.append(reflectionCopy, reflection, toggle)
+  panel.append(panelHeader, sort.field, theme.field, reflectionField)
   element.append(trigger, panel)
-
-  let change: (next: Partial<Preferences>) => void = () => undefined
 
   const setOpen = (open: boolean): void => {
     panel.hidden = !open
     trigger.setAttribute('aria-expanded', String(open))
-    if (open) sort.focus()
+    if (open) sort.buttons[0]?.focus()
   }
 
   trigger.addEventListener('click', () => setOpen(panel.hidden))
-  sort.addEventListener('change', () => change({ sortMode: sort.value as SortMode }))
-  theme.addEventListener('change', () => change({ theme: theme.value as ThemeMode }))
   reflection.addEventListener('change', () => change({ showReflection: reflection.checked }))
 
   const onPointerDown = (event: PointerEvent): void => {
@@ -91,8 +123,12 @@ export function createPreferencesMenu(): PreferencesMenuView {
   return {
     element,
     render(preferences): void {
-      sort.value = preferences.sortMode
-      theme.value = preferences.theme
+      sort.buttons.forEach((button) => {
+        button.setAttribute('aria-checked', String(button.dataset.value === preferences.sortMode))
+      })
+      theme.buttons.forEach((button) => {
+        button.setAttribute('aria-checked', String(button.dataset.value === preferences.theme))
+      })
       reflection.checked = preferences.showReflection
     },
     onChange(listener): void {

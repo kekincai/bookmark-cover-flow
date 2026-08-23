@@ -10,6 +10,6 @@ export interface Preferences {
 
 export const defaultPreferences: Preferences = {
   sortMode: 'bookmark',
-  theme: 'system',
+  theme: 'dark',
   showReflection: true,
 }

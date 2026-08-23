@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path'
 const extensionPath = resolve('dist')
 const profilePath = await mkdtemp(join(tmpdir(), 'bookmark-cover-flow-v1-'))
 const screenshotPath = resolve('docs/assets/store-screenshot-1280x800.png')
+const readmeScreenshotPath = resolve('docs/assets/screenshot.png')
 
 const publicFolders = [
   {
@@ -106,11 +107,23 @@ try {
   const previewSource = await page.locator('.cover-card__preview').first().getAttribute('src')
 
   await page.getByRole('button', { name: 'View options' }).click()
-  await page.getByLabel('Sort bookmarks').selectOption('title')
-  await page.getByLabel('Color theme').selectOption('dark')
+  await page.getByRole('radio', { name: 'Title', exact: true }).click()
+  await page.getByRole('radio', { name: 'Bookmark', exact: true }).click()
+  await page.getByRole('radio', { name: 'Dark', exact: true }).click()
   await page.getByLabel('Show reflection').uncheck()
+  await page.getByLabel('Show reflection').check()
   await page.getByRole('button', { name: 'View options' }).click()
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(500)
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+  })
   await page.screenshot({ path: screenshotPath })
+  await page.setViewportSize({ width: 1584, height: 1000 })
+  await page.waitForTimeout(250)
+  await page.screenshot({ path: readmeScreenshotPath })
 
   const extensionPage = page
   const newPagePromise = context.waitForEvent('page')
@@ -154,6 +167,7 @@ try {
         stressDomCovers,
         stressRenderMs,
         screenshotPath,
+        readmeScreenshotPath,
         consoleErrors,
       },
       null,
