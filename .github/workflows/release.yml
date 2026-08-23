@@ -19,6 +19,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build
       - run: cd dist && zip -FSr ../bookmark-cover-flow.zip .
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: bookmark-cover-flow.zip
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" bookmark-cover-flow.zip --generate-notes --verify-tag
