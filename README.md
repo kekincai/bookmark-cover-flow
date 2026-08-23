@@ -1,6 +1,6 @@
 # Bookmark Cover Flow
 
-![Bookmark Cover Flow design reference](docs/assets/design-reference.png)
+![Bookmark Cover Flow running in dark mode](docs/assets/screenshot.png)
 
 A quiet, spatial Chrome bookmark browser inspired by the browsing rhythm of classic Cover Flow and redesigned for today's new-tab experience.
 
