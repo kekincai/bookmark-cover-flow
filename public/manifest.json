@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Bookmark Cover Flow",
+  "description": "Browse Chrome bookmarks in a quiet, spatial Cover Flow.",
+  "version": "0.1.0",
+  "permissions": ["bookmarks", "storage", "favicon"],
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  }
+}
