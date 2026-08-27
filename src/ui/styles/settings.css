@@ -1,0 +1,444 @@
+.wallpaper-surface {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  dynamic-range-limit: no-limit;
+}
+.wallpaper-surface > img,
+.wallpaper-surface > video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  dynamic-range-limit: no-limit;
+}
+.wallpaper-surface > img {
+  inset: -30px;
+  width: calc(100% + 60px);
+  height: calc(100% + 60px);
+  filter: blur(var(--photo-blur, 0px));
+}
+.wallpaper-surface__tint {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+}
+/* Keep text legible on arbitrary media without filtering the full wallpaper. */
+body:has(.wallpaper-surface__media) .app-header {
+  background: var(--panel);
+}
+body:has(.wallpaper-surface__media) .bookmark-meta {
+  justify-self: center;
+  max-width: 100%;
+  padding: 10px 24px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  background: var(--panel);
+  backdrop-filter: blur(18px);
+}
+
+.settings-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 2999;
+  background: rgb(10 16 26 / 10%);
+}
+.settings-drawer {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 3000;
+  width: min(440px, calc(100vw - 40px));
+  max-height: calc(100dvh - 40px);
+  padding: 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--glass-line);
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--surface) 62%, transparent);
+  backdrop-filter: blur(30px) saturate(1.15);
+  box-shadow:
+    0 24px 80px rgb(10 18 32 / 20%),
+    inset 0 1px 0 rgb(255 255 255 / 35%);
+  transform: translateX(calc(100% + 32px));
+  transition: transform 360ms cubic-bezier(0.22, 0.76, 0.25, 1);
+}
+.settings-drawer.is-open {
+  transform: translateX(0);
+}
+@starting-style {
+  .settings-drawer.is-open {
+    transform: translateX(calc(100% + 32px));
+  }
+}
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+}
+.settings-eyebrow {
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.settings-header h2 {
+  margin: 7px 0 0;
+  color: var(--text-primary);
+  font-size: 28px;
+  font-weight: 590;
+  letter-spacing: -0.04em;
+}
+.settings-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--surface) 18%, transparent);
+  color: var(--text-secondary);
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+.settings-close:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface) 42%, transparent);
+}
+.settings-close svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.settings-body {
+  display: grid;
+  gap: 28px;
+}
+.settings-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+}
+.settings-tabs button {
+  justify-content: center;
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  transition:
+    background 180ms ease,
+    color 180ms ease;
+}
+.settings-tabs button[aria-selected='true'] {
+  color: var(--text-primary);
+  border-color: var(--glass-line);
+  background: color-mix(in srgb, var(--surface) 48%, transparent);
+  box-shadow: 0 2px 8px rgb(10 18 32 / 6%);
+}
+.settings-pane {
+  display: grid;
+  gap: 26px;
+  padding-bottom: 4px;
+  min-width: 0;
+}
+/* The tab labels already identify each pane; avoid repeating headings and introductions. */
+.settings-pane-header {
+  display: none;
+}
+.settings-group {
+  display: grid;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.settings-group + .settings-group {
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+.settings-group h4 {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 550;
+  letter-spacing: 0.04em;
+}
+.settings-pane .preferences-menu__field + .preferences-menu__field {
+  margin-top: 0;
+}
+.settings-pane .preferences-menu__label {
+  margin-bottom: 10px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.settings-pane .preferences-menu__choices {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+}
+.settings-pane .preferences-menu__choice {
+  justify-content: center;
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.settings-pane .preferences-menu__choice[aria-checked='true'] {
+  border-color: var(--glass-line);
+  background: color-mix(in srgb, var(--surface) 46%, transparent);
+  color: var(--text-primary);
+  box-shadow: 0 1px 5px rgb(10 18 32 / 5%);
+}
+.settings-pane .preferences-menu__reflection {
+  min-height: 52px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.settings-pane .preferences-menu__reflection strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.settings-pane .preferences-menu__reflection small {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.settings-action {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 16%, transparent);
+  color: var(--text-primary);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+.settings-action:hover {
+  background: color-mix(in srgb, var(--surface) 30%, transparent);
+  border-color: var(--glass-line);
+}
+.settings-action:disabled,
+.settings-action:has(input:disabled) {
+  opacity: 0.45;
+  cursor: default;
+}
+.wallpaper-upload {
+  min-height: 94px;
+  border-style: dashed;
+}
+.wallpaper-upload svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--text-secondary);
+}
+.wallpaper-upload strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 550;
+}
+.wallpaper-upload small {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.wallpaper-upload input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.wallpaper-upload:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.wallpaper-current,
+.wallpaper-status,
+.wallpaper-error,
+.wallpaper-hdr-note p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.wallpaper-current {
+  margin-top: -8px;
+}
+.wallpaper-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.wallpaper-actions .settings-action {
+  padding: 0;
+  min-height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.wallpaper-actions .settings-action:hover {
+  color: var(--text-primary);
+}
+.wallpaper-actions .settings-action b {
+  display: none;
+}
+.wallpaper-play {
+  margin-right: auto;
+}
+.wallpaper-error {
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--danger);
+}
+.wallpaper-status:empty {
+  display: none;
+}
+.wallpaper-hdr-note {
+  border: 0;
+  padding-top: 2px;
+}
+.wallpaper-hdr-note summary {
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+}
+.wallpaper-hdr-note p {
+  margin-top: 12px;
+}
+.settings-pane .range-row {
+  margin-top: 0;
+}
+.settings-pane .range-row > span {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+.settings-pane .range-row output {
+  color: var(--text-secondary);
+}
+.settings-drawer .liquid-range-fill {
+  background: color-mix(in srgb, var(--text-primary) 25%, transparent);
+}
+.settings-drawer liquid-toggle.is-checked > .liquid-toggle-track {
+  background: color-mix(in srgb, var(--accent) 54%, transparent);
+  box-shadow: inset 0 1px 4px rgb(10 18 32 / 8%);
+}
+.range-row {
+  display: block;
+  margin-top: 16px;
+}
+.range-row > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.range-row output {
+  font-variant-numeric: tabular-nums;
+}
+.range-row.is-disabled {
+  opacity: 0.45;
+}
+liquid-range {
+  position: relative;
+  display: block;
+  height: 44px;
+  margin-top: 2px;
+}
+.liquid-range-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(122 144 180 / 24%);
+  transform: translateY(-50%);
+}
+.liquid-range-fill {
+  display: block;
+  height: 100%;
+  width: var(--liquid-progress, 0%);
+  background: linear-gradient(90deg, #ff76b6, #78d7ff);
+}
+.liquid-range-thumb {
+  position: absolute;
+  top: 50%;
+  left: var(--liquid-thumb-left, -18px);
+  width: 90px;
+  height: 60px;
+  border-radius: 30px;
+  border: 1px solid rgb(255 255 255 / 72%);
+  background: rgb(255 255 255 / 85%);
+  box-shadow:
+    0 3px 12px rgb(38 51 83 / 16%),
+    inset 0 1px 0 rgb(255 255 255 / 75%);
+  backdrop-filter: var(--liquid-control-filter);
+  transform: translateY(-50%) scale(0.6);
+  transition:
+    transform 180ms ease,
+    background 180ms ease;
+}
+liquid-range.is-active .liquid-range-thumb {
+  transform: translateY(-50%) scale(1);
+  background: rgb(255 255 255 / 12%);
+}
+liquid-range.is-focused .liquid-range-track {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+liquid-range input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+[hidden] {
+  display: none !important;
+}

@@ -1,0 +1,218 @@
+{
+  "extensionName": {
+    "message": "書籤 Cover Flow"
+  },
+  "extensionDescription": {
+    "message": "以流暢的立體封面瀏覽 Chrome 書籤。"
+  },
+  "openExtension": {
+    "message": "開啟書籤 Cover Flow"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "viewOptions": {
+    "message": "開啟設定"
+  },
+  "closeSettings": {
+    "message": "關閉設定"
+  },
+  "categories": {
+    "message": "設定分類"
+  },
+  "appearance": {
+    "message": "外觀"
+  },
+  "background": {
+    "message": "桌布"
+  },
+  "appearanceDescription": {
+    "message": "調整封面排列與視覺體驗。"
+  },
+  "backgroundDescription": {
+    "message": "以圖片、影片與不同明暗背景打造書籤空間。"
+  },
+  "basicPreferences": {
+    "message": "基本偏好"
+  },
+  "visualExperience": {
+    "message": "視覺體驗"
+  },
+  "sortBookmarks": {
+    "message": "書籤排序"
+  },
+  "sortBookmark": {
+    "message": "原始順序"
+  },
+  "sortTitle": {
+    "message": "標題"
+  },
+  "sortWebsite": {
+    "message": "網站"
+  },
+  "recent": {
+    "message": "最近開啟"
+  },
+  "colorTheme": {
+    "message": "色彩主題"
+  },
+  "system": {
+    "message": "跟隨系統"
+  },
+  "light": {
+    "message": "淺色"
+  },
+  "dark": {
+    "message": "深色"
+  },
+  "reflection": {
+    "message": "封面倒影"
+  },
+  "showReflection": {
+    "message": "顯示封面倒影"
+  },
+  "reflectionDescription": {
+    "message": "在封面下方顯示鏡面倒影"
+  },
+  "wallpaperSource": {
+    "message": "桌布來源"
+  },
+  "chooseMedia": {
+    "message": "上傳本機圖片或影片"
+  },
+  "mediaHint": {
+    "message": "影片自動靜音循環 · 僅儲存在本機"
+  },
+  "mediaLimit": {
+    "message": "保留原始檔案 · 最大 512 MB · 不上傳至伺服器"
+  },
+  "restoreBackground": {
+    "message": "恢復預設背景"
+  },
+  "adjustments": {
+    "message": "畫面調整"
+  },
+  "photoBlur": {
+    "message": "照片模糊度"
+  },
+  "dimming": {
+    "message": "暗度"
+  },
+  "mediaDetails": {
+    "message": "播放與儲存說明"
+  },
+  "nativeVideoNote": {
+    "message": "保留原始影片與 HDR 中繼資料，不轉碼、不經畫布處理。"
+  },
+  "codecNote": {
+    "message": "格式支援取決於 Chrome 與系統解碼器；影片不使用模糊濾鏡，以保留原生播放路徑。"
+  },
+  "hdrDisplay": {
+    "message": "偵測到 HDR 顯示能力，實際效果仍取決於影片、解碼器與顯示設定。"
+  },
+  "sdrDisplay": {
+    "message": "目前顯示環境為 SDR，支援的 HDR 影片由 Chrome 進行色調映射。"
+  },
+  "defaultBackground": {
+    "message": "預設漸層背景"
+  },
+  "playVideo": {
+    "message": "播放影片"
+  },
+  "pauseVideo": {
+    "message": "暫停影片"
+  },
+  "savingMedia": {
+    "message": "正在讀取並儲存至本機…"
+  },
+  "videoPaused": {
+    "message": "影片已暫停 · 靜音"
+  },
+  "videoSelected": {
+    "message": "影片已選擇 · 一律靜音"
+  },
+  "emptyFile": {
+    "message": "檔案為空，請選擇圖片或影片。"
+  },
+  "largeFile": {
+    "message": "請選擇小於 512 MB 的檔案。"
+  },
+  "invalidFile": {
+    "message": "請選擇 Chrome 支援的圖片或影片檔案。"
+  },
+  "decodeFailed": {
+    "message": "Chrome 無法解碼此檔案，原背景未變更。請嘗試其他圖片或影片。"
+  },
+  "decodeTimeout": {
+    "message": "讀取檔案逾時，請嘗試較小的檔案或其他格式。"
+  },
+  "noFrames": {
+    "message": "檔案沒有可解碼的圖片或影片畫面。"
+  },
+  "autoplayBlocked": {
+    "message": "自動播放遭到阻擋，請點選「播放影片」重試。"
+  },
+  "playbackFailed": {
+    "message": "影片播放失敗，請重試或選擇其他檔案。"
+  },
+  "playbackStopped": {
+    "message": "影片無法繼續播放，請選擇其他檔案。"
+  },
+  "missingMedia": {
+    "message": "已儲存的背景檔案遺失，請重新選擇或恢復預設背景。"
+  },
+  "storageOpenFailed": {
+    "message": "無法開啟本機背景儲存空間。"
+  },
+  "storageBusy": {
+    "message": "背景儲存空間忙碌中，請關閉其他擴充功能分頁後重試。"
+  },
+  "storageReadFailed": {
+    "message": "無法讀取已儲存的背景。"
+  },
+  "storageSaveFailed": {
+    "message": "無法儲存背景，請檢查可用儲存空間。原背景未變更。"
+  },
+  "genericError": {
+    "message": "無法儲存背景，請重試。"
+  },
+  "bookmarks": {
+    "message": "書籤"
+  },
+  "searchBookmarks": {
+    "message": "搜尋書籤"
+  },
+  "bookmarkFolders": {
+    "message": "書籤資料夾"
+  },
+  "coverFlow": {
+    "message": "書籤封面瀏覽"
+  },
+  "backFolder": {
+    "message": "返回$1"
+  },
+  "back": {
+    "message": "返回"
+  },
+  "noResults": {
+    "message": "找不到結果"
+  },
+  "noRecent": {
+    "message": "尚無最近開啟的書籤"
+  },
+  "noBookmarks": {
+    "message": "此資料夾沒有書籤"
+  },
+  "tryFolder": {
+    "message": "試試其他資料夾或搜尋"
+  },
+  "loadingBookmarks": {
+    "message": "正在讀取書籤…"
+  },
+  "bookmarksFailed": {
+    "message": "無法讀取 Chrome 書籤。"
+  },
+  "openFailed": {
+    "message": "無法開啟書籤"
+  }
+}

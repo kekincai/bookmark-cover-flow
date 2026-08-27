@@ -1,0 +1,218 @@
+{
+  "extensionName": {
+    "message": "Bookmark Cover Flow"
+  },
+  "extensionDescription": {
+    "message": "Chrome のブックマークを、なめらかな Cover Flow で閲覧。"
+  },
+  "openExtension": {
+    "message": "Bookmark Cover Flow を開く"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "viewOptions": {
+    "message": "設定を開く"
+  },
+  "closeSettings": {
+    "message": "設定を閉じる"
+  },
+  "categories": {
+    "message": "設定カテゴリー"
+  },
+  "appearance": {
+    "message": "外観"
+  },
+  "background": {
+    "message": "壁紙"
+  },
+  "appearanceDescription": {
+    "message": "カバーの並び順と見た目を調整します。"
+  },
+  "backgroundDescription": {
+    "message": "写真や動画で、ブックマークの背景を自分らしく。"
+  },
+  "basicPreferences": {
+    "message": "基本設定"
+  },
+  "visualExperience": {
+    "message": "表示設定"
+  },
+  "sortBookmarks": {
+    "message": "ブックマークの並び順"
+  },
+  "sortBookmark": {
+    "message": "元の順序"
+  },
+  "sortTitle": {
+    "message": "タイトル"
+  },
+  "sortWebsite": {
+    "message": "サイト"
+  },
+  "recent": {
+    "message": "最近開いた項目"
+  },
+  "colorTheme": {
+    "message": "カラーテーマ"
+  },
+  "system": {
+    "message": "システム"
+  },
+  "light": {
+    "message": "ライト"
+  },
+  "dark": {
+    "message": "ダーク"
+  },
+  "reflection": {
+    "message": "カバーの反射"
+  },
+  "showReflection": {
+    "message": "カバーの反射を表示"
+  },
+  "reflectionDescription": {
+    "message": "カバーの下に反射を表示します"
+  },
+  "wallpaperSource": {
+    "message": "壁紙の選択"
+  },
+  "chooseMedia": {
+    "message": "写真・動画を選択"
+  },
+  "mediaHint": {
+    "message": "動画は無音でループ再生・この端末にのみ保存"
+  },
+  "mediaLimit": {
+    "message": "元のファイルを保存・最大 512 MB・外部へのアップロードなし"
+  },
+  "restoreBackground": {
+    "message": "デフォルトの背景に戻す"
+  },
+  "adjustments": {
+    "message": "画面の調整"
+  },
+  "photoBlur": {
+    "message": "写真のぼかし"
+  },
+  "dimming": {
+    "message": "暗さ"
+  },
+  "mediaDetails": {
+    "message": "再生と保存について"
+  },
+  "nativeVideoNote": {
+    "message": "元の動画と HDR メタデータを保持します。変換や Canvas 処理は行いません。"
+  },
+  "codecNote": {
+    "message": "対応形式は Chrome と OS のデコーダーに依存します。動画にはぼかしを適用しません。"
+  },
+  "hdrDisplay": {
+    "message": "HDR 対応ディスプレイを検出しました。出力は動画・デコーダー・表示設定にも依存します。"
+  },
+  "sdrDisplay": {
+    "message": "現在の表示環境は SDR です。対応する HDR 動画は Chrome がトーンマッピングします。"
+  },
+  "defaultBackground": {
+    "message": "デフォルトのグラデーション"
+  },
+  "playVideo": {
+    "message": "動画を再生"
+  },
+  "pauseVideo": {
+    "message": "動画を一時停止"
+  },
+  "savingMedia": {
+    "message": "読み込み・保存中…"
+  },
+  "videoPaused": {
+    "message": "動画を一時停止中・無音"
+  },
+  "videoSelected": {
+    "message": "動画を選択済み・常に無音"
+  },
+  "emptyFile": {
+    "message": "ファイルが空です。写真または動画を選択してください。"
+  },
+  "largeFile": {
+    "message": "512 MB 以下のファイルを選択してください。"
+  },
+  "invalidFile": {
+    "message": "Chrome で再生できる画像または動画を選択してください。"
+  },
+  "decodeFailed": {
+    "message": "Chrome でこのファイルを読み込めません。元の背景は変更していません。別の画像・動画をお試しください。"
+  },
+  "decodeTimeout": {
+    "message": "読み込みがタイムアウトしました。小さいファイルや別の形式をお試しください。"
+  },
+  "noFrames": {
+    "message": "読み込める画像・動画フレームがありません。"
+  },
+  "autoplayBlocked": {
+    "message": "自動再生がブロックされました。「動画を再生」で再試行してください。"
+  },
+  "playbackFailed": {
+    "message": "動画を再生できません。再試行するか、別のファイルを選択してください。"
+  },
+  "playbackStopped": {
+    "message": "動画の再生を続けられません。別のファイルを選択してください。"
+  },
+  "missingMedia": {
+    "message": "保存した背景が見つかりません。再選択するか、デフォルトに戻してください。"
+  },
+  "storageOpenFailed": {
+    "message": "背景の保存先を開けません。"
+  },
+  "storageBusy": {
+    "message": "保存先が使用中です。他の拡張機能タブを閉じて再試行してください。"
+  },
+  "storageReadFailed": {
+    "message": "保存した背景を読み込めません。"
+  },
+  "storageSaveFailed": {
+    "message": "背景を保存できません。空き容量をご確認ください。元の背景は変更していません。"
+  },
+  "genericError": {
+    "message": "背景を保存できません。もう一度お試しください。"
+  },
+  "bookmarks": {
+    "message": "ブックマーク"
+  },
+  "searchBookmarks": {
+    "message": "ブックマークを検索"
+  },
+  "bookmarkFolders": {
+    "message": "ブックマークフォルダー"
+  },
+  "coverFlow": {
+    "message": "ブックマークの Cover Flow"
+  },
+  "backFolder": {
+    "message": "$1 に戻る"
+  },
+  "back": {
+    "message": "戻る"
+  },
+  "noResults": {
+    "message": "検索結果がありません"
+  },
+  "noRecent": {
+    "message": "最近開いたブックマークはありません"
+  },
+  "noBookmarks": {
+    "message": "このフォルダーにブックマークはありません"
+  },
+  "tryFolder": {
+    "message": "別のフォルダーや検索をお試しください"
+  },
+  "loadingBookmarks": {
+    "message": "ブックマークを読み込み中…"
+  },
+  "bookmarksFailed": {
+    "message": "Chrome のブックマークを読み込めません。"
+  },
+  "openFailed": {
+    "message": "ブックマークを開けません"
+  }
+}

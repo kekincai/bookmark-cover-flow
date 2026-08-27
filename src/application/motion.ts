@@ -2,51 +2,39 @@ import type { MotionState } from '../domain/navigation'
 import { clamp } from '../shared/clamp'
 
 export interface MotionConfig {
-  readonly stiffness: number
-  readonly damping: number
+  readonly frequency: number
   readonly settleDistance: number
   readonly settleVelocity: number
-  readonly maximumVelocity: number
 }
-
 export const defaultMotionConfig: MotionConfig = {
-  stiffness: 0.24,
-  damping: 0.56,
-  settleDistance: 0.005,
-  settleVelocity: 0.005,
-  maximumVelocity: 0.44,
+  frequency: 20,
+  settleDistance: 0.001,
+  settleVelocity: 0.015,
 }
-
+/** Analytic critical spring. Positions are cards; velocity is cards/second. */
 export function advanceMotion(
   state: MotionState,
   timestamp: number,
   maximumPosition: number,
   config: MotionConfig = defaultMotionConfig,
 ): MotionState {
-  const elapsed = state.lastTimestamp === 0 ? 16.67 : clamp(timestamp - state.lastTimestamp, 1, 32)
-  const frameFactor = elapsed / 16.67
-  const distance = state.targetPosition - state.position
-  const velocity = clamp(
-    (state.velocity + distance * config.stiffness * frameFactor) * config.damping ** frameFactor,
-    -config.maximumVelocity,
-    config.maximumVelocity,
-  )
-  const position = clamp(state.position + velocity * frameFactor, 0, maximumPosition)
-
+  const elapsed =
+    state.lastTimestamp === 0 ? 1 / 60 : Math.max(0, timestamp - state.lastTimestamp) / 1000
+  const target = clamp(state.targetPosition, 0, maximumPosition)
+  const displacement = state.position - target
+  const impulse = state.velocity + config.frequency * displacement
+  const decay = Math.exp(-config.frequency * elapsed)
+  const rawPosition = target + (displacement + impulse * elapsed) * decay
+  const position = clamp(rawPosition, 0, maximumPosition)
+  const velocity =
+    position === rawPosition ? (state.velocity - config.frequency * impulse * elapsed) * decay : 0
   if (
-    Math.abs(state.targetPosition - position) < config.settleDistance &&
+    Math.abs(target - position) < config.settleDistance &&
     Math.abs(velocity) < config.settleVelocity
   ) {
-    return {
-      position: state.targetPosition,
-      targetPosition: state.targetPosition,
-      velocity: 0,
-      lastTimestamp: timestamp,
-    }
+    return { position: target, targetPosition: target, velocity: 0, lastTimestamp: timestamp }
   }
-
-  return { position, targetPosition: state.targetPosition, velocity, lastTimestamp: timestamp }
+  return { position, targetPosition: target, velocity, lastTimestamp: timestamp }
 }
-
 export const isMotionSettled = (state: MotionState): boolean =>
   state.position === state.targetPosition && state.velocity === 0

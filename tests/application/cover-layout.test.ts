@@ -31,11 +31,19 @@ describe('getCoverTransform', () => {
   })
 
   it('interpolates continuously as a cover moves away from center', () => {
-    const nearCenter = getCoverTransform(0.01)
-    const halfway = getCoverTransform(0.5)
-    const side = getCoverTransform(1)
+    for (const boundary of [-1, 0, 1]) {
+      const before = getCoverTransform(boundary - 0.00001)
+      const after = getCoverTransform(boundary + 0.00001)
+      for (const property of ['x', 'z', 'rotateY', 'scale', 'opacity'] as const) {
+        expect(Math.abs(after[property] - before[property])).toBeLessThan(0.01)
+      }
+    }
+  })
 
-    expect(nearCenter.x).toBeCloseTo(side.x * 0.01)
-    expect(halfway.x).toBeCloseTo(side.x / 2)
+  it('keeps overlapping nearby content opaque and scales spacing with card width', () => {
+    expect(getCoverTransform(2).opacity).toBe(1)
+    expect(getCoverTransform(1, false, 300).x).toBeCloseTo(
+      getCoverTransform(1, false, 400).x * 0.75,
+    )
   })
 })

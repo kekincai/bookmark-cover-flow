@@ -1,0 +1,218 @@
+{
+  "extensionName": {
+    "message": "书签 Cover Flow"
+  },
+  "extensionDescription": {
+    "message": "用流畅的立体封面浏览 Chrome 书签。"
+  },
+  "openExtension": {
+    "message": "打开书签 Cover Flow"
+  },
+  "settings": {
+    "message": "设置"
+  },
+  "viewOptions": {
+    "message": "打开设置"
+  },
+  "closeSettings": {
+    "message": "关闭设置"
+  },
+  "categories": {
+    "message": "设置分类"
+  },
+  "appearance": {
+    "message": "外观"
+  },
+  "background": {
+    "message": "壁纸"
+  },
+  "appearanceDescription": {
+    "message": "调整封面排列与视觉体验。"
+  },
+  "backgroundDescription": {
+    "message": "让书签空间适配图片、视频和不同明暗背景。"
+  },
+  "basicPreferences": {
+    "message": "基础偏好"
+  },
+  "visualExperience": {
+    "message": "视觉体验"
+  },
+  "sortBookmarks": {
+    "message": "书签排序"
+  },
+  "sortBookmark": {
+    "message": "原始顺序"
+  },
+  "sortTitle": {
+    "message": "标题"
+  },
+  "sortWebsite": {
+    "message": "网站"
+  },
+  "recent": {
+    "message": "最近打开"
+  },
+  "colorTheme": {
+    "message": "颜色主题"
+  },
+  "system": {
+    "message": "跟随系统"
+  },
+  "light": {
+    "message": "浅色"
+  },
+  "dark": {
+    "message": "深色"
+  },
+  "reflection": {
+    "message": "封面倒影"
+  },
+  "showReflection": {
+    "message": "显示封面倒影"
+  },
+  "reflectionDescription": {
+    "message": "在封面下方显示镜面倒影"
+  },
+  "wallpaperSource": {
+    "message": "壁纸来源"
+  },
+  "chooseMedia": {
+    "message": "上传本地图片或视频"
+  },
+  "mediaHint": {
+    "message": "视频自动静音循环 · 仅保存在本机"
+  },
+  "mediaLimit": {
+    "message": "保留原文件 · 最大 512 MB · 不上传到服务器"
+  },
+  "restoreBackground": {
+    "message": "恢复默认背景"
+  },
+  "adjustments": {
+    "message": "画面调节"
+  },
+  "photoBlur": {
+    "message": "照片模糊度"
+  },
+  "dimming": {
+    "message": "暗度"
+  },
+  "mediaDetails": {
+    "message": "播放与存储说明"
+  },
+  "nativeVideoNote": {
+    "message": "保留原始视频与 HDR 元数据，不转码、不经画布处理。"
+  },
+  "codecNote": {
+    "message": "格式支持取决于 Chrome 与系统解码器；视频不使用模糊滤镜，以保留原生播放路径。"
+  },
+  "hdrDisplay": {
+    "message": "检测到 HDR 显示能力，实际效果仍取决于视频、解码器与显示设置。"
+  },
+  "sdrDisplay": {
+    "message": "当前显示环境为 SDR，受支持的 HDR 视频由 Chrome 进行色调映射。"
+  },
+  "defaultBackground": {
+    "message": "默认渐变背景"
+  },
+  "playVideo": {
+    "message": "播放视频"
+  },
+  "pauseVideo": {
+    "message": "暂停视频"
+  },
+  "savingMedia": {
+    "message": "正在读取并保存到本机…"
+  },
+  "videoPaused": {
+    "message": "视频已暂停 · 静音"
+  },
+  "videoSelected": {
+    "message": "视频已选择 · 始终静音"
+  },
+  "emptyFile": {
+    "message": "文件为空，请选择图片或视频。"
+  },
+  "largeFile": {
+    "message": "请选择小于 512 MB 的文件。"
+  },
+  "invalidFile": {
+    "message": "请选择 Chrome 支持的图片或视频文件。"
+  },
+  "decodeFailed": {
+    "message": "Chrome 无法解码此文件，原背景未更改。请尝试其他图片或视频。"
+  },
+  "decodeTimeout": {
+    "message": "读取文件超时，请尝试较小的文件或其他格式。"
+  },
+  "noFrames": {
+    "message": "文件没有可解码的图片或视频画面。"
+  },
+  "autoplayBlocked": {
+    "message": "自动播放被阻止，请点击“播放视频”重试。"
+  },
+  "playbackFailed": {
+    "message": "视频播放失败，请重试或选择其他文件。"
+  },
+  "playbackStopped": {
+    "message": "视频无法继续播放，请选择其他文件。"
+  },
+  "missingMedia": {
+    "message": "已保存的背景文件丢失，请重新选择或恢复默认背景。"
+  },
+  "storageOpenFailed": {
+    "message": "无法打开本地背景存储。"
+  },
+  "storageBusy": {
+    "message": "背景存储正忙，请关闭其他插件标签页后重试。"
+  },
+  "storageReadFailed": {
+    "message": "无法读取已保存的背景。"
+  },
+  "storageSaveFailed": {
+    "message": "无法保存背景，请检查可用存储空间。原背景未更改。"
+  },
+  "genericError": {
+    "message": "无法保存背景，请重试。"
+  },
+  "bookmarks": {
+    "message": "书签"
+  },
+  "searchBookmarks": {
+    "message": "搜索书签"
+  },
+  "bookmarkFolders": {
+    "message": "书签文件夹"
+  },
+  "coverFlow": {
+    "message": "书签封面浏览"
+  },
+  "backFolder": {
+    "message": "返回$1"
+  },
+  "back": {
+    "message": "返回"
+  },
+  "noResults": {
+    "message": "没有找到结果"
+  },
+  "noRecent": {
+    "message": "还没有最近打开的书签"
+  },
+  "noBookmarks": {
+    "message": "此文件夹没有书签"
+  },
+  "tryFolder": {
+    "message": "试试其他文件夹或搜索"
+  },
+  "loadingBookmarks": {
+    "message": "正在读取书签…"
+  },
+  "bookmarksFailed": {
+    "message": "无法读取 Chrome 书签。"
+  },
+  "openFailed": {
+    "message": "无法打开书签"
+  }
+}

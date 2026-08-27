@@ -27,7 +27,9 @@ import { attachKeyboardController } from '../ui/controllers/keyboard-controller'
 import { createMotionController } from '../ui/controllers/motion-controller'
 import { attachPointerController } from '../ui/controllers/pointer-controller'
 import { attachWheelController } from '../ui/controllers/wheel-controller'
+import { createWallpaperController } from '../ui/controllers/wallpaper-controller'
 import { createStore, type AppState } from '../ui/state/app-store'
+import { t } from '../shared/i18n'
 
 const initialState: AppState = {
   folders: [],
@@ -50,11 +52,14 @@ function applyAppearance(preferences: Preferences): void {
 export async function bootstrap(root: HTMLElement): Promise<() => void> {
   const shell = createAppShell()
   root.replaceChildren(shell.element)
+  const wallpaper = createWallpaperController(shell.preferences.wallpaper)
+  void wallpaper.init()
   const store = createStore(initialState)
   const repository = createBookmarkRepository()
   const previewProvider = createPreviewProvider()
   const tabService = createTabService()
   let previousFolderId: string | undefined
+  let previousFolders = store.value.folders
   let previousVisibleCovers = store.value.visibleCovers
   let previewGeneration = 0
   let requestedPreviewIds = new Set<string>()
@@ -72,10 +77,10 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
       const item = store.value.visibleCovers[Math.round(position)]
       const emptyMessage =
         store.value.query !== ''
-          ? 'No results found'
+          ? t('noResults')
           : store.value.activeFolderId === RECENT_COLLECTION_ID
-            ? 'No recent bookmarks yet'
-            : 'No bookmarks here'
+            ? t('noRecent')
+            : t('noBookmarks')
       shell.meta.render(item, emptyMessage)
     },
     (selectedIndex) => {
@@ -193,7 +198,8 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
             }
           })
           .catch((error: unknown) => {
-            shell.setStatus(error instanceof Error ? error.message : 'Unable to open bookmark')
+            console.warn('Unable to open bookmark', error)
+            shell.setStatus(t('openFailed'))
           })
       }
     }
@@ -225,18 +231,20 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
 
   const cleanups = [
     attachKeyboardController(dispatch, shell.search.input),
-    attachWheelController(shell.coverFlow.element, dispatch),
-    attachPointerController(shell.coverFlow.element, motion, activateCover),
+    attachWheelController(shell.coverFlow.element, motion),
+    attachPointerController(shell.coverFlow.element, motion),
   ]
 
   cleanups.push(
     store.subscribe((state) => {
-      shell.folders.render(
-        state.folders,
-        getFolderBreadcrumbs(state.folders, state.activeFolderId),
-        state.activeFolderId,
-      )
+      if (state.activeFolderId !== previousFolderId || state.folders !== previousFolders)
+        shell.folders.render(
+          state.folders,
+          getFolderBreadcrumbs(state.folders, state.activeFolderId),
+          state.activeFolderId,
+        )
       shell.preferences.render(state)
+      previousFolders = state.folders
       if (
         state.activeFolderId !== previousFolderId ||
         state.visibleCovers !== previousVisibleCovers
@@ -257,7 +265,7 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
         previousFolderId = state.activeFolderId
         previousVisibleCovers = state.visibleCovers
       }
-      shell.setStatus(state.status === 'loading' ? 'Loading bookmarks…' : state.errorMessage)
+      shell.setStatus(state.status === 'loading' ? t('loadingBookmarks') : state.errorMessage)
     }),
   )
 
@@ -282,13 +290,16 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     }))
     if (preferredFolderId !== undefined) setCollection(preferredFolderId, false)
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unable to load Chrome bookmarks.'
+    console.warn('Unable to load Chrome bookmarks.', error)
+    const message = t('bookmarksFailed')
     store.update((state) => ({ ...state, status: 'error', errorMessage: message }))
   }
 
   return () => {
     cleanups.forEach((cleanup) => cleanup())
+    wallpaper.destroy()
     shell.preferences.destroy()
+    shell.coverFlow.destroy()
     motion.destroy()
   }
 }

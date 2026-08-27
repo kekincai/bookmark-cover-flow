@@ -1,4 +1,5 @@
 import type { CoverItem } from '../../domain/cover'
+import { t } from '../../shared/i18n'
 
 export interface BookmarkMetaView {
   readonly element: HTMLElement
@@ -17,12 +18,12 @@ export function createBookmarkMeta(): BookmarkMetaView {
 
   return {
     element,
-    render(item, emptyMessage = 'No bookmarks found'): void {
+    render(item, emptyMessage = t('noBookmarks')): void {
       const key = item === undefined ? `empty:${emptyMessage}` : item.bookmarkId
       if (key === renderedKey) return
       renderedKey = key
       title.textContent = item?.title ?? emptyMessage
-      subtitle.textContent = item?.subtitle ?? 'Try another folder or search'
+      subtitle.textContent = item?.subtitle ?? t('tryFolder')
       element.dataset.empty = String(item === undefined)
     },
   }

@@ -15,6 +15,23 @@ export function attachKeyboardController(
       return
     }
     if (isSearchFocused) return
+    if (
+      event.defaultPrevented ||
+      event.altKey ||
+      event.ctrlKey ||
+      (event.metaKey && event.key.toLowerCase() !== 'k')
+    )
+      return
+    const target = event.target instanceof Element ? event.target : null
+    if (
+      target?.closest(
+        'input, textarea, select, [contenteditable="true"], .preferences-menu__panel',
+      ) !== null &&
+      target !== null
+    )
+      return
+    if (event.key === 'Enter' && target?.closest('button, a') && !target.closest('.cover-card'))
+      return
 
     const command: NavigationCommand | undefined = (() => {
       if (event.key === 'ArrowLeft') return { type: 'previous' }

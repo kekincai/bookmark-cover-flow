@@ -1,0 +1,303 @@
+/// <reference types="@webgpu/types" />
+// Optical shader ported unchanged from infinity-newtab-extension.
+type GlassGeometry = {
+  x: number
+  y: number
+  width: number
+  height: number
+  radius: number
+}
+
+const HDR_MAX_EDGE = 512
+const HDR_RESOLUTION_STEP = 32
+
+export const HDR_SHADER = `
+struct GlassUniforms {
+    size: vec2f,
+    radius: f32,
+    bridge: f32,
+    resolution: vec2f,
+    padding: vec2f,
+}
+
+@group(0) @binding(0) var<uniform> glass: GlassUniforms;
+
+@vertex
+fn vertexMain(@builtin(vertex_index) index: u32) -> @builtin(position) vec4f {
+    var positions = array<vec2f, 3>(
+        vec2f(-1.0, -1.0),
+        vec2f(3.0, -1.0),
+        vec2f(-1.0, 3.0)
+    );
+    return vec4f(positions[index], 0.0, 1.0);
+}
+
+fn roundedRectDistance(point: vec2f, halfSize: vec2f, radius: f32) -> f32 {
+    let corner = abs(point) - (halfSize - vec2f(radius));
+    return length(max(corner, vec2f(0.0))) + min(max(corner.x, corner.y), 0.0) - radius;
+}
+
+@fragment
+fn fragmentMain(@builtin(position) position: vec4f) -> @location(0) vec4f {
+    let uv = position.xy / glass.resolution;
+    let point = (uv - vec2f(0.5)) * glass.size;
+    let halfSize = max(glass.size * 0.5 - vec2f(2.0), vec2f(1.0));
+    let radius = min(glass.radius, min(halfSize.x, halfSize.y));
+    let sdf = roundedRectDistance(point, halfSize, radius);
+    let inside = 1.0 - smoothstep(0.0, 2.0, sdf);
+    let rim = exp(-abs(sdf) * 0.58) * inside;
+
+    let gradient = vec2f(dpdx(sdf), dpdy(sdf));
+    let normal = gradient / max(length(gradient), 0.0001);
+    let light = normalize(vec2f(0.5, -0.8660254));
+    let tangent = vec2f(-light.y, light.x);
+    let facing = abs(dot(normal, light));
+    let specular = pow(facing, 3.2);
+    let dispersion = dot(normal, tangent);
+    let cyanEdge = pow(max(dispersion, 0.0), 2.4);
+    let pinkEdge = pow(max(-dispersion, 0.0), 2.4);
+    let innerCaustic = exp(-abs(sdf + 4.2) * 0.42) * inside;
+    let motionGain = 1.0 + glass.bridge * 0.42;
+
+    let whiteSpecular = vec3f(3.25) * rim * (0.16 + specular * 1.12);
+    let skyDispersion = vec3f(0.16, 1.05, 2.8) * rim * cyanEdge * 0.52;
+    let pinkDispersion = vec3f(2.35, 0.22, 0.82) * rim * pinkEdge * 0.4;
+    let caustic = vec3f(0.52, 0.82, 1.35) * innerCaustic * (0.08 + glass.bridge * 0.12);
+    let radiance = (whiteSpecular + skyDispersion + pinkDispersion + caustic) * motionGain;
+    let alpha = clamp(rim * (0.2 + specular * 0.7 + (cyanEdge + pinkEdge) * 0.12) + innerCaustic * 0.08, 0.0, 0.96);
+
+    return vec4f(radiance * alpha, alpha);
+}`
+
+export class HdrGlassRenderer {
+  readonly canvas = document.createElement('canvas')
+  private device: GPUDevice | null = null
+  private context: GPUCanvasContext | null = null
+  private pipeline: GPURenderPipeline | null = null
+  private uniformBuffer: GPUBuffer | null = null
+  private bindGroup: GPUBindGroup | null = null
+  private geometry: GlassGeometry | null = null
+  private bridge = 0
+  private wantsVisible = false
+  private initializing = false
+  private drawFrame = 0
+  private connected = false
+  private lifecycle = 0
+  private readonly hdrMedia = window.matchMedia('(dynamic-range: high)')
+  private readonly classObserver = new MutationObserver(() => this.syncVisibility())
+
+  constructor() {
+    this.canvas.className = 'hdr-glass-layer'
+    this.canvas.width = HDR_MAX_EDGE
+    this.canvas.height = HDR_MAX_EDGE
+    this.canvas.setAttribute('aria-hidden', 'true')
+  }
+
+  connect(): void {
+    this.lifecycle += 1
+    this.connected = true
+    this.canvas.dataset.hdrRenderer = this.hdrMedia.matches ? 'pending' : 'sdr'
+    this.classObserver.observe(document.body, { attributeFilter: ['class'] })
+    this.hdrMedia.addEventListener('change', this.onDisplayChange)
+    void this.initialize()
+  }
+
+  disconnect(): void {
+    this.lifecycle += 1
+    this.connected = false
+    this.classObserver.disconnect()
+    this.hdrMedia.removeEventListener('change', this.onDisplayChange)
+    this.device?.destroy?.()
+    this.device = null
+    this.context?.unconfigure()
+    this.context = null
+    this.canvas.classList.remove('is-visible')
+    cancelAnimationFrame(this.drawFrame)
+    this.drawFrame = 0
+  }
+
+  show(): void {
+    this.wantsVisible = true
+    this.syncVisibility()
+  }
+
+  hide(): void {
+    this.wantsVisible = false
+    this.canvas.classList.remove('is-visible')
+  }
+
+  render(geometry: GlassGeometry, bridge: number): void {
+    this.geometry = geometry
+    this.bridge = bridge
+    this.resizeRenderTarget(geometry)
+    this.canvas.style.setProperty('--hdr-glass-x', `${geometry.x}px`)
+    this.canvas.style.setProperty('--hdr-glass-y', `${geometry.y}px`)
+    this.canvas.style.setProperty('--hdr-glass-width', `${geometry.width}px`)
+    this.canvas.style.setProperty('--hdr-glass-height', `${geometry.height}px`)
+    this.canvas.style.setProperty('--hdr-glass-radius', `${geometry.radius}px`)
+    this.scheduleDraw()
+  }
+
+  private readonly onDisplayChange = (): void => {
+    if (this.hdrMedia.matches) void this.initialize()
+    this.syncVisibility()
+  }
+
+  private async initialize(): Promise<void> {
+    if (!this.connected || this.device || this.initializing || !this.hdrMedia.matches) return
+    if (!('gpu' in navigator)) {
+      this.canvas.dataset.hdrRenderer = 'unavailable'
+      return
+    }
+    this.initializing = true
+    const lifecycle = this.lifecycle
+    let pendingDevice: GPUDevice | undefined
+    try {
+      const gpu = navigator.gpu
+      const adapter = await gpu?.requestAdapter()
+      if (!adapter) {
+        this.canvas.dataset.hdrRenderer = 'unavailable'
+        return
+      }
+      const device = await adapter.requestDevice()
+      pendingDevice = device
+      if (!this.connected || lifecycle !== this.lifecycle) {
+        device.destroy()
+        return
+      }
+      const context = this.canvas.getContext('webgpu')
+      if (!context) {
+        device.destroy()
+        this.canvas.dataset.hdrRenderer = 'unavailable'
+        return
+      }
+      context.configure({
+        device,
+        format: 'rgba16float',
+        alphaMode: 'premultiplied',
+        toneMapping: { mode: 'extended' },
+      })
+      const shader = device.createShaderModule({ code: HDR_SHADER })
+      const pipeline = device.createRenderPipeline({
+        layout: 'auto',
+        vertex: { module: shader, entryPoint: 'vertexMain' },
+        fragment: {
+          module: shader,
+          entryPoint: 'fragmentMain',
+          targets: [
+            {
+              format: 'rgba16float',
+              blend: {
+                color: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
+                alpha: { srcFactor: 'one', dstFactor: 'one-minus-src-alpha' },
+              },
+            },
+          ],
+        },
+        primitive: { topology: 'triangle-list' },
+      })
+      const uniformBuffer = device.createBuffer({
+        size: 32,
+        usage: 0x40 | 0x08,
+      })
+      const bindGroup = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
+      })
+      this.device = device
+      pendingDevice = undefined
+      this.context = context
+      this.pipeline = pipeline
+      this.uniformBuffer = uniformBuffer
+      this.bindGroup = bindGroup
+      this.canvas.dataset.hdrRenderer = 'webgpu'
+      void device.lost.then(() => {
+        if (this.device !== device) return
+        this.device = null
+        this.canvas.classList.remove('is-visible')
+        this.canvas.dataset.hdrRenderer = 'lost'
+      })
+      this.scheduleDraw()
+      this.syncVisibility()
+    } catch {
+      pendingDevice?.destroy()
+      this.canvas.dataset.hdrRenderer = 'unavailable'
+    } finally {
+      this.initializing = false
+    }
+  }
+
+  private syncVisibility(): void {
+    const enabled =
+      this.wantsVisible &&
+      Boolean(this.device) &&
+      this.hdrMedia.matches &&
+      document.body.classList.contains('hdr-highlights')
+    this.canvas.classList.toggle('is-visible', enabled)
+  }
+
+  private draw(): void {
+    if (
+      !this.device ||
+      !this.context ||
+      !this.pipeline ||
+      !this.uniformBuffer ||
+      !this.bindGroup ||
+      !this.geometry
+    )
+      return
+    const values = new Float32Array([
+      this.geometry.width,
+      this.geometry.height,
+      this.geometry.radius,
+      this.bridge,
+      this.canvas.width,
+      this.canvas.height,
+      0,
+      0,
+    ])
+    this.device.queue.writeBuffer(this.uniformBuffer, 0, values)
+    const encoder = this.device.createCommandEncoder()
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: this.context.getCurrentTexture().createView(),
+          clearValue: { r: 0, g: 0, b: 0, a: 0 },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    })
+    pass.setPipeline(this.pipeline)
+    pass.setBindGroup(0, this.bindGroup)
+    pass.draw(3)
+    pass.end()
+    this.device.queue.submit([encoder.finish()])
+  }
+
+  private scheduleDraw(): void {
+    if (this.drawFrame) return
+    this.drawFrame = requestAnimationFrame(() => {
+      this.drawFrame = 0
+      this.draw()
+    })
+  }
+
+  private resizeRenderTarget(geometry: GlassGeometry): void {
+    const pixelRatio = Math.max(1, window.devicePixelRatio || 1)
+    const longestEdge = Math.max(geometry.width, geometry.height) * pixelRatio
+    const scale = Math.min(1, HDR_MAX_EDGE / Math.max(1, longestEdge))
+    const width = quantizeResolution(geometry.width * pixelRatio * scale)
+    const height = quantizeResolution(geometry.height * pixelRatio * scale)
+    if (this.canvas.width === width && this.canvas.height === height) return
+    this.canvas.width = width
+    this.canvas.height = height
+  }
+}
+
+function quantizeResolution(value: number): number {
+  return Math.max(
+    1,
+    Math.min(HDR_MAX_EDGE, Math.ceil(value / HDR_RESOLUTION_STEP) * HDR_RESOLUTION_STEP),
+  )
+}

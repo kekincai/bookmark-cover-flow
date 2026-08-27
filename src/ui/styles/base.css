@@ -5,43 +5,35 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-
 body::before {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   background:
-    radial-gradient(ellipse 58% 52% at 50% 46%, rgb(255 255 255 / 6%), transparent 64%),
-    radial-gradient(ellipse 88% 70% at 50% 54%, transparent 38%, rgb(0 0 0 / 36%) 100%),
-    linear-gradient(180deg, var(--background-deep), var(--background) 64%, #0a0b0d);
+    radial-gradient(circle at 12% 14%, var(--wallpaper-pink), transparent 34%),
+    radial-gradient(circle at 84% 10%, var(--wallpaper-blue), transparent 32%),
+    linear-gradient(
+      135deg,
+      var(--background) 0%,
+      var(--background-deep) 48%,
+      var(--background) 100%
+    );
   content: '';
   pointer-events: none;
 }
-
-body::after {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: -1;
-  height: 43%;
-  background: linear-gradient(180deg, transparent, rgb(0 0 0 / 22%));
-  content: '';
-  pointer-events: none;
-}
-
 button {
   border: 0;
   background: none;
   cursor: pointer;
 }
-
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 5px;
 }
-
 ::selection {
-  background: var(--accent);
-  color: white;
+  background: var(--pink-soft);
+  color: #1c2744;
+}
+body.hdr-highlights {
+  dynamic-range-limit: no-limit;
 }

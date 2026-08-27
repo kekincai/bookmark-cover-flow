@@ -1,3 +1,5 @@
+import { t } from '../../shared/i18n'
+
 export interface SearchBoxView {
   readonly element: HTMLElement
   readonly input: HTMLInputElement
@@ -12,9 +14,9 @@ export function createSearchBox(): SearchBoxView {
   `
   const input = document.createElement('input')
   input.type = 'search'
-  input.placeholder = 'Search bookmarks'
+  input.placeholder = t('searchBookmarks')
   input.autocomplete = 'off'
-  input.setAttribute('aria-label', 'Search bookmarks')
+  input.setAttribute('aria-label', t('searchBookmarks'))
   element.append(input)
 
   let search: (query: string) => void = () => undefined

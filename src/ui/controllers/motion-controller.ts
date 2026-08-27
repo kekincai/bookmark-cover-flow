@@ -4,6 +4,8 @@ import { clamp } from '../../shared/clamp'
 
 export interface MotionController {
   readonly position: number
+  readonly revision: number
+  interrupt(): void
   setItemCount(count: number): void
   setTarget(index: number, immediate?: boolean): void
   moveTarget(delta: number): void
@@ -18,6 +20,7 @@ export function createMotionController(
 ): MotionController {
   let itemCount = 0
   let frame = 0
+  let revision = 0
   let state: MotionState = { position: 0, targetPosition: 0, velocity: 0, lastTimestamp: 0 }
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
@@ -44,7 +47,8 @@ export function createMotionController(
   }
 
   const setTarget = (index: number, immediate = false): void => {
-    const target = clamp(index, 0, maximum())
+    revision += 1
+    const target = clamp(Math.round(index), 0, maximum())
     if (immediate || reducedMotion.matches) {
       stop()
       state = { position: target, targetPosition: target, velocity: 0, lastTimestamp: 0 }
@@ -52,13 +56,25 @@ export function createMotionController(
       onSettle(Math.round(target))
       return
     }
-    state = { ...state, targetPosition: target }
+    state = {
+      ...state,
+      targetPosition: target,
+      lastTimestamp: frame === 0 ? performance.now() : state.lastTimestamp,
+    }
     start()
   }
 
   return {
     get position(): number {
       return state.position
+    },
+    get revision(): number {
+      return revision
+    },
+    interrupt(): void {
+      revision += 1
+      stop()
+      state = { ...state, targetPosition: state.position, velocity: 0, lastTimestamp: 0 }
     },
     setItemCount(count): void {
       itemCount = Math.max(0, count)
@@ -87,8 +103,9 @@ export function createMotionController(
       render(nextPosition)
     },
     snap(velocity = 0): void {
-      const projected = state.position + velocity * 0.18
-      state = { ...state, velocity: velocity * 0.012 }
+      const releaseVelocity = clamp(velocity, -12, 12)
+      const projected = state.position + releaseVelocity * 0.16
+      state = { ...state, velocity: releaseVelocity, lastTimestamp: performance.now() }
       setTarget(Math.round(projected))
     },
     destroy(): void {

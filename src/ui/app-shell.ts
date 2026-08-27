@@ -3,6 +3,7 @@ import { createCoverFlow, type CoverFlowView } from './components/cover-flow'
 import { createFolderNavigation, type FolderNavigationView } from './components/folder-navigation'
 import { createSearchBox, type SearchBoxView } from './components/search-box'
 import { createPreferencesMenu, type PreferencesMenuView } from './components/preferences-menu'
+import { t } from '../shared/i18n'
 
 export interface AppShell {
   readonly element: HTMLElement
@@ -27,7 +28,7 @@ export function createAppShell(): AppShell {
       <path d="M3.5 5.5c2.7-1.2 5.4-.9 8.5.9v13c-3.1-1.8-5.8-2.1-8.5-.9z" />
       <path d="M20.5 5.5c-2.7-1.2-5.4-.9-8.5.9v13c3.1-1.8 5.8-2.1 8.5-.9z" />
     </svg>
-    <span>Bookmarks</span>
+    <span>${t('bookmarks')}</span>
   `
   const search = createSearchBox()
   const preferences = createPreferencesMenu()
@@ -38,15 +39,11 @@ export function createAppShell(): AppShell {
 
   const coverFlow = createCoverFlow()
   const meta = createBookmarkMeta()
-  const hint = document.createElement('p')
-  hint.className = 'interaction-hint'
-  hint.innerHTML =
-    'Use <kbd>←</kbd> <kbd>→</kbd> to browse <span class="interaction-hint__secondary"><i>·</i> <kbd>Enter</kbd> to open <i>·</i> <kbd>/</kbd> to search</span>'
   const status = document.createElement('p')
   status.className = 'app-status'
   status.setAttribute('role', 'status')
 
-  element.append(header, coverFlow.element, meta.element, hint, status)
+  element.append(header, coverFlow.element, meta.element, status)
 
   return {
     element,

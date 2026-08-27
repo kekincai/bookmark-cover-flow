@@ -1,0 +1,218 @@
+{
+  "extensionName": {
+    "message": "Bookmark Cover Flow"
+  },
+  "extensionDescription": {
+    "message": "Browse Chrome bookmarks in a quiet, spatial Cover Flow."
+  },
+  "openExtension": {
+    "message": "Open Bookmark Cover Flow"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "viewOptions": {
+    "message": "View options"
+  },
+  "closeSettings": {
+    "message": "Close settings"
+  },
+  "categories": {
+    "message": "Settings categories"
+  },
+  "appearance": {
+    "message": "Appearance"
+  },
+  "background": {
+    "message": "Background"
+  },
+  "appearanceDescription": {
+    "message": "Customize your covers and visual experience."
+  },
+  "backgroundDescription": {
+    "message": "Photos, videos and a background that feels like you."
+  },
+  "basicPreferences": {
+    "message": "Basic preferences"
+  },
+  "visualExperience": {
+    "message": "Visual experience"
+  },
+  "sortBookmarks": {
+    "message": "Sort bookmarks"
+  },
+  "sortBookmark": {
+    "message": "Bookmark"
+  },
+  "sortTitle": {
+    "message": "Title"
+  },
+  "sortWebsite": {
+    "message": "Website"
+  },
+  "recent": {
+    "message": "Recent"
+  },
+  "colorTheme": {
+    "message": "Color theme"
+  },
+  "system": {
+    "message": "System"
+  },
+  "light": {
+    "message": "Light"
+  },
+  "dark": {
+    "message": "Dark"
+  },
+  "reflection": {
+    "message": "Reflection"
+  },
+  "showReflection": {
+    "message": "Show reflection"
+  },
+  "reflectionDescription": {
+    "message": "Mirror covers onto the stage"
+  },
+  "wallpaperSource": {
+    "message": "Background source"
+  },
+  "chooseMedia": {
+    "message": "Choose photo or video"
+  },
+  "mediaHint": {
+    "message": "Videos loop silently · stored only on this device"
+  },
+  "mediaLimit": {
+    "message": "Original file · up to 512 MB · never uploaded"
+  },
+  "restoreBackground": {
+    "message": "Restore default background"
+  },
+  "adjustments": {
+    "message": "Image treatment"
+  },
+  "photoBlur": {
+    "message": "Photo blur"
+  },
+  "dimming": {
+    "message": "Dimming"
+  },
+  "mediaDetails": {
+    "message": "Playback and storage details"
+  },
+  "nativeVideoNote": {
+    "message": "Original video and HDR metadata stay intact. No transcoding or canvas processing."
+  },
+  "codecNote": {
+    "message": "Supported codecs depend on Chrome and your system. Video blur is disabled to keep native playback."
+  },
+  "hdrDisplay": {
+    "message": "HDR display detected. Output also depends on the file, decoder and display settings."
+  },
+  "sdrDisplay": {
+    "message": "SDR display detected. Chrome tone-maps supported HDR videos."
+  },
+  "defaultBackground": {
+    "message": "Default gradient"
+  },
+  "playVideo": {
+    "message": "Play video"
+  },
+  "pauseVideo": {
+    "message": "Pause video"
+  },
+  "savingMedia": {
+    "message": "Loading and saving locally…"
+  },
+  "videoPaused": {
+    "message": "Video paused · sound off"
+  },
+  "videoSelected": {
+    "message": "Video selected · sound always off"
+  },
+  "emptyFile": {
+    "message": "This file is empty. Choose a photo or video."
+  },
+  "largeFile": {
+    "message": "Choose a file smaller than 512 MB."
+  },
+  "invalidFile": {
+    "message": "Choose an image or video file supported by Chrome."
+  },
+  "decodeFailed": {
+    "message": "Chrome cannot decode this file. Try a supported image, MP4 or WebM video; HEVC/MOV support depends on your system."
+  },
+  "decodeTimeout": {
+    "message": "This file took too long to decode. Try a smaller or different file."
+  },
+  "noFrames": {
+    "message": "The file has no decodable image or video frames."
+  },
+  "autoplayBlocked": {
+    "message": "Autoplay was blocked. Select Play video to retry."
+  },
+  "playbackFailed": {
+    "message": "Video playback failed. Try another file or select Play video to retry."
+  },
+  "playbackStopped": {
+    "message": "This video could not continue playing. Choose another file."
+  },
+  "missingMedia": {
+    "message": "The saved background file is missing. Choose another file or restore the default."
+  },
+  "storageOpenFailed": {
+    "message": "Unable to open local background storage."
+  },
+  "storageBusy": {
+    "message": "Background storage is busy. Close other extension tabs and try again."
+  },
+  "storageReadFailed": {
+    "message": "Unable to read the saved background."
+  },
+  "storageSaveFailed": {
+    "message": "Unable to save the background. Check available disk space."
+  },
+  "genericError": {
+    "message": "Unable to save the background."
+  },
+  "bookmarks": {
+    "message": "Bookmarks"
+  },
+  "searchBookmarks": {
+    "message": "Search bookmarks"
+  },
+  "bookmarkFolders": {
+    "message": "Bookmark folders"
+  },
+  "coverFlow": {
+    "message": "Bookmark cover flow"
+  },
+  "backFolder": {
+    "message": "Back to $1"
+  },
+  "back": {
+    "message": "Back"
+  },
+  "noResults": {
+    "message": "No results found"
+  },
+  "noRecent": {
+    "message": "No recent bookmarks yet"
+  },
+  "noBookmarks": {
+    "message": "No bookmarks here"
+  },
+  "tryFolder": {
+    "message": "Try another folder or search"
+  },
+  "loadingBookmarks": {
+    "message": "Loading bookmarks…"
+  },
+  "bookmarksFailed": {
+    "message": "Unable to load Chrome bookmarks."
+  },
+  "openFailed": {
+    "message": "Unable to open bookmark"
+  }
+}

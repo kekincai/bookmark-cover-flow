@@ -1,4 +1,5 @@
 import { chromium } from '@playwright/test'
+import assert from 'node:assert/strict'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
@@ -54,6 +55,19 @@ try {
   }
   const worker = workers[0]
   if (worker === undefined) throw new Error('Extension service worker did not start.')
+  const labels = await worker.evaluate(() =>
+    Object.fromEntries(
+      [
+        'viewOptions',
+        'sortTitle',
+        'sortBookmark',
+        'light',
+        'showReflection',
+        'closeSettings',
+        'recent',
+      ].map((key) => [key, chrome.i18n.getMessage(key)]),
+    ),
+  )
 
   const seedResult = await worker.evaluate(
     async ({ folders }) => {
@@ -103,29 +117,69 @@ try {
   await page.locator('.cover-card').first().waitFor({ state: 'visible' })
   const initialRenderMs = Math.round(performance.now() - startedAt)
 
-  await page.locator('.cover-card__preview').first().waitFor({ state: 'visible', timeout: 20_000 })
+  await page
+    .locator('.cover-card__preview[data-loaded="true"]')
+    .first()
+    .waitFor({ state: 'visible', timeout: 20_000 })
   const previewSource = await page.locator('.cover-card__preview').first().getAttribute('src')
 
-  await page.getByRole('button', { name: 'View options' }).click()
-  await page.getByRole('radio', { name: 'Title', exact: true }).click()
-  await page.getByRole('radio', { name: 'Bookmark', exact: true }).click()
-  await page.getByRole('radio', { name: 'Dark', exact: true }).click()
-  await page.getByLabel('Show reflection').uncheck()
-  await page.getByLabel('Show reflection').check()
-  await page.getByRole('button', { name: 'View options' }).click()
+  await page.getByRole('button', { name: labels.viewOptions }).click()
+  await page.getByRole('radio', { name: labels.sortTitle, exact: true }).click()
+  await page.getByRole('radio', { name: labels.sortBookmark, exact: true }).click()
+  await page.getByRole('radio', { name: labels.light, exact: true }).click()
+  await page.getByLabel(labels.showReflection).uncheck()
+  await page.getByLabel(labels.showReflection).check()
+  await page.getByRole('button', { name: labels.closeSettings }).click()
+  const frameSample = page.evaluate(async () => {
+    const intervals = []
+    let last = performance.now()
+    const end = last + 1400
+    await new Promise((resolve) => {
+      const tick = (time) => {
+        intervals.push(time - last)
+        last = time
+        if (time < end) requestAnimationFrame(tick)
+        else resolve()
+      }
+      requestAnimationFrame(tick)
+    })
+    const valid = intervals.slice(1).sort((a, b) => a - b)
+    return {
+      frames: valid.length,
+      medianMs: Number(valid[Math.floor(valid.length * 0.5)].toFixed(2)),
+      p95Ms: Number(valid[Math.floor(valid.length * 0.95)].toFixed(2)),
+      maxMs: Number(valid.at(-1).toFixed(2)),
+    }
+  })
+  await page.mouse.move(640, 420)
+  await page.mouse.wheel(420, 0)
+  await page.waitForTimeout(350)
+  await page.mouse.wheel(-180, 0)
+  const motionFrames = await frameSample
+  await page.keyboard.press('Home')
+  await page.waitForTimeout(600)
   await page.keyboard.press('ArrowRight')
   await page.keyboard.press('ArrowRight')
   await page.keyboard.press('ArrowRight')
-  await page.waitForTimeout(500)
+  await page.waitForTimeout(700)
   await page.evaluate(() => {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
   })
+  await page.mouse.move(20, 740)
+  await page.waitForTimeout(250)
   await page.screenshot({ path: screenshotPath })
   await page.setViewportSize({ width: 1584, height: 1000 })
   await page.waitForTimeout(250)
   await page.screenshot({ path: readmeScreenshotPath })
+  const renderingCapabilities = await page.evaluate(() => ({
+    hdrDisplay: matchMedia('(dynamic-range: high)').matches,
+    webgpu: 'gpu' in navigator,
+    hdrRenderer: document.querySelector('.hdr-glass-layer')?.getAttribute('data-hdr-renderer'),
+    previewCount: document.querySelectorAll('.cover-card__preview[data-loaded="true"]').length,
+  }))
 
   const extensionPage = page
+  const selectedTitle = await page.locator('.bookmark-meta h1').innerText()
   const newPagePromise = context.waitForEvent('page')
   await extensionPage.keyboard.press('Enter')
   const openedPage = await newPagePromise
@@ -134,7 +188,7 @@ try {
   await extensionPage.bringToFront()
   await extensionPage.locator('.folder-navigation__back').click()
   await extensionPage.locator('.folder-navigation__back').click()
-  await extensionPage.getByRole('button', { name: 'Recent', exact: true }).click()
+  await extensionPage.getByRole('button', { name: labels.recent, exact: true }).click()
   await extensionPage.locator('.cover-card').first().waitFor({ state: 'visible' })
   const recentTitle = await extensionPage.locator('.bookmark-meta h1').innerText()
 
@@ -149,6 +203,11 @@ try {
     .locator('.cover-card')
     .first()
     .getAttribute('aria-setsize')
+  assert.equal(recentTitle, selectedTitle, 'Enter must open the currently selected bookmark')
+  assert.equal(Number(stressTotal), 5000)
+  assert.equal(stressDomCovers, 8)
+  assert.ok(renderingCapabilities.previewCount > 0)
+  assert.deepEqual(consoleErrors, [])
 
   console.log(
     JSON.stringify(
@@ -162,6 +221,8 @@ try {
         ),
         initialRenderMs,
         previewSource,
+        renderingCapabilities,
+        motionFrames,
         recentTitle,
         stressTotal: Number(stressTotal),
         stressDomCovers,

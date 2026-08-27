@@ -1,5 +1,6 @@
 import type { BookmarkFolder } from '../../domain/bookmark'
 import { RECENT_COLLECTION_ID } from '../../domain/recent-bookmark'
+import { t } from '../../shared/i18n'
 
 export interface FolderNavigationView {
   readonly element: HTMLElement
@@ -15,7 +16,7 @@ export interface FolderNavigationView {
 export function createFolderNavigation(): FolderNavigationView {
   const element = document.createElement('nav')
   element.className = 'folder-navigation'
-  element.setAttribute('aria-label', 'Bookmark folders')
+  element.setAttribute('aria-label', t('bookmarkFolders'))
   const backElement = document.createElement('button')
   backElement.type = 'button'
   backElement.className = 'folder-navigation__back'
@@ -37,6 +38,7 @@ export function createFolderNavigation(): FolderNavigationView {
     button.className = `folder-navigation__item ${className}`.trim()
     button.textContent = folder.title
     button.dataset.active = String(folder.id === currentActiveFolderId)
+    button.dataset.liquidItem = ''
     button.setAttribute('aria-current', folder.id === currentActiveFolderId ? 'page' : 'false')
     button.addEventListener('click', () => select(folder.id))
     element.append(button)
@@ -57,7 +59,7 @@ export function createFolderNavigation(): FolderNavigationView {
       backElement.dataset.visible = String(parentFolder !== undefined)
       backElement.setAttribute(
         'aria-label',
-        parentFolder === undefined ? 'No parent folder' : `Back to ${parentFolder.title}`,
+        parentFolder === undefined ? t('back') : t('backFolder', parentFolder.title),
       )
       backElement.onclick = parentFolder === undefined ? null : () => select(parentFolder.id)
 
@@ -65,8 +67,9 @@ export function createFolderNavigation(): FolderNavigationView {
         const recent = document.createElement('button')
         recent.type = 'button'
         recent.className = 'folder-navigation__item folder-navigation__recent'
-        recent.textContent = 'Recent'
+        recent.textContent = t('recent')
         recent.dataset.active = String(activeFolderId === RECENT_COLLECTION_ID)
+        recent.dataset.liquidItem = ''
         recent.setAttribute(
           'aria-current',
           activeFolderId === RECENT_COLLECTION_ID ? 'page' : 'false',
