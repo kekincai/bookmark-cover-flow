@@ -169,7 +169,14 @@ try {
   const page = await context.newPage()
   const consoleErrors = []
   page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text())
+    // Public sites may refuse preview images (for example 429 after repeated runs). Those are
+    // third-party network responses, not application errors; script errors still fail the run.
+    const external = message.location().url.startsWith('http')
+    if (
+      message.type() === 'error' &&
+      !(external && message.text().startsWith('Failed to load resource'))
+    )
+      consoleErrors.push(message.text())
   })
   page.on('pageerror', (error) => consoleErrors.push(error.message))
   await page.setViewportSize({ width: 1280, height: 800 })

@@ -115,7 +115,7 @@ for (const sample of all)
       await search.fill('figma')
       await expect(page.locator('.title-bar__detail')).toHaveText(sample.matches)
       await search.fill('zzzz')
-      await expect(page.locator('.stage-status')).toContainText(sample.noResults)
+      await expect(page.locator('.stage .stage-status')).toContainText(sample.noResults)
       await search.fill('')
 
       await page.getByRole('button', { name: sample.fullscreen }).click()

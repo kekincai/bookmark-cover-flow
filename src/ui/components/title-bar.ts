@@ -1,10 +1,12 @@
+import type { ViewMode } from '../../domain/preferences'
 import { t } from '../../shared/i18n'
 import { icons } from './icons'
 
 export interface TitleBarView {
   readonly element: HTMLElement
   readonly fullscreenButton: HTMLButtonElement
-  render(title: string, detail: string): void
+  render(title: string, detail: string, view: ViewMode): void
+  onViewChange(listener: (view: ViewMode) => void): void
 }
 
 export function createTitleBar(): TitleBarView {
@@ -19,28 +21,29 @@ export function createTitleBar(): TitleBarView {
   detail.setAttribute('aria-live', 'polite')
   heading.append(title, detail)
 
+  let change: (view: ViewMode) => void = () => undefined
   const views = document.createElement('div')
   views.className = 'segmented'
   views.setAttribute('role', 'group')
   views.setAttribute('aria-label', t('view'))
-  for (const [label, icon, current] of [
-    [t('viewCoverFlow'), icons.coverFlow, true],
-    [t('viewGrid'), icons.grid, false],
-    [t('viewList'), icons.list, false],
-  ] as const) {
+  const buttons = (
+    [
+      ['coverflow', t('viewCoverFlow'), icons.coverFlow],
+      ['grid', t('viewGrid'), icons.grid],
+      ['list', t('viewList'), icons.list],
+    ] as const
+  ).map(([view, label, icon]) => {
     const button = document.createElement('button')
     button.type = 'button'
     button.className = 'segmented__option segmented__option--icon'
+    button.dataset.view = view
     button.setAttribute('aria-label', label)
-    button.setAttribute('aria-pressed', String(current))
+    button.title = label
     button.innerHTML = icon
-    // Grid and list views are not built yet; their buttons stay visible but inert.
-    if (!current) {
-      button.disabled = true
-      button.title = t('comingSoon')
-    }
+    button.addEventListener('click', () => change(view))
     views.append(button)
-  }
+    return button
+  })
 
   const fullscreenButton = document.createElement('button')
   fullscreenButton.type = 'button'
@@ -57,9 +60,14 @@ export function createTitleBar(): TitleBarView {
   return {
     element,
     fullscreenButton,
-    render(nextTitle, nextDetail): void {
+    render(nextTitle, nextDetail, view): void {
       if (title.textContent !== nextTitle) title.textContent = nextTitle
       if (detail.textContent !== nextDetail) detail.textContent = nextDetail
+      for (const button of buttons)
+        button.setAttribute('aria-pressed', String(button.dataset.view === view))
+    },
+    onViewChange(listener): void {
+      change = listener
     },
   }
 }

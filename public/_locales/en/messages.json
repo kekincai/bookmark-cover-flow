@@ -284,9 +284,6 @@
   "viewList": {
     "message": "List"
   },
-  "comingSoon": {
-    "message": "Coming soon"
-  },
   "enterFullscreen": {
     "message": "Full-screen Cover Flow"
   },
@@ -328,6 +325,9 @@
   },
   "bookmarkList": {
     "message": "Bookmark list"
+  },
+  "bookmarkGrid": {
+    "message": "Bookmark grid"
   },
   "columnName": {
     "message": "Name"

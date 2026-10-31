@@ -284,9 +284,6 @@
   "viewList": {
     "message": "リスト"
   },
-  "comingSoon": {
-    "message": "近日対応"
-  },
   "enterFullscreen": {
     "message": "フルスクリーン Cover Flow"
   },
@@ -328,6 +325,9 @@
   },
   "bookmarkList": {
     "message": "ブックマークのリスト"
+  },
+  "bookmarkGrid": {
+    "message": "ブックマークのグリッド"
   },
   "columnName": {
     "message": "名前"

@@ -69,6 +69,7 @@ const preferencesOf = (state: AppState): Preferences => ({
   preferPreviewImages: state.preferPreviewImages,
   coverAngle: state.coverAngle,
   reduceFlipMotion: state.reduceFlipMotion,
+  view: state.view,
 })
 
 function applyAppearance(preferences: Preferences): void {
@@ -195,6 +196,7 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     shell.meta.render(items[Math.round(position)])
     shell.scrubber.render(position, items.length)
     shell.list.setSelected(Math.round(position))
+    shell.grid.setSelected(Math.round(position))
     shell.fullscreen.render(position, items, collectionTitle(state))
   }
 
@@ -239,14 +241,14 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     })
   }
 
-  const requestVisiblePreviews = (index: number): void => {
+  const requestVisiblePreviews = (index: number): void =>
+    requestPreviews(index - PREVIEW_RADIUS, index + PREVIEW_RADIUS)
+
+  const requestPreviews = (first: number, last: number): void => {
     const generation = previewGeneration
     const covers = store.value.visibleCovers
     const candidates = covers
-      .slice(
-        Math.max(0, index - PREVIEW_RADIUS),
-        Math.min(covers.length, index + PREVIEW_RADIUS + 1),
-      )
+      .slice(Math.max(0, first), Math.min(covers.length, last + 1))
       .filter((item) => {
         if (requestedPreviewIds.has(item.bookmarkId)) return false
         requestedPreviewIds.add(item.bookmarkId)
@@ -351,16 +353,24 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     renderPosition(motion.position)
   }
 
+  /** Covers glide in Cover Flow; the grid and list select instantly. */
+  const animates = (): boolean => store.value.view === 'coverflow' || shell.fullscreen.isOpen
+  const select = (index: number): void => motion.setTarget(index, !animates())
+  const move = (delta: number): void => {
+    if (animates()) motion.moveTarget(delta)
+    else motion.setTarget(Math.round(motion.position) + delta, true)
+  }
+
   const dispatch = (command: NavigationCommand): void => {
     const count = store.value.visibleCovers.length
     if (command.type === 'search') setQuery(command.query)
-    else if (command.type === 'next') motion.moveTarget(1)
-    else if (command.type === 'previous') motion.moveTarget(-1)
-    else if (command.type === 'move') motion.moveTarget(command.delta)
-    else if (command.type === 'first') motion.setTarget(0)
-    else if (command.type === 'last') motion.setTarget(Math.max(0, count - 1))
-    else if (command.type === 'page-previous') motion.moveTarget(-5)
-    else if (command.type === 'page-next') motion.moveTarget(5)
+    else if (command.type === 'next') move(1)
+    else if (command.type === 'previous') move(-1)
+    else if (command.type === 'move') move(command.delta)
+    else if (command.type === 'first') select(0)
+    else if (command.type === 'last') select(Math.max(0, count - 1))
+    else if (command.type === 'page-previous') move(-5)
+    else if (command.type === 'page-next') move(5)
     else if (command.type === 'open') openCurrent(command.background)
     else if (command.type === 'toggle-fullscreen') toggleFullscreen()
     else if (command.type === 'escape') {
@@ -381,13 +391,22 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
   shell.sidebar.search.onSearch((query) => dispatch({ type: 'search', query }))
   shell.titleBar.fullscreenButton.addEventListener('click', toggleFullscreen)
   shell.status.onRetry(() => void load())
+  shell.browseStatus.onRetry(() => void load())
+  shell.titleBar.onViewChange((view) => {
+    if (view === store.value.view) return
+    store.update((state) => ({ ...state, view }))
+    persistPreferences()
+  })
   shell.scrubber.onSeek((index) => motion.setTarget(index))
   shell.scrubber.onStep((delta) => motion.moveTarget(delta))
-  shell.list.onSelect((index) => motion.setTarget(index))
-  shell.list.onOpen((index, background) => {
-    motion.setTarget(index)
-    openItem(store.value.visibleCovers[index], background)
-  })
+  for (const browser of [shell.list, shell.grid]) {
+    browser.onSelect(select)
+    browser.onOpen((index, background) => {
+      select(index)
+      openItem(store.value.visibleCovers[index], background)
+    })
+  }
+  shell.grid.onVisibleRange(requestPreviews)
   shell.fullscreen.onClose(() => shell.fullscreen.close())
   shell.fullscreen.onStep((delta) => motion.moveTarget(delta))
   shell.fullscreen.onOpenBookmark(() =>
@@ -427,8 +446,11 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
       shell.titleBar.render(
         state.query.trim() !== '' ? t('searchResults') : collectionTitle(state),
         state.status === 'ready' ? countText(state) : '',
+        state.view,
       )
+      shell.main.dataset.view = state.view
       shell.status.render(stageState(state))
+      shell.browseStatus.render(stageState(state))
       preferencesMenu.render(preferencesOf(state))
       if (changed('theme') || changed('showReflection') || changed('reduceFlipMotion'))
         applyAppearance(state)
@@ -442,6 +464,7 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
           state.query,
           new Map(state.recentBookmarks.map((bookmark) => [bookmark.id, bookmark.openedAt])),
         )
+      if (changed('visibleCovers')) shell.grid.setItems(state.visibleCovers)
       if (changed('activeFolderId') || changed('visibleCovers')) {
         const before = previous?.visibleCovers ?? []
         const preservesSelection =
@@ -492,6 +515,8 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     shell.coverFlow.destroy()
     shell.status.destroy()
     shell.list.destroy()
+    shell.grid.destroy()
+    shell.browseStatus.destroy()
     shell.fullscreen.destroy()
     motion.destroy()
   }

@@ -1,3 +1,4 @@
+import { createBookmarkGrid, type BookmarkGridView } from './components/bookmark-grid'
 import { createBookmarkList, type BookmarkListView } from './components/bookmark-list'
 import { createBookmarkMeta, type BookmarkMetaView } from './components/bookmark-meta'
 import { createCoverFlow, type CoverFlowView } from './components/cover-flow'
@@ -11,13 +12,18 @@ export interface AppShell {
   readonly element: HTMLElement
   readonly sidebar: SidebarView
   readonly titleBar: TitleBarView
+  /** Carries `data-view`; CSS shows the stage, grid or list accordingly. */
+  readonly main: HTMLElement
   /** Hosts the wallpaper surface, the covers and the stage overlays. */
   readonly stage: HTMLElement
   readonly coverFlow: CoverFlowView
   readonly meta: BookmarkMetaView
   readonly status: StageStatusView
+  /** The same loading, empty and error states, shown over the grid and list views. */
+  readonly browseStatus: StageStatusView
   readonly scrubber: ScrubberView
   readonly list: BookmarkListView
+  readonly grid: BookmarkGridView
   readonly fullscreen: FullscreenView
 }
 
@@ -38,9 +44,29 @@ export function createAppShell(): AppShell {
   stage.append(coverFlow.element, meta.element, status.element, scrubber.element)
 
   const list = createBookmarkList()
-  main.append(titleBar.element, stage, list.element)
+  const grid = createBookmarkGrid()
+  const browseStatus = createStageStatus()
+  browseStatus.element.classList.add('stage-status--browse')
+  const body = document.createElement('div')
+  body.className = 'app-body'
+  body.append(stage, list.element, grid.element, browseStatus.element)
+  main.append(titleBar.element, body)
   element.append(sidebar.element, main)
   const fullscreen = createFullscreenView()
 
-  return { element, sidebar, titleBar, stage, coverFlow, meta, status, scrubber, list, fullscreen }
+  return {
+    element,
+    sidebar,
+    titleBar,
+    main,
+    stage,
+    coverFlow,
+    meta,
+    status,
+    browseStatus,
+    scrubber,
+    list,
+    grid,
+    fullscreen,
+  }
 }

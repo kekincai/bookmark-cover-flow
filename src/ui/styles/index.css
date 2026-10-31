@@ -5,6 +5,7 @@
 @import './cover-flow.css' layer(components);
 @import './cover-art.css' layer(components);
 @import './list.css' layer(components);
+@import './grid.css' layer(components);
 @import './fullscreen.css' layer(components);
 @import './settings.css' layer(components);
 @import './wallpaper.css' layer(components);

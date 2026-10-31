@@ -7,7 +7,7 @@ describe('extension manifest', () => {
     expect(manifest.action.default_title).toBe('__MSG_openExtension__')
     expect(manifest.default_locale).toBe('en')
     expect(manifest.background.service_worker).toBe('assets/background.js')
-    expect(manifest.version).toBe('1.1.0')
+    expect(manifest.version).toBe('1.2.0')
     expect(manifest.icons['128']).toBe('icons/icon-128.png')
   })
 

@@ -5,12 +5,14 @@ import {
   type Preferences,
   type SortMode,
   type ThemeMode,
+  type ViewMode,
 } from '../../domain/preferences'
 
 const key = 'bookmark-cover-flow-preferences'
 
 const sortModes: readonly SortMode[] = ['bookmark', 'title', 'domain', 'recent']
 const themeModes: readonly ThemeMode[] = ['system', 'light', 'dark']
+const viewModes: readonly ViewMode[] = ['coverflow', 'grid', 'list']
 
 export function parsePreferences(value: unknown): Preferences {
   if (typeof value !== 'object' || value === null) return defaultPreferences
@@ -37,6 +39,9 @@ export function parsePreferences(value: unknown): Preferences {
     preferPreviewImages: boolean('preferPreviewImages', defaultPreferences.preferPreviewImages),
     coverAngle,
     reduceFlipMotion: boolean('reduceFlipMotion', defaultPreferences.reduceFlipMotion),
+    view: viewModes.includes(record.view as ViewMode)
+      ? (record.view as ViewMode)
+      : defaultPreferences.view,
   }
 }
 

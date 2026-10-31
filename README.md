@@ -34,7 +34,7 @@ Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click th
 - sidebar with search, a Library (All Bookmarks, Recently Opened, Recently Added) and your real Chrome folders with counts
 - Cover Flow stage with adjustable cover angle (45–80°), optional mirror reflection, a hover “Open ↗” pill and a slim scrubber
 - album-style generated covers when a site has no preview: one of four templates (`mono`, `type`, `circle`, `bands`) chosen per domain, colored from the site's `theme-color` or favicon
-- a list under the stage with name, website, folder, date added and last opened; selecting a row moves the covers, and search matches are highlighted
+- three views that share one selection and are remembered: Cover Flow with a list under the stage, an album-style Grid, and a full-height List with name, website, folder, date added and last opened; search matches are highlighted
 - full-screen Cover Flow (`F`) on a dark stage tinted by the current cover
 - searches titles, hostnames, URLs and folder names instantly
 - four sorting modes, light, dark and automatic themes, and a choice of stage backgrounds: default, Mist, Night, or your own photo or video
@@ -42,8 +42,6 @@ Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click th
 - virtualizes covers to `selectedIndex ± 7` and list rows to the visible window, so 5,000-bookmark folders stay at 60 fps
 - respects Reduce Motion (or the in-app “Reduce flip animation”), forced colors, keyboard focus zones and screen-reader metadata
 - stays local-first with no analytics, account, backend, or bookmark uploads
-
-Not built yet: the Grid and List buttons in the view switcher are shown disabled; the list under the stage is always available.
 
 ## Install
 
@@ -82,7 +80,7 @@ Load the generated `dist` folder from `chrome://extensions`. Running `npm run de
 | `PageUp` / `PageDown` | Move five bookmarks                 |
 | `F`                   | Enter / exit full-screen Cover Flow |
 
-Arrow keys act on the focused area: the stage, the list (`↑` / `↓`) and the sidebar each navigate independently. Shortcuts never fire while you type in a field.
+Arrow keys act on the focused area: the stage, the list (`↑` / `↓`), the grid (arrows move by cover and by row) and the sidebar each navigate independently. Shortcuts never fire while you type in a field.
 
 ## Architecture
 
@@ -142,8 +140,7 @@ Requests omit credentials, time out after eight seconds, and are limited to near
 - **v0.1–v0.5 ✓** — architecture, bookmarks, motion, folders, search, sorting, performance, accessibility
 - **v1.0 ✓** — stable APIs, packaging, documentation, and store-ready release
 - **v1.1 ✓** — editorial cover system, fixed breadcrumb header, spatial graphite stage, redesigned view options
-- **Unreleased · main** — modern Apple-style redesign: sidebar library, generated album covers, list view, full-screen Cover Flow, stage backgrounds, settings with Appearance/Background/Privacy tabs; Liquid Glass removed. Available from source, not yet tagged as a release
-- **Later** — Grid and List views
+- **v1.2 ✓** — modern Apple-style redesign: sidebar library, Cover Flow / Grid / List views, generated album covers, full-screen Cover Flow, stage backgrounds, settings with Appearance/Background/Privacy tabs, new icon
 
 ## Contributing
 

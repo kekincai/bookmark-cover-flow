@@ -163,6 +163,24 @@
     height: 100%;
   }
 }
+.app-body {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+.stage-status--browse {
+  z-index: 5;
+  background: var(--bg);
+  color: var(--label);
+  --stage-label: var(--label);
+  --stage-secondary: var(--secondary);
+}
+.app-main[data-view='coverflow'] .stage-status--browse,
+.app-main:not([data-view]) .stage-status--browse {
+  display: none;
+}
 .title-bar {
   display: flex;
   flex-wrap: wrap;

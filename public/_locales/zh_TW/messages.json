@@ -284,9 +284,6 @@
   "viewList": {
     "message": "列表"
   },
-  "comingSoon": {
-    "message": "即將推出"
-  },
   "enterFullscreen": {
     "message": "全螢幕 Cover Flow"
   },
@@ -328,6 +325,9 @@
   },
   "bookmarkList": {
     "message": "書籤列表"
+  },
+  "bookmarkGrid": {
+    "message": "書籤網格"
   },
   "columnName": {
     "message": "名稱"

@@ -18,7 +18,7 @@ export interface BookmarkListView {
 }
 
 export const LIST_ROW_HEIGHT = 32
-const HEADER_HEIGHT = 30
+const HEADER_HEIGHT = 32
 const BODY_PADDING_TOP = 4
 const PAGE_STEP = 10
 const DEFAULT_OVERSCAN = 8

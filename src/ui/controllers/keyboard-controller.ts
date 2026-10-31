@@ -3,7 +3,7 @@ import type { NavigationCommand } from '../../domain/navigation'
 /** Holding an arrow key advances one cover per 90 ms regardless of the OS repeat rate. */
 const REPEAT_INTERVAL_MS = 90
 /** Regions that handle their own arrow, Home/End and Enter keys. */
-const SELF_NAVIGATING = '.sidebar, .bookmark-list, .settings-dialog'
+const SELF_NAVIGATING = '.sidebar, .bookmark-list, .bookmark-grid, .settings-dialog'
 const TEXT_ENTRY = 'input, textarea, select, [contenteditable="true"]'
 
 export function attachKeyboardController(

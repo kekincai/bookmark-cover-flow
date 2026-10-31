@@ -138,7 +138,10 @@ test('preview updates preserve live cards and do not rebuild focused DOM', async
       else preview.addEventListener('load', () => resolve(), { once: true })
     })
     await preview.decode()
-    await new Promise((resolve) => setTimeout(resolve, 260))
+    // Wait for the 200 ms cross-fade to finish rather than a fixed delay, which is flaky under load.
+    await Promise.all(preview.getAnimations().map((animation) => animation.finished))
+    const placeholder = original.querySelector<HTMLElement>('.cover-card__placeholder')!
+    await Promise.all(placeholder.getAnimations().map((animation) => animation.finished))
     const output = {
       sameCard: original === flow.element.querySelector('.cover-card'),
       focusPreserved: document.activeElement === original,

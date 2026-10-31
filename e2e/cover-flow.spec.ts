@@ -113,7 +113,7 @@ test('sidebar switches collections, shows counts and marks the active source', a
   await sidebarItem(page, 'Recently Opened').click()
   await expect(page.locator('.title-bar__title')).toHaveText('Recently Opened')
   await expect(covers(page)).toHaveCount(0)
-  const status = page.locator('.stage-status')
+  const status = page.locator('.stage .stage-status')
   await expect(status).toBeVisible()
   await expect(status).toHaveAttribute('data-kind', 'empty')
   await expect(status).toContainText('No recent bookmarks yet')
@@ -153,7 +153,7 @@ test('search shows a no-results state, a clear button and highlights matches', a
   await expect(page.locator('.title-bar__detail')).toHaveText('0 matches for “zzzz-nothing”')
   await expect(covers(page)).toHaveCount(0)
   await expect(listRows(page)).toHaveCount(0)
-  const status = page.locator('.stage-status')
+  const status = page.locator('.stage .stage-status')
   await expect(status).toHaveAttribute('data-kind', 'no-results')
   await expect(status).toContainText('No results for “zzzz-nothing”')
   await expect(status).toContainText('Try other keywords')
@@ -391,7 +391,8 @@ test('a failed bookmark read shows a retry state, then a delayed load shows the 
                     ],
                   },
                 ]),
-              900,
+              // Long enough that the spinner (shown after 400 ms) is observable under parallel load.
+              2000,
             ),
           )
         },
@@ -399,7 +400,7 @@ test('a failed bookmark read shows a retry state, then a delayed load shows the 
     }
   })
   await page.goto('/')
-  const status = page.locator('.stage-status')
+  const status = page.locator('.stage .stage-status')
   await expect(status).toHaveAttribute('data-kind', 'error')
   await expect(status).toHaveAttribute('role', 'alert')
   await expect(status).toContainText("Can't read Chrome bookmarks")
