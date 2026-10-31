@@ -7,7 +7,7 @@ Bookmark Cover Flow is local-first. It has no user account, analytics, advertisi
 ## Data used
 
 - Chrome bookmarks are read locally to render folders and covers.
-- View preferences, recently opened bookmarks, and resolved preview-image URLs are stored in Chrome extension storage on the user's device.
+- View preferences, recently opened bookmarks, and resolved preview-image URLs and site theme colors are stored in Chrome extension storage on the user's device.
 - “Recently opened” includes only bookmarks opened through this extension. Chrome browsing history is not requested or read.
 - A photo or video explicitly selected for the background is stored as an original Blob in the extension's local IndexedDB. Backgrounds are not uploaded, sent to bookmarked websites, or synchronized between devices. Only the file selected in the system picker is read.
 
@@ -17,7 +17,7 @@ To display webpage cover images, the extension may request nearby bookmarked HTT
 
 ## Data sharing and retention
 
-Bookmark Cover Flow does not sell, upload, or share bookmark data. Local preview results expire automatically; preferences and recent entries remain until the extension data is cleared or the extension is removed.
+Bookmark Cover Flow does not sell, upload, or share bookmark data. Local preview results expire automatically. Turning off **Prefer website preview images** stops all page requests, and the Privacy tab in Settings clears the preview cache and the Recently Opened list at any time; preferences and recent entries remain until the extension data is cleared or the extension is removed.
 
 The selected background remains until replaced, restored to the default, extension data is cleared, or the extension is removed. Restoring the default deletes only the extension's stored copy; the original file on disk is unchanged.
 

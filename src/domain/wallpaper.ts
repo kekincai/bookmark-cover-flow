@@ -1,7 +1,13 @@
 export type WallpaperKind = 'gradient' | 'image' | 'video'
+/** Built-in stage backgrounds used when no photo or video is chosen. */
+export type WallpaperPreset = 'default' | 'mist' | 'night'
+export const WALLPAPER_PRESETS: readonly WallpaperPreset[] = ['default', 'mist', 'night']
+export const MAX_WALLPAPER_BLUR = 40
+export const MAX_WALLPAPER_DIM = 80
 
 export interface WallpaperSettings {
   readonly kind: WallpaperKind
+  readonly preset: WallpaperPreset
   readonly name: string
   readonly width: number
   readonly height: number
@@ -13,6 +19,7 @@ export interface WallpaperSettings {
 export type WallpaperAdjustment = Pick<WallpaperSettings, 'blur' | 'dim' | 'paused'>
 export const defaultWallpaper: WallpaperSettings = {
   kind: 'gradient',
+  preset: 'default',
   name: '',
   width: 0,
   height: 0,
@@ -42,11 +49,14 @@ export function parseWallpaper(value: unknown): WallpaperSettings {
       : 0
   return {
     kind: record.kind === 'image' || record.kind === 'video' ? record.kind : 'gradient',
+    preset: WALLPAPER_PRESETS.includes(record.preset as WallpaperPreset)
+      ? (record.preset as WallpaperPreset)
+      : 'default',
     name: typeof record.name === 'string' ? record.name.slice(0, 255) : '',
     width: number('width', 65536),
     height: number('height', 65536),
-    blur: number('blur', 10),
-    dim: number('dim', 80),
+    blur: number('blur', MAX_WALLPAPER_BLUR),
+    dim: number('dim', MAX_WALLPAPER_DIM),
     paused: record.paused === true,
   }
 }

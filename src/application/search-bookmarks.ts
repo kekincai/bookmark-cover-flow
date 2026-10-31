@@ -5,7 +5,7 @@ export function searchBookmarks(items: readonly CoverItem[], query: string): rea
   if (normalizedQuery === '') return items
 
   return items.filter((item) =>
-    [item.title, item.subtitle, item.url].some((value) =>
+    [item.title, item.subtitle, item.url, item.folderTitle].some((value) =>
       value.toLocaleLowerCase().includes(normalizedQuery),
     ),
   )

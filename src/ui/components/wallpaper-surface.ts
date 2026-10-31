@@ -85,6 +85,7 @@ export async function prepareWallpaper(
   }
 }
 
+/** Stage background layer. Mounted as the first child of the Cover Flow stage, behind the covers. */
 export function createWallpaperSurface(onPlayback: (error?: string) => void) {
   const element = document.createElement('div')
   element.className = 'wallpaper-surface'
@@ -139,6 +140,7 @@ export function createWallpaperSurface(onPlayback: (error?: string) => void) {
     const playbackChanged = settings?.paused !== next.paused
     settings = next
     element.dataset.kind = next.kind
+    element.dataset.preset = next.preset
     // No filter (even blur(0)) on video or its ancestors: use the native HDR media pipeline.
     element.style.setProperty('--photo-blur', `${next.blur}px`)
     tint.style.opacity = next.kind === 'gradient' ? '0' : String(next.dim / 100)

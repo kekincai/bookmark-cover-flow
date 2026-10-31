@@ -1,39 +1,80 @@
 body {
-  overflow: hidden;
-  background: var(--background);
-  color: var(--text-primary);
+  background: var(--bg);
+  color: var(--label);
+  font-family: var(--font);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
-body::before {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  background:
-    radial-gradient(circle at 12% 14%, var(--wallpaper-pink), transparent 34%),
-    radial-gradient(circle at 84% 10%, var(--wallpaper-blue), transparent 32%),
-    linear-gradient(
-      135deg,
-      var(--background) 0%,
-      var(--background-deep) 48%,
-      var(--background) 100%
-    );
-  content: '';
-  pointer-events: none;
+button,
+select {
+  cursor: default;
 }
 button {
   border: 0;
   background: none;
-  cursor: pointer;
 }
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 5px;
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 ::selection {
-  background: var(--pink-soft);
-  color: #1c2744;
+  background: rgb(0 113 227 / 22%);
 }
-body.hdr-highlights {
-  dynamic-range-limit: no-limit;
+mark {
+  border-radius: 3px;
+  padding: 0 1px;
+  background: var(--search-highlight);
+  color: inherit;
+}
+.icon {
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon .icon-fill {
+  fill: currentcolor;
+  stroke: none;
+}
+.icon .icon-dim {
+  opacity: 0.55;
+}
+.icon-button {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  color: var(--icon);
+}
+.icon-button .icon {
+  width: 16px;
+  height: 16px;
+}
+.icon-button:hover {
+  background: var(--hover);
+}
+.icon-button:active {
+  background: var(--fill);
+}
+.icon-button:disabled {
+  opacity: 0.35;
+  background: none;
+}
+.pill-button {
+  height: 30px;
+  padding: 0 18px;
+  border-radius: 15px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+.pill-button:hover {
+  background: var(--accent-hover);
 }

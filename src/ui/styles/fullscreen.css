@@ -1,0 +1,156 @@
+.fullscreen {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  color: #f5f5f7;
+  --cover-size: 340px;
+  --cover-shadow: 0 30px 60px -20px rgb(0 0 0 / 90%);
+  --shade-near: rgb(0 0 0 / 10%);
+  --shade-far: rgb(0 0 0 / 60%);
+  --reflection: linear-gradient(transparent 64%, rgb(255 255 255 / 26%));
+  --track: rgb(255 255 255 / 16%);
+  --thumb: rgb(255 255 255 / 75%);
+  --focus-ring: 0 0 0 3px rgb(10 132 255 / 70%);
+  --focus-ring-color: #0a84ff;
+}
+.fullscreen[hidden] {
+  display: none;
+}
+.fullscreen__glow {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  width: 900px;
+  height: 600px;
+  margin-left: -450px;
+  border-radius: 50%;
+  background-color: var(--glow, #1c1c1e);
+  filter: blur(140px);
+  opacity: 0.42;
+  transition: background-color 0.8s ease;
+}
+.cover-flow--fullscreen .cover-flow__stage {
+  top: 15%;
+  perspective: 1500px;
+}
+.cover-flow--fullscreen .cover-card {
+  border-radius: 14px;
+}
+.glass-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 12%);
+  backdrop-filter: blur(20px);
+  color: #f5f5f7;
+}
+.glass-button:hover {
+  background: rgb(255 255 255 / 20%);
+}
+.glass-button:disabled {
+  opacity: 0.35;
+}
+.fullscreen__close {
+  position: absolute;
+  z-index: 3;
+  top: 24px;
+  left: 24px;
+  width: 32px;
+  height: 32px;
+}
+.fullscreen__close .icon {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.7;
+}
+.fullscreen__heading {
+  position: absolute;
+  z-index: 2;
+  top: 32px;
+  right: 80px;
+  left: 80px;
+  margin: 0;
+  overflow: hidden;
+  color: rgb(245 245 247 / 60%);
+  font-size: 13px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fullscreen__footer {
+  position: absolute;
+  z-index: 2;
+  bottom: 44px;
+  left: 50%;
+  display: flex;
+  width: min(560px, 80%);
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  transform: translateX(-50%);
+}
+.bookmark-meta--fullscreen {
+  position: static;
+  gap: 5px;
+  padding: 0;
+}
+.bookmark-meta--fullscreen .bookmark-meta__title {
+  color: #f5f5f7;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.bookmark-meta--fullscreen .bookmark-meta__subtitle {
+  color: rgb(245 245 247 / 60%);
+  font-size: 14px;
+}
+.fullscreen__actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.fullscreen__step {
+  width: 40px;
+  height: 40px;
+}
+.fullscreen__step .icon {
+  width: 9px;
+  height: 15px;
+  stroke-width: 2;
+}
+.fullscreen__open {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 20px;
+  border-radius: 18px;
+  background: #f5f5f7;
+  color: #1d1d1f;
+  font-size: 14px;
+  font-weight: 600;
+}
+.fullscreen__open:hover {
+  background: #fff;
+}
+.fullscreen__open .icon {
+  width: 11px;
+  height: 11px;
+  stroke-width: 1.7;
+}
+.scrubber--fullscreen {
+  position: static;
+  width: 100%;
+  transform: none;
+}
+.scrubber--fullscreen .scrubber__step {
+  display: none;
+}
+@media (max-height: 760px) {
+  .fullscreen {
+    --cover-size: 260px;
+  }
+}

@@ -2,6 +2,7 @@ import {
   defaultWallpaper,
   parseWallpaper,
   type WallpaperAdjustment,
+  type WallpaperPreset,
   type WallpaperSettings,
 } from '../domain/wallpaper'
 
@@ -94,5 +95,13 @@ export async function resetWallpaper(): Promise<void> {
   await mutate((store) => {
     store.delete('media')
     store.put(defaultWallpaper, 'settings')
+  })
+}
+
+/** Switching to a built-in background releases any stored photo or video. */
+export async function saveWallpaperPreset(preset: WallpaperPreset): Promise<void> {
+  await mutate((store) => {
+    store.delete('media')
+    store.put({ ...defaultWallpaper, preset }, 'settings')
   })
 }

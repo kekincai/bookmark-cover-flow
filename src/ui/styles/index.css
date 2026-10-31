@@ -3,9 +3,11 @@
 @import './base.css' layer(base);
 @import './layout.css' layer(layout);
 @import './cover-flow.css' layer(components);
-@import './liquid-glass.css' layer(components);
-@import './liquid-controls.css' layer(components);
+@import './cover-art.css' layer(components);
+@import './list.css' layer(components);
+@import './fullscreen.css' layer(components);
 @import './settings.css' layer(components);
+@import './wallpaper.css' layer(components);
 @import './motion.css' layer(utilities);
 
 @layer reset, tokens, base, layout, components, utilities;

@@ -1,0 +1,42 @@
+/* Stage background. Mounted as the first child of the Cover Flow stage; covers sit above it. */
+.wallpaper-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Built-in gradients. `default` stays transparent so the stage token shows through in both themes. */
+.wallpaper-surface[data-kind='gradient'][data-preset='mist'] {
+  background: linear-gradient(160deg, #e8f0fb, #c9d8ee);
+}
+.wallpaper-surface[data-kind='gradient'][data-preset='night'] {
+  background: linear-gradient(160deg, #2a2d3a, #0e0f14);
+}
+
+.wallpaper-surface__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  dynamic-range-limit: no-limit;
+}
+
+/* Blur applies to photos only. Video and its ancestors never get a filter, keeping the native HDR path. */
+img.wallpaper-surface__media {
+  /* Overscan by the blur radius so soft edges never reveal the stage behind. */
+  inset: calc(var(--photo-blur, 0px) * -2);
+  width: calc(100% + var(--photo-blur, 0px) * 4);
+  height: calc(100% + var(--photo-blur, 0px) * 4);
+  filter: blur(var(--photo-blur, 0px));
+}
+
+.wallpaper-surface__tint {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+}

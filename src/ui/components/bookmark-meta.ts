@@ -1,30 +1,37 @@
 import type { CoverItem } from '../../domain/cover'
-import { t } from '../../shared/i18n'
 
 export interface BookmarkMetaView {
   readonly element: HTMLElement
-  render(item: CoverItem | undefined, emptyMessage?: string): void
+  render(item: CoverItem | undefined): void
 }
 
-export function createBookmarkMeta(): BookmarkMetaView {
-  const element = document.createElement('section')
-  element.className = 'bookmark-meta'
+/** Title and "site · folder" under the centered cover. */
+export function createBookmarkMeta(className = ''): BookmarkMetaView {
+  const element = document.createElement('div')
+  element.className = `bookmark-meta ${className}`.trim()
   element.setAttribute('aria-live', 'polite')
   element.setAttribute('aria-atomic', 'true')
-  const title = document.createElement('h1')
+  const title = document.createElement('h2')
+  title.className = 'bookmark-meta__title'
   const subtitle = document.createElement('p')
+  subtitle.className = 'bookmark-meta__subtitle'
   element.append(title, subtitle)
-  let renderedKey = ''
+  let renderedKey: string | undefined
 
   return {
     element,
-    render(item, emptyMessage = t('noBookmarks')): void {
-      const key = item === undefined ? `empty:${emptyMessage}` : item.bookmarkId
+    render(item): void {
+      const key = item === undefined ? '' : `${item.bookmarkId}:${item.folderTitle}`
       if (key === renderedKey) return
       renderedKey = key
-      title.textContent = item?.title ?? emptyMessage
-      subtitle.textContent = item?.subtitle ?? t('tryFolder')
-      element.dataset.empty = String(item === undefined)
+      element.hidden = item === undefined
+      title.textContent = item?.title ?? ''
+      subtitle.textContent =
+        item === undefined
+          ? ''
+          : item.folderTitle
+            ? `${item.subtitle} · ${item.folderTitle}`
+            : item.subtitle
     },
   }
 }

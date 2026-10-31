@@ -1,18 +1,13 @@
-/* Cover transforms are exclusively owned by the spring, never CSS transitions. */
+/* Cover transforms are owned by the spring, never by CSS transitions. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0ms !important;
-    animation-duration: 0ms !important;
-    animation-iteration-count: 1 !important;
   }
-  .cover-card {
-    -webkit-box-reflect: unset;
-  }
-  .liquid-glass-lens,
-  .hdr-glass-layer {
-    display: none;
+  .cover-card__placeholder,
+  .spinner {
+    animation: none;
   }
 }

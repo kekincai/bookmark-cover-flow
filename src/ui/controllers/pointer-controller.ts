@@ -11,7 +11,7 @@ export function attachPointerController(
   let lastX = 0
   let lastAt = 0
   let velocity = 0
-  let distance = 340
+  let distance = 60
   let didDrag = false
   let pendingPosition = 0
   let frame = 0

@@ -14,9 +14,15 @@ export interface MotionController {
   destroy(): void
 }
 
+/** Friction 0.92 per 60 Hz frame carries a fling about 0.19 s worth of its release velocity. */
+const FLING_PROJECTION = 0.92 / (1 - 0.92) / 60
+
 export function createMotionController(
   render: (position: number) => void,
   onSettle: (index: number) => void,
+  /** Jump instead of animating (system Reduce Motion or the in-app preference). */
+  shouldReduceMotion: () => boolean = () => false,
+  onJump: () => void = () => undefined,
 ): MotionController {
   let itemCount = 0
   let frame = 0
@@ -49,10 +55,12 @@ export function createMotionController(
   const setTarget = (index: number, immediate = false): void => {
     revision += 1
     const target = clamp(Math.round(index), 0, maximum())
-    if (immediate || reducedMotion.matches) {
+    if (immediate || reducedMotion.matches || shouldReduceMotion()) {
+      const jumped = !immediate && Math.round(state.position) !== target
       stop()
       state = { position: target, targetPosition: target, velocity: 0, lastTimestamp: 0 }
       render(target)
+      if (jumped) onJump()
       onSettle(Math.round(target))
       return
     }
@@ -103,8 +111,8 @@ export function createMotionController(
       render(nextPosition)
     },
     snap(velocity = 0): void {
-      const releaseVelocity = clamp(velocity, -12, 12)
-      const projected = state.position + releaseVelocity * 0.16
+      const releaseVelocity = clamp(velocity, -40, 40)
+      const projected = state.position + releaseVelocity * FLING_PROJECTION
       state = { ...state, velocity: releaseVelocity, lastTimestamp: performance.now() }
       setTarget(Math.round(projected))
     },

@@ -1,60 +1,46 @@
+import { createBookmarkList, type BookmarkListView } from './components/bookmark-list'
 import { createBookmarkMeta, type BookmarkMetaView } from './components/bookmark-meta'
 import { createCoverFlow, type CoverFlowView } from './components/cover-flow'
-import { createFolderNavigation, type FolderNavigationView } from './components/folder-navigation'
-import { createSearchBox, type SearchBoxView } from './components/search-box'
-import { createPreferencesMenu, type PreferencesMenuView } from './components/preferences-menu'
-import { t } from '../shared/i18n'
+import { createFullscreenView, type FullscreenView } from './components/fullscreen-view'
+import { createScrubber, type ScrubberView } from './components/scrubber'
+import { createSidebar, type SidebarView } from './components/sidebar'
+import { createStageStatus, type StageStatusView } from './components/stage-status'
+import { createTitleBar, type TitleBarView } from './components/title-bar'
 
 export interface AppShell {
   readonly element: HTMLElement
-  readonly folders: FolderNavigationView
-  readonly search: SearchBoxView
-  readonly preferences: PreferencesMenuView
+  readonly sidebar: SidebarView
+  readonly titleBar: TitleBarView
+  /** Hosts the wallpaper surface, the covers and the stage overlays. */
+  readonly stage: HTMLElement
   readonly coverFlow: CoverFlowView
   readonly meta: BookmarkMetaView
-  setStatus(message: string | undefined): void
+  readonly status: StageStatusView
+  readonly scrubber: ScrubberView
+  readonly list: BookmarkListView
+  readonly fullscreen: FullscreenView
 }
 
 export function createAppShell(): AppShell {
-  const element = document.createElement('main')
+  const element = document.createElement('div')
   element.className = 'app-shell'
-  const header = document.createElement('header')
-  header.className = 'app-header'
-  const folders = createFolderNavigation()
-  const brand = document.createElement('div')
-  brand.className = 'app-brand'
-  brand.innerHTML = `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3.5 5.5c2.7-1.2 5.4-.9 8.5.9v13c-3.1-1.8-5.8-2.1-8.5-.9z" />
-      <path d="M20.5 5.5c-2.7-1.2-5.4-.9-8.5.9v13c3.1-1.8 5.8-2.1 8.5-.9z" />
-    </svg>
-    <span>${t('bookmarks')}</span>
-  `
-  const search = createSearchBox()
-  const preferences = createPreferencesMenu()
-  const tools = document.createElement('div')
-  tools.className = 'app-header__tools'
-  tools.append(search.element, preferences.element)
-  header.append(folders.backElement, brand, folders.element, tools)
+  const sidebar = createSidebar()
+  const main = document.createElement('main')
+  main.className = 'app-main'
+  const titleBar = createTitleBar()
 
+  const stage = document.createElement('div')
+  stage.className = 'stage'
   const coverFlow = createCoverFlow()
   const meta = createBookmarkMeta()
-  const status = document.createElement('p')
-  status.className = 'app-status'
-  status.setAttribute('role', 'status')
+  const status = createStageStatus()
+  const scrubber = createScrubber()
+  stage.append(coverFlow.element, meta.element, status.element, scrubber.element)
 
-  element.append(header, coverFlow.element, meta.element, status)
+  const list = createBookmarkList()
+  main.append(titleBar.element, stage, list.element)
+  element.append(sidebar.element, main)
+  const fullscreen = createFullscreenView()
 
-  return {
-    element,
-    folders,
-    search,
-    preferences,
-    coverFlow,
-    meta,
-    setStatus(message): void {
-      status.textContent = message ?? ''
-      status.hidden = message === undefined
-    },
-  }
+  return { element, sidebar, titleBar, stage, coverFlow, meta, status, scrubber, list, fullscreen }
 }

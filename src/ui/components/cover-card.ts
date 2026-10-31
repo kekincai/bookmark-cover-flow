@@ -1,14 +1,28 @@
 import type { CoverItem } from '../../domain/cover'
+import { t } from '../../shared/i18n'
+import { renderCoverArt } from './cover-art-view'
 
 const renderedItems = new WeakMap<HTMLButtonElement, CoverItem>()
+const OPEN_ICON =
+  '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 8l6-6M3.2 2H8v4.8"/></svg>'
+
 export function createCoverCard(item: CoverItem, index: number, total: number): HTMLButtonElement {
   const card = document.createElement('button')
   card.className = 'cover-card'
   card.type = 'button'
-  card.innerHTML = `<span class="cover-card__media" aria-hidden="true"><span class="cover-card__fallback"><span class="cover-card__monogram"></span><span class="cover-card__fallback-domain"></span></span></span><span class="cover-card__footer" data-liquid-item><span class="cover-card__icon" aria-hidden="true"></span><span class="cover-card__copy"><span class="cover-card__title"></span><span class="cover-card__hostname"></span></span><svg class="cover-card__open" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></span>`
+  card.innerHTML = `<span class="cover-card__art" aria-hidden="true"><span class="cover-art"></span><span class="cover-card__placeholder"><span class="cover-card__initial"></span></span><span class="cover-card__shade"></span></span><span class="cover-card__hint" aria-hidden="true"><span class="cover-card__hint-label"></span>${OPEN_ICON}</span>`
+  setCoverHint(card, false)
   updateCoverCard(card, item, index, total)
   return card
 }
+
+export function setCoverHint(card: HTMLButtonElement, opening: boolean): void {
+  card.querySelector<HTMLElement>('.cover-card__hint-label')!.textContent = opening
+    ? t('opening')
+    : t('open')
+  card.dataset.opening = String(opening)
+}
+
 /** Update only the changed media; preserve the button, focus and pointer capture. */
 export function updateCoverCard(
   card: HTMLButtonElement,
@@ -24,59 +38,41 @@ export function updateCoverCard(
   renderedItems.set(card, item)
   card.dataset.bookmarkId = item.bookmarkId
   card.setAttribute('aria-label', `${item.title}, ${item.subtitle}`)
-  card.style.setProperty('--cover-accent', item.accent)
-  const title = card.querySelector<HTMLElement>('.cover-card__title')!
-  const domain = card.querySelector<HTMLElement>('.cover-card__hostname')!
-  title.textContent = item.title
-  domain.textContent = item.subtitle
-  const initials = item.title
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0] ?? '')
-    .join('')
-    .toLocaleUpperCase()
-  card.querySelector<HTMLElement>('.cover-card__monogram')!.textContent = initials
-  card.querySelector<HTMLElement>('.cover-card__fallback-domain')!.textContent = item.subtitle
-  const icon = card.querySelector<HTMLElement>('.cover-card__icon')!
-  if (!previous || previous.favicon !== item.favicon) {
-    icon.textContent = initials
-    if (item.favicon) {
-      const favicon = document.createElement('img')
-      favicon.className = 'cover-card__favicon'
-      favicon.alt = ''
-      favicon.draggable = false
-      favicon.src = item.favicon
-      favicon.addEventListener(
-        'load',
-        () => {
-          if (renderedItems.get(card)?.favicon === item.favicon) icon.replaceChildren(favicon)
-        },
-        { once: true },
-      )
-    }
+  card.dataset.state = item.imageKind
+  if (previous?.art !== item.art) {
+    renderCoverArt(
+      card.querySelector<HTMLElement>('.cover-art')!,
+      item.art,
+      item.title,
+      item.subtitle,
+    )
+    card.querySelector<HTMLElement>('.cover-card__initial')!.textContent = item.art.glyph
   }
   if (previous?.image === item.image && previous?.imageKind === item.imageKind) return
-  const media = card.querySelector<HTMLElement>('.cover-card__media')!
-  media.querySelector('.cover-card__preview')?.remove()
-  card.dataset.imageKind = item.fallbackKind
-  if (item.imageKind === 'preview' && item.image) {
-    const preview = document.createElement('img')
-    preview.className = 'cover-card__preview'
-    preview.alt = ''
-    preview.draggable = false
-    preview.decoding = 'async'
-    preview.referrerPolicy = 'no-referrer'
-    preview.addEventListener(
-      'load',
-      () => {
-        if (renderedItems.get(card)?.image !== item.image) return
-        card.dataset.imageKind = 'preview'
-        preview.dataset.loaded = 'true'
-      },
-      { once: true },
-    )
-    preview.addEventListener('error', () => preview.remove(), { once: true })
-    preview.src = item.image
-    media.append(preview)
+  const art = card.querySelector<HTMLElement>('.cover-card__art')!
+  const existing = art.querySelector<HTMLImageElement>('.cover-card__preview')
+  if (item.imageKind !== 'preview' || !item.image) {
+    existing?.remove()
+    return
   }
+  if (existing?.dataset.src === item.image) return
+  existing?.remove()
+  const preview = document.createElement('img')
+  preview.className = 'cover-card__preview'
+  preview.alt = ''
+  preview.draggable = false
+  preview.decoding = 'async'
+  preview.referrerPolicy = 'no-referrer'
+  preview.dataset.src = item.image
+  preview.addEventListener(
+    'load',
+    () => {
+      if (renderedItems.get(card)?.image === item.image) preview.dataset.loaded = 'true'
+    },
+    { once: true },
+  )
+  // A broken preview reveals the generated art underneath.
+  preview.addEventListener('error', () => preview.remove(), { once: true })
+  preview.src = item.image
+  art.querySelector('.cover-card__shade')!.before(preview)
 }

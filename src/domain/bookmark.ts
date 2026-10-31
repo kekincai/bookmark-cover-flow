@@ -3,6 +3,7 @@ export interface Bookmark {
   readonly title: string
   readonly url: string
   readonly parentId?: string
+  readonly dateAdded?: number
 }
 
 export interface BookmarkRepository {

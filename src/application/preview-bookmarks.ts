@@ -1,17 +1,27 @@
 import type { CoverItem } from '../domain/cover'
+import { applySiteColor } from './resolve-cover'
 
-export interface PreviewProvider {
-  resolve(url: string): Promise<string | undefined>
+export interface PreviewResult {
+  readonly imageUrl?: string
+  readonly themeColor?: string
 }
 
-export function applyPreviewImage(item: CoverItem, imageUrl: string): CoverItem {
-  return { ...item, image: imageUrl, imageKind: 'preview' }
+export interface PreviewProvider {
+  resolve(url: string): Promise<PreviewResult>
+}
+
+/** A missing preview settles the cover on its generated art instead of leaving it pending. */
+export function applyPreview(item: CoverItem, result: PreviewResult): CoverItem {
+  const colored = result.themeColor === undefined ? item : applySiteColor(item, result.themeColor)
+  return result.imageUrl === undefined
+    ? { ...colored, imageKind: 'generated' }
+    : { ...colored, image: result.imageUrl, imageKind: 'preview' }
 }
 
 export async function preloadBookmarkPreviews(
   items: readonly CoverItem[],
   provider: PreviewProvider,
-  onPreview: (bookmarkId: string, imageUrl: string) => void,
+  onPreview: (bookmarkId: string, result: PreviewResult) => void,
   isCurrent: () => boolean,
   concurrency = 4,
 ): Promise<void> {
@@ -22,8 +32,8 @@ export async function preloadBookmarkPreviews(
       nextIndex += 1
       const item = items[index]
       if (item === undefined) continue
-      const imageUrl = await provider.resolve(item.url)
-      if (imageUrl !== undefined && isCurrent()) onPreview(item.bookmarkId, imageUrl)
+      const result = await provider.resolve(item.url)
+      if (isCurrent()) onPreview(item.bookmarkId, result)
     }
   }
 

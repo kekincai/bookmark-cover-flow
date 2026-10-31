@@ -1,5 +1,7 @@
 import {
   defaultPreferences,
+  MAX_COVER_ANGLE,
+  MIN_COVER_ANGLE,
   type Preferences,
   type SortMode,
   type ThemeMode,
@@ -10,29 +12,31 @@ const key = 'bookmark-cover-flow-preferences'
 const sortModes: readonly SortMode[] = ['bookmark', 'title', 'domain', 'recent']
 const themeModes: readonly ThemeMode[] = ['system', 'light', 'dark']
 
-function parsePreferences(value: unknown): Preferences {
+export function parsePreferences(value: unknown): Preferences {
   if (typeof value !== 'object' || value === null) return defaultPreferences
+  const record = value as Record<string, unknown>
+  const boolean = (name: keyof Preferences, fallback: boolean): boolean =>
+    typeof record[name] === 'boolean' ? record[name] : fallback
   const activeFolderId =
-    'activeFolderId' in value && typeof value.activeFolderId === 'string'
-      ? value.activeFolderId
-      : undefined
-  const showReflection =
-    'showReflection' in value && typeof value.showReflection === 'boolean'
-      ? value.showReflection
-      : defaultPreferences.showReflection
-  const sortMode =
-    'sortMode' in value && sortModes.includes(value.sortMode as SortMode)
-      ? (value.sortMode as SortMode)
-      : defaultPreferences.sortMode
-  const theme =
-    'theme' in value && themeModes.includes(value.theme as ThemeMode)
-      ? (value.theme as ThemeMode)
-      : defaultPreferences.theme
+    typeof record.activeFolderId === 'string' ? record.activeFolderId : undefined
+  const sortMode = sortModes.includes(record.sortMode as SortMode)
+    ? (record.sortMode as SortMode)
+    : defaultPreferences.sortMode
+  const theme = themeModes.includes(record.theme as ThemeMode)
+    ? (record.theme as ThemeMode)
+    : defaultPreferences.theme
+  const coverAngle =
+    typeof record.coverAngle === 'number' && Number.isFinite(record.coverAngle)
+      ? Math.round(Math.min(MAX_COVER_ANGLE, Math.max(MIN_COVER_ANGLE, record.coverAngle)))
+      : defaultPreferences.coverAngle
   return {
     ...(activeFolderId === undefined ? {} : { activeFolderId }),
-    showReflection,
+    showReflection: boolean('showReflection', defaultPreferences.showReflection),
     sortMode,
     theme,
+    preferPreviewImages: boolean('preferPreviewImages', defaultPreferences.preferPreviewImages),
+    coverAngle,
+    reduceFlipMotion: boolean('reduceFlipMotion', defaultPreferences.reduceFlipMotion),
   }
 }
 

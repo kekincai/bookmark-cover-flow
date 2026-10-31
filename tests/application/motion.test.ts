@@ -15,8 +15,8 @@ describe('motion physics', () => {
     expect(state.position).toBe(4)
     expect(state.velocity).toBe(0)
     expect(isMotionSettled(state)).toBe(true)
-    // The new critical spring uses a longer, gentle tail, below 600 ms for four cards.
-    expect(timestamp).toBeLessThanOrEqual(600)
+    // Tuned to feel like a 620 ms cubic-bezier(.22,.8,.24,1) flip; four cards settle within ~0.8 s.
+    expect(timestamp).toBeLessThanOrEqual(800)
   })
 
   it('clamps motion to the available item range', () => {
@@ -52,5 +52,22 @@ describe('motion physics', () => {
       expect(state.position).toBeGreaterThanOrEqual(0)
     }
     expect(isMotionSettled(state)).toBe(true)
+  })
+})
+
+describe('flip timing', () => {
+  it('covers most of a single flip quickly and lands gently within about 620 ms', () => {
+    let state: MotionState = { position: 0, targetPosition: 1, velocity: 0, lastTimestamp: 0 }
+    const at = (ms: number): number => {
+      state = { position: 0, targetPosition: 1, velocity: 0, lastTimestamp: 0 }
+      for (let time = 16; time <= ms; time += 16) state = advanceMotion(state, time, 4)
+      return state.position
+    }
+    expect(at(260)).toBeGreaterThan(0.85)
+    expect(at(620)).toBeGreaterThan(0.99)
+    for (let time = 16; time < 1000; time += 16) {
+      state = advanceMotion(state, time, 4)
+      expect(state.position).toBeLessThanOrEqual(1)
+    }
   })
 })

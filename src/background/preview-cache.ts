@@ -1,8 +1,9 @@
-import type { PreviewResponse } from '../shared/preview-message'
-import { extractPreviewImage } from './preview-metadata'
+import { PREVIEW_CACHE_PREFIX, type PreviewResponse } from '../shared/preview-message'
+import { extractPreviewImage, extractThemeColor } from './preview-metadata'
 
 interface CachedPreview {
   readonly imageUrl?: string
+  readonly themeColor?: string
   readonly resolvedAt: number
 }
 
@@ -16,7 +17,7 @@ function cacheKey(url: string): string {
     hash ^= character.codePointAt(0) ?? 0
     hash = Math.imul(hash, 16777619)
   }
-  return `preview-${(hash >>> 0).toString(16)}`
+  return `${PREVIEW_CACHE_PREFIX}${(hash >>> 0).toString(16)}`
 }
 
 function parseCache(value: unknown): CachedPreview | undefined {
@@ -30,6 +31,9 @@ function parseCache(value: unknown): CachedPreview | undefined {
     ...('imageUrl' in value && typeof value.imageUrl === 'string'
       ? { imageUrl: value.imageUrl }
       : {}),
+    ...('themeColor' in value && typeof value.themeColor === 'string'
+      ? { themeColor: value.themeColor }
+      : {}),
   }
 }
 
@@ -39,10 +43,15 @@ async function readCache(url: string): Promise<CachedPreview | undefined> {
   return parseCache(stored[key])
 }
 
-async function writeCache(url: string, imageUrl: string | undefined): Promise<void> {
+async function writeCache(
+  url: string,
+  imageUrl: string | undefined,
+  themeColor?: string,
+): Promise<void> {
   const value: CachedPreview = {
     resolvedAt: Date.now(),
     ...(imageUrl === undefined ? {} : { imageUrl }),
+    ...(themeColor === undefined ? {} : { themeColor }),
   }
   await chrome.storage.local.set({ [cacheKey(url)]: value })
 }
@@ -57,6 +66,7 @@ export async function resolvePreview(url: string): Promise<PreviewResponse> {
   if (cached !== undefined && isFresh(cached)) {
     return {
       ...(cached.imageUrl === undefined ? {} : { imageUrl: cached.imageUrl }),
+      ...(cached.themeColor === undefined ? {} : { themeColor: cached.themeColor }),
       source: cached.imageUrl === undefined ? 'none' : 'cache',
     }
   }
@@ -76,9 +86,11 @@ export async function resolvePreview(url: string): Promise<PreviewResponse> {
     }
     const html = (await response.text()).slice(0, MAX_HTML_LENGTH)
     const imageUrl = extractPreviewImage(html, response.url || url)
-    await writeCache(url, imageUrl)
+    const themeColor = extractThemeColor(html)
+    await writeCache(url, imageUrl, themeColor)
     return {
       ...(imageUrl === undefined ? {} : { imageUrl }),
+      ...(themeColor === undefined ? {} : { themeColor }),
       source: imageUrl === undefined ? 'none' : 'network',
     }
   } catch (error: unknown) {

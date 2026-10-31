@@ -1,0 +1,155 @@
+.bookmark-list {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 160px;
+  border-top: 1px solid var(--separator);
+  background: var(--bg);
+  color: var(--label);
+  font-family: var(--font);
+}
+
+.bookmark-list__grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  outline: none;
+  scroll-behavior: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumb) transparent;
+}
+
+.bookmark-list__grid:focus-visible {
+  box-shadow: inset var(--focus-ring);
+}
+
+.bookmark-list__inner {
+  box-sizing: border-box;
+  min-width: 780px;
+  padding: 0 12px;
+}
+
+.bookmark-list__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg);
+}
+
+.bookmark-list__row {
+  display: grid;
+  grid-template-columns: 44px minmax(200px, 2.4fr) minmax(170px, 1.8fr) 90px 108px 116px;
+  align-items: center;
+  box-sizing: border-box;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: default;
+  user-select: none;
+}
+
+.bookmark-list__row--header {
+  height: 30px;
+  border-bottom: 1px solid var(--separator);
+  border-radius: 0;
+  color: var(--secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.bookmark-list__row--header .bookmark-list__cell--number {
+  color: var(--label);
+}
+
+.bookmark-list__body {
+  position: relative;
+  margin: 4px 0 8px;
+}
+
+.bookmark-list__body .bookmark-list__row {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+}
+
+.bookmark-list__row.is-alternate {
+  background: var(--row-alt);
+}
+
+.bookmark-list__body .bookmark-list__row:hover {
+  background: var(--hover);
+}
+
+.bookmark-list__cell {
+  overflow: hidden;
+  padding: 0 10px;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bookmark-list__cell--secondary {
+  color: var(--secondary);
+}
+
+/* 44px column: no left padding so four- and five-digit indexes still fit. */
+.bookmark-list__cell--number {
+  padding-left: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.bookmark-list__cell--name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bookmark-list__tile {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 15%);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.bookmark-list__title {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
+
+.bookmark-list mark {
+  border-radius: 3px;
+  padding: 0 1px;
+  background: var(--search-highlight);
+  color: inherit;
+}
+
+/* Selected row while focus is elsewhere (stage, sidebar, search). */
+.bookmark-list__body .bookmark-list__row.is-selected {
+  background: var(--row-selected-inactive);
+}
+
+.bookmark-list__row.is-selected .bookmark-list__cell--secondary {
+  color: var(--row-selected-inactive-label);
+}
+
+/* Selected row while the list has focus. */
+.bookmark-list:focus-within .bookmark-list__body .bookmark-list__row.is-selected {
+  background: var(--accent-fill);
+  color: #fff;
+}
+
+.bookmark-list:focus-within .bookmark-list__row.is-selected .bookmark-list__cell--secondary {
+  color: rgb(255 255 255 / 85%);
+}

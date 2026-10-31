@@ -5,6 +5,7 @@ interface BookmarkNodeLike {
   readonly parentId?: string
   readonly title: string
   readonly url?: string
+  readonly dateAdded?: number
   readonly children?: readonly BookmarkNodeLike[]
 }
 
@@ -15,6 +16,7 @@ function toBookmark(node: BookmarkNodeLike): Bookmark | undefined {
     title: node.title,
     url: node.url,
     ...(node.parentId === undefined ? {} : { parentId: node.parentId }),
+    ...(node.dateAdded === undefined ? {} : { dateAdded: node.dateAdded }),
   }
 }
 
@@ -42,7 +44,25 @@ export function mapChromeTree(nodes: readonly BookmarkNodeLike[]): readonly Book
     .map((node) => toFolder(node))
 }
 
-const demoFolders: readonly BookmarkFolder[] = [
+const DAY = 24 * 60 * 60 * 1000
+
+/** Demo bookmarks get stable, staggered added dates so "Recently Added" has content. */
+function dated(folders: readonly BookmarkFolder[]): readonly BookmarkFolder[] {
+  let order = 0
+  const now = Date.now()
+  const visit = (folder: BookmarkFolder): BookmarkFolder => ({
+    ...folder,
+    children: folder.children.map((bookmark) => ({
+      ...bookmark,
+      parentId: folder.id,
+      dateAdded: now - ((order++ * 7) % 40) * DAY - order * 60_000,
+    })),
+    folders: folder.folders.map(visit),
+  })
+  return folders.map(visit)
+}
+
+const demoFolders: readonly BookmarkFolder[] = dated([
   {
     id: 'demo-favorites',
     title: 'Favorites',
@@ -102,7 +122,7 @@ const demoFolders: readonly BookmarkFolder[] = [
       { id: 'r3', title: 'Longreads', url: 'https://longreads.com' },
     ],
   },
-]
+])
 
 export function createBookmarkRepository(): BookmarkRepository {
   return {

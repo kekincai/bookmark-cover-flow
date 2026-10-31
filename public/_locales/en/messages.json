@@ -12,10 +12,7 @@
     "message": "Settings"
   },
   "viewOptions": {
-    "message": "View options"
-  },
-  "closeSettings": {
-    "message": "Close settings"
+    "message": "Open settings"
   },
   "categories": {
     "message": "Settings categories"
@@ -25,18 +22,6 @@
   },
   "background": {
     "message": "Background"
-  },
-  "appearanceDescription": {
-    "message": "Customize your covers and visual experience."
-  },
-  "backgroundDescription": {
-    "message": "Photos, videos and a background that feels like you."
-  },
-  "basicPreferences": {
-    "message": "Basic preferences"
-  },
-  "visualExperience": {
-    "message": "Visual experience"
   },
   "sortBookmarks": {
     "message": "Sort bookmarks"
@@ -51,13 +36,10 @@
     "message": "Website"
   },
   "recent": {
-    "message": "Recent"
-  },
-  "colorTheme": {
-    "message": "Color theme"
+    "message": "Recently Opened"
   },
   "system": {
-    "message": "System"
+    "message": "Auto"
   },
   "light": {
     "message": "Light"
@@ -66,52 +48,22 @@
     "message": "Dark"
   },
   "reflection": {
-    "message": "Reflection"
-  },
-  "showReflection": {
-    "message": "Show reflection"
-  },
-  "reflectionDescription": {
-    "message": "Mirror covers onto the stage"
-  },
-  "wallpaperSource": {
-    "message": "Background source"
+    "message": "Cover reflection"
   },
   "chooseMedia": {
     "message": "Choose photo or video"
   },
   "mediaHint": {
-    "message": "Videos loop silently · stored only on this device"
-  },
-  "mediaLimit": {
-    "message": "Original file · up to 512 MB · never uploaded"
+    "message": "Original file and HDR data are kept · Up to 512 MB · Stored only on this computer, never uploaded. Videos always loop muted."
   },
   "restoreBackground": {
     "message": "Restore default background"
-  },
-  "adjustments": {
-    "message": "Image treatment"
   },
   "photoBlur": {
     "message": "Photo blur"
   },
   "dimming": {
     "message": "Dimming"
-  },
-  "mediaDetails": {
-    "message": "Playback and storage details"
-  },
-  "nativeVideoNote": {
-    "message": "Original video and HDR metadata stay intact. No transcoding or canvas processing."
-  },
-  "codecNote": {
-    "message": "Supported codecs depend on Chrome and your system. Video blur is disabled to keep native playback."
-  },
-  "hdrDisplay": {
-    "message": "HDR display detected. Output also depends on the file, decoder and display settings."
-  },
-  "sdrDisplay": {
-    "message": "SDR display detected. Chrome tone-maps supported HDR videos."
   },
   "defaultBackground": {
     "message": "Default gradient"
@@ -176,9 +128,6 @@
   "genericError": {
     "message": "Unable to save the background."
   },
-  "bookmarks": {
-    "message": "Bookmarks"
-  },
   "searchBookmarks": {
     "message": "Search bookmarks"
   },
@@ -188,20 +137,11 @@
   "coverFlow": {
     "message": "Bookmark cover flow"
   },
-  "backFolder": {
-    "message": "Back to $1"
-  },
-  "back": {
-    "message": "Back"
-  },
-  "noResults": {
-    "message": "No results found"
-  },
   "noRecent": {
     "message": "No recent bookmarks yet"
   },
   "noBookmarks": {
-    "message": "No bookmarks here"
+    "message": "No bookmarks in this folder"
   },
   "tryFolder": {
     "message": "Try another folder or search"
@@ -210,9 +150,207 @@
     "message": "Loading bookmarks…"
   },
   "bookmarksFailed": {
-    "message": "Unable to load Chrome bookmarks."
+    "message": "Can't read Chrome bookmarks"
   },
   "openFailed": {
     "message": "Unable to open bookmark"
+  },
+  "privacy": {
+    "message": "Privacy"
+  },
+  "done": {
+    "message": "Done"
+  },
+  "changesApplyNow": {
+    "message": "Changes apply immediately"
+  },
+  "preferPreview": {
+    "message": "Prefer website preview images"
+  },
+  "preferPreviewHint": {
+    "message": "Without a preview, a cover is generated from the site's name and theme color."
+  },
+  "coverAngle": {
+    "message": "Cover angle"
+  },
+  "reduceFlip": {
+    "message": "Reduce flip animation"
+  },
+  "reduceFlipHint": {
+    "message": "Covers fade into place. Turns on automatically when Reduce Motion is on in your system settings."
+  },
+  "stageBackground": {
+    "message": "Stage background"
+  },
+  "presetDefault": {
+    "message": "Default"
+  },
+  "presetMist": {
+    "message": "Mist"
+  },
+  "presetNight": {
+    "message": "Night"
+  },
+  "presetMedia": {
+    "message": "Photo or video"
+  },
+  "dropMedia": {
+    "message": "Drag a photo or video here, or"
+  },
+  "chooseFile": {
+    "message": "Choose File…"
+  },
+  "photoBlurHint": {
+    "message": "Applies to photos only; videos keep their original quality."
+  },
+  "restore": {
+    "message": "Restore"
+  },
+  "privacyLocal": {
+    "message": "Bookmarks never leave this computer"
+  },
+  "privacyLocalBody": {
+    "message": "Reads Chrome bookmarks directly. No account, server or sync."
+  },
+  "privacyNoTracking": {
+    "message": "No analytics or tracking"
+  },
+  "privacyNoTrackingBody": {
+    "message": "No usage data is collected. Recently opened bookmarks are recorded only on this computer."
+  },
+  "privacyPreviews": {
+    "message": "Previews come from the websites themselves"
+  },
+  "privacyPreviewsBody": {
+    "message": "Covers use each site's public preview image (Open Graph). Fetching it visits that site; results are cached on this computer."
+  },
+  "previewCache": {
+    "message": "Preview cache"
+  },
+  "previewCacheCount": {
+    "message": "$1 preview images cached"
+  },
+  "clear": {
+    "message": "Clear"
+  },
+  "recentHistory": {
+    "message": "Recently opened history"
+  },
+  "recentHistoryHint": {
+    "message": "Stored only on this computer"
+  },
+  "cleared": {
+    "message": "Cleared"
+  },
+  "clearSearch": {
+    "message": "Clear search"
+  },
+  "library": {
+    "message": "Library"
+  },
+  "allBookmarks": {
+    "message": "All Bookmarks"
+  },
+  "recentlyAdded": {
+    "message": "Recently Added"
+  },
+  "localOnly": {
+    "message": "Bookmarks stay local"
+  },
+  "bookmarkCount": {
+    "message": "$1 bookmarks"
+  },
+  "bookmarkCountOne": {
+    "message": "1 bookmark"
+  },
+  "searchResults": {
+    "message": "Search Results"
+  },
+  "matchCount": {
+    "message": "$1 matches for “$2”"
+  },
+  "matchCountOne": {
+    "message": "1 match for “$1”"
+  },
+  "view": {
+    "message": "View"
+  },
+  "viewCoverFlow": {
+    "message": "Cover Flow"
+  },
+  "viewGrid": {
+    "message": "Grid"
+  },
+  "viewList": {
+    "message": "List"
+  },
+  "comingSoon": {
+    "message": "Coming soon"
+  },
+  "enterFullscreen": {
+    "message": "Full-screen Cover Flow"
+  },
+  "exitFullscreen": {
+    "message": "Exit full screen"
+  },
+  "position": {
+    "message": "Browsing position"
+  },
+  "positionValue": {
+    "message": "$1 of $2"
+  },
+  "previousBookmark": {
+    "message": "Previous bookmark"
+  },
+  "nextBookmark": {
+    "message": "Next bookmark"
+  },
+  "open": {
+    "message": "Open"
+  },
+  "opening": {
+    "message": "Opening…"
+  },
+  "noResultsFor": {
+    "message": "No results for “$1”"
+  },
+  "tryOtherKeywords": {
+    "message": "Try other keywords, or search in All Bookmarks"
+  },
+  "noRecentHint": {
+    "message": "Bookmarks you open will appear here"
+  },
+  "bookmarksFailedHint": {
+    "message": "Make sure bookmark access is allowed, then try again."
+  },
+  "retry": {
+    "message": "Retry"
+  },
+  "bookmarkList": {
+    "message": "Bookmark list"
+  },
+  "columnName": {
+    "message": "Name"
+  },
+  "columnSite": {
+    "message": "Website"
+  },
+  "columnFolder": {
+    "message": "Folder"
+  },
+  "columnAdded": {
+    "message": "Date Added"
+  },
+  "columnLastOpened": {
+    "message": "Last Opened"
+  },
+  "never": {
+    "message": "Never"
+  },
+  "todayAt": {
+    "message": "Today $1"
+  },
+  "yesterdayAt": {
+    "message": "Yesterday $1"
   }
 }

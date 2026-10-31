@@ -14,9 +14,6 @@
   "viewOptions": {
     "message": "設定を開く"
   },
-  "closeSettings": {
-    "message": "設定を閉じる"
-  },
   "categories": {
     "message": "設定カテゴリー"
   },
@@ -24,19 +21,7 @@
     "message": "外観"
   },
   "background": {
-    "message": "壁紙"
-  },
-  "appearanceDescription": {
-    "message": "カバーの並び順と見た目を調整します。"
-  },
-  "backgroundDescription": {
-    "message": "写真や動画で、ブックマークの背景を自分らしく。"
-  },
-  "basicPreferences": {
-    "message": "基本設定"
-  },
-  "visualExperience": {
-    "message": "表示設定"
+    "message": "背景"
   },
   "sortBookmarks": {
     "message": "ブックマークの並び順"
@@ -53,11 +38,8 @@
   "recent": {
     "message": "最近開いた項目"
   },
-  "colorTheme": {
-    "message": "カラーテーマ"
-  },
   "system": {
-    "message": "システム"
+    "message": "自動"
   },
   "light": {
     "message": "ライト"
@@ -68,50 +50,20 @@
   "reflection": {
     "message": "カバーの反射"
   },
-  "showReflection": {
-    "message": "カバーの反射を表示"
-  },
-  "reflectionDescription": {
-    "message": "カバーの下に反射を表示します"
-  },
-  "wallpaperSource": {
-    "message": "壁紙の選択"
-  },
   "chooseMedia": {
     "message": "写真・動画を選択"
   },
   "mediaHint": {
-    "message": "動画は無音でループ再生・この端末にのみ保存"
-  },
-  "mediaLimit": {
-    "message": "元のファイルを保存・最大 512 MB・外部へのアップロードなし"
+    "message": "元のファイルと HDR 情報を保持・最大 512 MB・このコンピュータにのみ保存され、アップロードされません。動画は常に消音でループ再生されます。"
   },
   "restoreBackground": {
     "message": "デフォルトの背景に戻す"
   },
-  "adjustments": {
-    "message": "画面の調整"
-  },
   "photoBlur": {
-    "message": "写真のぼかし"
+    "message": "ぼかし"
   },
   "dimming": {
     "message": "暗さ"
-  },
-  "mediaDetails": {
-    "message": "再生と保存について"
-  },
-  "nativeVideoNote": {
-    "message": "元の動画と HDR メタデータを保持します。変換や Canvas 処理は行いません。"
-  },
-  "codecNote": {
-    "message": "対応形式は Chrome と OS のデコーダーに依存します。動画にはぼかしを適用しません。"
-  },
-  "hdrDisplay": {
-    "message": "HDR 対応ディスプレイを検出しました。出力は動画・デコーダー・表示設定にも依存します。"
-  },
-  "sdrDisplay": {
-    "message": "現在の表示環境は SDR です。対応する HDR 動画は Chrome がトーンマッピングします。"
   },
   "defaultBackground": {
     "message": "デフォルトのグラデーション"
@@ -176,9 +128,6 @@
   "genericError": {
     "message": "背景を保存できません。もう一度お試しください。"
   },
-  "bookmarks": {
-    "message": "ブックマーク"
-  },
   "searchBookmarks": {
     "message": "ブックマークを検索"
   },
@@ -187,15 +136,6 @@
   },
   "coverFlow": {
     "message": "ブックマークの Cover Flow"
-  },
-  "backFolder": {
-    "message": "$1 に戻る"
-  },
-  "back": {
-    "message": "戻る"
-  },
-  "noResults": {
-    "message": "検索結果がありません"
   },
   "noRecent": {
     "message": "最近開いたブックマークはありません"
@@ -210,9 +150,207 @@
     "message": "ブックマークを読み込み中…"
   },
   "bookmarksFailed": {
-    "message": "Chrome のブックマークを読み込めません。"
+    "message": "Chrome のブックマークを読み込めません"
   },
   "openFailed": {
     "message": "ブックマークを開けません"
+  },
+  "privacy": {
+    "message": "プライバシー"
+  },
+  "done": {
+    "message": "完了"
+  },
+  "changesApplyNow": {
+    "message": "変更はすぐに反映されます"
+  },
+  "preferPreview": {
+    "message": "Web サイトのプレビュー画像を優先"
+  },
+  "preferPreviewHint": {
+    "message": "プレビュー画像がない場合は、サイト名とテーマカラーからカバーを生成します。"
+  },
+  "coverAngle": {
+    "message": "カバーの角度"
+  },
+  "reduceFlip": {
+    "message": "めくりアニメーションを減らす"
+  },
+  "reduceFlipHint": {
+    "message": "カバーはフェードインで表示されます。システム設定で「視差効果を減らす」がオンのときは自動的に有効になります。"
+  },
+  "stageBackground": {
+    "message": "ステージの背景"
+  },
+  "presetDefault": {
+    "message": "デフォルト"
+  },
+  "presetMist": {
+    "message": "ミスト"
+  },
+  "presetNight": {
+    "message": "ナイト"
+  },
+  "presetMedia": {
+    "message": "写真または動画"
+  },
+  "dropMedia": {
+    "message": "写真または動画をここにドラッグするか、"
+  },
+  "chooseFile": {
+    "message": "ファイルを選択…"
+  },
+  "photoBlurHint": {
+    "message": "写真にのみ適用されます。動画は元の画質のままです。"
+  },
+  "restore": {
+    "message": "元に戻す"
+  },
+  "privacyLocal": {
+    "message": "ブックマークはこのコンピュータの外に出ません"
+  },
+  "privacyLocalBody": {
+    "message": "Chrome のブックマークを直接読み込みます。アカウント、サーバ、同期は不要です。"
+  },
+  "privacyNoTracking": {
+    "message": "分析やトラッキングは行いません"
+  },
+  "privacyNoTrackingBody": {
+    "message": "使用状況のデータは一切収集しません。「最近開いた項目」はこのコンピュータにのみ記録されます。"
+  },
+  "privacyPreviews": {
+    "message": "プレビューは各 Web サイトから取得"
+  },
+  "privacyPreviewsBody": {
+    "message": "カバーには各サイトが公開しているプレビュー画像（Open Graph）を使用します。取得時にそのサイトにアクセスし、結果はこのコンピュータにキャッシュされます。"
+  },
+  "previewCache": {
+    "message": "プレビューのキャッシュ"
+  },
+  "previewCacheCount": {
+    "message": "$1 件のプレビュー画像をキャッシュ済み"
+  },
+  "clear": {
+    "message": "消去"
+  },
+  "recentHistory": {
+    "message": "「最近開いた項目」の履歴"
+  },
+  "recentHistoryHint": {
+    "message": "このコンピュータにのみ保存"
+  },
+  "cleared": {
+    "message": "消去しました"
+  },
+  "clearSearch": {
+    "message": "検索を消去"
+  },
+  "library": {
+    "message": "ライブラリ"
+  },
+  "allBookmarks": {
+    "message": "すべてのブックマーク"
+  },
+  "recentlyAdded": {
+    "message": "最近追加した項目"
+  },
+  "localOnly": {
+    "message": "ブックマークは本機にのみ保存"
+  },
+  "bookmarkCount": {
+    "message": "$1 件のブックマーク"
+  },
+  "bookmarkCountOne": {
+    "message": "1 件のブックマーク"
+  },
+  "searchResults": {
+    "message": "検索結果"
+  },
+  "matchCount": {
+    "message": "「$2」に一致する項目 $1 件"
+  },
+  "matchCountOne": {
+    "message": "「$1」に一致する項目 1 件"
+  },
+  "view": {
+    "message": "表示"
+  },
+  "viewCoverFlow": {
+    "message": "Cover Flow"
+  },
+  "viewGrid": {
+    "message": "グリッド"
+  },
+  "viewList": {
+    "message": "リスト"
+  },
+  "comingSoon": {
+    "message": "近日対応"
+  },
+  "enterFullscreen": {
+    "message": "フルスクリーン Cover Flow"
+  },
+  "exitFullscreen": {
+    "message": "フルスクリーンを解除"
+  },
+  "position": {
+    "message": "表示位置"
+  },
+  "positionValue": {
+    "message": "$2 件中 $1 件目"
+  },
+  "previousBookmark": {
+    "message": "前のブックマーク"
+  },
+  "nextBookmark": {
+    "message": "次のブックマーク"
+  },
+  "open": {
+    "message": "開く"
+  },
+  "opening": {
+    "message": "開いています…"
+  },
+  "noResultsFor": {
+    "message": "「$1」に一致する項目はありません"
+  },
+  "tryOtherKeywords": {
+    "message": "別のキーワードを試すか、「すべてのブックマーク」で検索してください"
+  },
+  "noRecentHint": {
+    "message": "開いたブックマークがここに表示されます"
+  },
+  "bookmarksFailedHint": {
+    "message": "ブックマークへのアクセスが許可されていることを確認して、もう一度お試しください。"
+  },
+  "retry": {
+    "message": "再試行"
+  },
+  "bookmarkList": {
+    "message": "ブックマークのリスト"
+  },
+  "columnName": {
+    "message": "名前"
+  },
+  "columnSite": {
+    "message": "サイト"
+  },
+  "columnFolder": {
+    "message": "フォルダー"
+  },
+  "columnAdded": {
+    "message": "追加日"
+  },
+  "columnLastOpened": {
+    "message": "最後に開いた日"
+  },
+  "never": {
+    "message": "なし"
+  },
+  "todayAt": {
+    "message": "今日 $1"
+  },
+  "yesterdayAt": {
+    "message": "昨日 $1"
   }
 }

@@ -1,3 +1,5 @@
+import { parseColor } from '../application/cover-art'
+
 const PREVIEW_NAMES = new Set(['og:image', 'og:image:url', 'twitter:image', 'twitter:image:src'])
 
 function decodeHtmlEntities(value: string): string {
@@ -48,4 +50,19 @@ export function extractPreviewImage(html: string, pageUrl: string): string | und
   }
 
   return undefined
+}
+
+/** Prefer a theme color that applies to light mode or to every scheme. */
+export function extractThemeColor(html: string): string | undefined {
+  let fallback: string | undefined
+  for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const attributes = parseAttributes(match[0])
+    if (attributes.get('name')?.toLocaleLowerCase() !== 'theme-color') continue
+    const color = parseColor(attributes.get('content') ?? '')
+    if (color === undefined) continue
+    const media = attributes.get('media')?.toLocaleLowerCase() ?? ''
+    if (!media.includes('dark')) return color
+    fallback ??= color
+  }
+  return fallback
 }

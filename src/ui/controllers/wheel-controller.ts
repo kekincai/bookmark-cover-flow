@@ -1,7 +1,8 @@
 import type { MotionController } from './motion-controller'
 
+/** One cover per 60 px of drag or trackpad travel, scaled with the cover size (240 px). */
 export function gestureDistance(element: HTMLElement): number {
-  return (element.querySelector<HTMLElement>('.cover-card')?.offsetWidth ?? 400) * 0.85
+  return 60 * ((element.querySelector<HTMLElement>('.cover-card')?.offsetWidth ?? 240) / 240)
 }
 export function attachWheelController(element: HTMLElement, motion: MotionController): () => void {
   let delta = 0
@@ -9,7 +10,7 @@ export function attachWheelController(element: HTMLElement, motion: MotionContro
   let idle = 0
   let revision = -1
   let axis: 'x' | 'y' | undefined
-  let distance = 340
+  let distance = 60
   const flush = (): void => {
     frame = 0
     if (revision === motion.revision) motion.scrubTo(motion.position + delta / distance)

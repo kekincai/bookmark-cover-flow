@@ -7,7 +7,7 @@ export interface MotionConfig {
   readonly settleVelocity: number
 }
 export const defaultMotionConfig: MotionConfig = {
-  frequency: 20,
+  frequency: 15,
   settleDistance: 0.001,
   settleVelocity: 0.015,
 }

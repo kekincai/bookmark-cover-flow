@@ -12,10 +12,7 @@
     "message": "設定"
   },
   "viewOptions": {
-    "message": "開啟設定"
-  },
-  "closeSettings": {
-    "message": "關閉設定"
+    "message": "偏好設定"
   },
   "categories": {
     "message": "設定分類"
@@ -24,19 +21,7 @@
     "message": "外觀"
   },
   "background": {
-    "message": "桌布"
-  },
-  "appearanceDescription": {
-    "message": "調整封面排列與視覺體驗。"
-  },
-  "backgroundDescription": {
-    "message": "以圖片、影片與不同明暗背景打造書籤空間。"
-  },
-  "basicPreferences": {
-    "message": "基本偏好"
-  },
-  "visualExperience": {
-    "message": "視覺體驗"
+    "message": "背景"
   },
   "sortBookmarks": {
     "message": "書籤排序"
@@ -53,11 +38,8 @@
   "recent": {
     "message": "最近開啟"
   },
-  "colorTheme": {
-    "message": "色彩主題"
-  },
   "system": {
-    "message": "跟隨系統"
+    "message": "自動"
   },
   "light": {
     "message": "淺色"
@@ -68,50 +50,20 @@
   "reflection": {
     "message": "封面倒影"
   },
-  "showReflection": {
-    "message": "顯示封面倒影"
-  },
-  "reflectionDescription": {
-    "message": "在封面下方顯示鏡面倒影"
-  },
-  "wallpaperSource": {
-    "message": "桌布來源"
-  },
   "chooseMedia": {
-    "message": "上傳本機圖片或影片"
+    "message": "選擇圖片或影片"
   },
   "mediaHint": {
-    "message": "影片自動靜音循環 · 僅儲存在本機"
-  },
-  "mediaLimit": {
-    "message": "保留原始檔案 · 最大 512 MB · 不上傳至伺服器"
+    "message": "保留原始檔案與 HDR 資訊 · 最大 512 MB · 只存在本機，不會上傳。影片一律靜音循環播放。"
   },
   "restoreBackground": {
     "message": "恢復預設背景"
   },
-  "adjustments": {
-    "message": "畫面調整"
-  },
   "photoBlur": {
-    "message": "照片模糊度"
+    "message": "模糊"
   },
   "dimming": {
     "message": "暗度"
-  },
-  "mediaDetails": {
-    "message": "播放與儲存說明"
-  },
-  "nativeVideoNote": {
-    "message": "保留原始影片與 HDR 中繼資料，不轉碼、不經畫布處理。"
-  },
-  "codecNote": {
-    "message": "格式支援取決於 Chrome 與系統解碼器；影片不使用模糊濾鏡，以保留原生播放路徑。"
-  },
-  "hdrDisplay": {
-    "message": "偵測到 HDR 顯示能力，實際效果仍取決於影片、解碼器與顯示設定。"
-  },
-  "sdrDisplay": {
-    "message": "目前顯示環境為 SDR，支援的 HDR 影片由 Chrome 進行色調映射。"
   },
   "defaultBackground": {
     "message": "預設漸層背景"
@@ -176,9 +128,6 @@
   "genericError": {
     "message": "無法儲存背景，請重試。"
   },
-  "bookmarks": {
-    "message": "書籤"
-  },
   "searchBookmarks": {
     "message": "搜尋書籤"
   },
@@ -187,15 +136,6 @@
   },
   "coverFlow": {
     "message": "書籤封面瀏覽"
-  },
-  "backFolder": {
-    "message": "返回$1"
-  },
-  "back": {
-    "message": "返回"
-  },
-  "noResults": {
-    "message": "找不到結果"
   },
   "noRecent": {
     "message": "尚無最近開啟的書籤"
@@ -210,9 +150,207 @@
     "message": "正在讀取書籤…"
   },
   "bookmarksFailed": {
-    "message": "無法讀取 Chrome 書籤。"
+    "message": "無法讀取 Chrome 書籤"
   },
   "openFailed": {
     "message": "無法開啟書籤"
+  },
+  "privacy": {
+    "message": "隱私權"
+  },
+  "done": {
+    "message": "完成"
+  },
+  "changesApplyNow": {
+    "message": "變更會立即生效"
+  },
+  "preferPreview": {
+    "message": "優先使用網站預覽圖"
+  },
+  "preferPreviewHint": {
+    "message": "沒有預覽圖時，會依網站名稱和主題色彩產生封面。"
+  },
+  "coverAngle": {
+    "message": "封面角度"
+  },
+  "reduceFlip": {
+    "message": "減少翻頁動畫"
+  },
+  "reduceFlipHint": {
+    "message": "封面直接淡入就位。系統開啟「減少動態效果」時會自動生效。"
+  },
+  "stageBackground": {
+    "message": "舞台背景"
+  },
+  "presetDefault": {
+    "message": "預設"
+  },
+  "presetMist": {
+    "message": "霧藍"
+  },
+  "presetNight": {
+    "message": "夜色"
+  },
+  "presetMedia": {
+    "message": "照片或影片"
+  },
+  "dropMedia": {
+    "message": "將圖片或影片拖到這裡，或"
+  },
+  "chooseFile": {
+    "message": "選擇檔案…"
+  },
+  "photoBlurHint": {
+    "message": "只對照片生效，影片保持原始畫質。"
+  },
+  "restore": {
+    "message": "恢復"
+  },
+  "privacyLocal": {
+    "message": "書籤不會離開這台電腦"
+  },
+  "privacyLocalBody": {
+    "message": "直接讀取 Chrome 書籤，不需要帳號、伺服器或同步。"
+  },
+  "privacyNoTracking": {
+    "message": "沒有統計與追蹤"
+  },
+  "privacyNoTrackingBody": {
+    "message": "不收集任何使用資料，「最近開啟」只記錄在本機。"
+  },
+  "privacyPreviews": {
+    "message": "預覽圖來自網站本身"
+  },
+  "privacyPreviewsBody": {
+    "message": "封面使用網站公開的預覽圖（Open Graph），取得時會連線至該網站，結果快取在本機。"
+  },
+  "previewCache": {
+    "message": "預覽快取"
+  },
+  "previewCacheCount": {
+    "message": "已快取 $1 張預覽圖"
+  },
+  "clear": {
+    "message": "清除"
+  },
+  "recentHistory": {
+    "message": "「最近開啟」記錄"
+  },
+  "recentHistoryHint": {
+    "message": "只儲存在本機"
+  },
+  "cleared": {
+    "message": "已清除"
+  },
+  "clearSearch": {
+    "message": "清除搜尋"
+  },
+  "library": {
+    "message": "資料庫"
+  },
+  "allBookmarks": {
+    "message": "所有書籤"
+  },
+  "recentlyAdded": {
+    "message": "最近加入"
+  },
+  "localOnly": {
+    "message": "書籤僅儲存在本機"
+  },
+  "bookmarkCount": {
+    "message": "$1 個書籤"
+  },
+  "bookmarkCountOne": {
+    "message": "1 個書籤"
+  },
+  "searchResults": {
+    "message": "搜尋結果"
+  },
+  "matchCount": {
+    "message": "$1 個符合「$2」的結果"
+  },
+  "matchCountOne": {
+    "message": "1 個符合「$1」的結果"
+  },
+  "view": {
+    "message": "顯示方式"
+  },
+  "viewCoverFlow": {
+    "message": "Cover Flow"
+  },
+  "viewGrid": {
+    "message": "網格"
+  },
+  "viewList": {
+    "message": "列表"
+  },
+  "comingSoon": {
+    "message": "即將推出"
+  },
+  "enterFullscreen": {
+    "message": "全螢幕 Cover Flow"
+  },
+  "exitFullscreen": {
+    "message": "結束全螢幕"
+  },
+  "position": {
+    "message": "瀏覽位置"
+  },
+  "positionValue": {
+    "message": "第 $1 個，共 $2 個"
+  },
+  "previousBookmark": {
+    "message": "上一個書籤"
+  },
+  "nextBookmark": {
+    "message": "下一個書籤"
+  },
+  "open": {
+    "message": "開啟"
+  },
+  "opening": {
+    "message": "正在開啟…"
+  },
+  "noResultsFor": {
+    "message": "找不到「$1」"
+  },
+  "tryOtherKeywords": {
+    "message": "試試其他關鍵字，或在「所有書籤」中搜尋"
+  },
+  "noRecentHint": {
+    "message": "開啟過的書籤會顯示在這裡"
+  },
+  "bookmarksFailedHint": {
+    "message": "請確認已授予書籤權限，然後再試一次。"
+  },
+  "retry": {
+    "message": "重試"
+  },
+  "bookmarkList": {
+    "message": "書籤列表"
+  },
+  "columnName": {
+    "message": "名稱"
+  },
+  "columnSite": {
+    "message": "網站"
+  },
+  "columnFolder": {
+    "message": "資料夾"
+  },
+  "columnAdded": {
+    "message": "加入日期"
+  },
+  "columnLastOpened": {
+    "message": "上次開啟"
+  },
+  "never": {
+    "message": "從未"
+  },
+  "todayAt": {
+    "message": "今天 $1"
+  },
+  "yesterdayAt": {
+    "message": "昨天 $1"
   }
 }

@@ -27,7 +27,11 @@ describe('local wallpaper validation', () => {
       defaultWallpaper,
     )
     expect(
-      parseWallpaper({ kind: 'video', blur: 20, dim: 100, width: NaN, paused: true }),
-    ).toMatchObject({ kind: 'video', blur: 10, dim: 80, width: 0, paused: true })
+      parseWallpaper({ kind: 'video', blur: 60, dim: 100, width: NaN, paused: true }),
+    ).toMatchObject({ kind: 'video', blur: 40, dim: 80, width: 0, paused: true })
+  })
+  it('keeps only known built-in presets', () => {
+    expect(parseWallpaper({ kind: 'gradient', preset: 'night' }).preset).toBe('night')
+    expect(parseWallpaper({ kind: 'gradient', preset: 'neon' }).preset).toBe('default')
   })
 })

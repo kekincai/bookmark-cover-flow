@@ -1,11 +1,20 @@
-export interface TabService {
-  open(url: string): Promise<void>
+export interface OpenOptions {
+  /** Open without switching to the new tab. */
+  readonly background?: boolean
 }
 
-export async function openBookmark(service: TabService, url: string): Promise<void> {
+export interface TabService {
+  open(url: string, options?: OpenOptions): Promise<void>
+}
+
+export async function openBookmark(
+  service: TabService,
+  url: string,
+  options: OpenOptions = {},
+): Promise<void> {
   const parsedUrl = new URL(url)
   if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
     throw new Error(`Unsupported bookmark protocol: ${parsedUrl.protocol}`)
   }
-  await service.open(parsedUrl.href)
+  await service.open(parsedUrl.href, options)
 }

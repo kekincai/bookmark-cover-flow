@@ -1,49 +1,47 @@
 import { describe, expect, it } from 'vitest'
-import { getCoverTransform } from '../../src/application/cover-layout'
+import { coverStackOrder, getCoverTransform } from '../../src/application/cover-layout'
 
 describe('getCoverTransform', () => {
-  it('keeps the active cover centered, largest, and fully opaque', () => {
-    expect(getCoverTransform(0)).toEqual({
-      x: 0,
-      z: 80,
-      rotateY: 0,
-      scale: 1,
-      opacity: 1,
-    })
+  it('brings the centered cover forward and keeps it flat', () => {
+    expect(getCoverTransform(0)).toEqual({ x: 0, z: 40, rotateY: 0, opacity: 1 })
   })
 
-  it('mirrors side covers and progressively reduces their prominence', () => {
-    const left = getCoverTransform(-2)
-    const right = getCoverTransform(2)
-    const farther = getCoverTransform(4)
-
-    expect(left.x).toBe(-right.x)
-    expect(left.rotateY).toBe(-right.rotateY)
-    expect(left.scale).toBe(right.scale)
-    expect(farther.scale).toBeLessThan(right.scale)
-    expect(farther.opacity).toBeLessThan(right.opacity)
+  it('places side covers at the specified offsets, depth and angle', () => {
+    expect(getCoverTransform(1)).toEqual({ x: 178, z: -120, rotateY: 70, opacity: 1 })
+    expect(getCoverTransform(3)).toEqual({ x: 298, z: -120, rotateY: 70, opacity: 1 })
+    expect(getCoverTransform(-2)).toEqual({ x: -238, z: -120, rotateY: -70, opacity: 1 })
   })
 
-  it('reduces rotation when reduced motion is requested', () => {
-    expect(Math.abs(getCoverTransform(1, true).rotateY)).toBeLessThan(
-      Math.abs(getCoverTransform(1).rotateY),
-    )
+  it('turns right-hand covers by a positive angle and honors the configured angle', () => {
+    expect(getCoverTransform(2, { angle: 45 }).rotateY).toBe(45)
+    expect(getCoverTransform(-2, { angle: 80 }).rotateY).toBe(-80)
   })
 
-  it('interpolates continuously as a cover moves away from center', () => {
-    for (const boundary of [-1, 0, 1]) {
+  it('scales linearly with the cover size', () => {
+    const large = getCoverTransform(2, { size: 340 })
+    expect(large.x).toBeCloseTo(238 * (340 / 240))
+    expect(large.z).toBeCloseTo(-170)
+  })
+
+  it('is continuous through the center and every snap point', () => {
+    for (const boundary of [-2, -1, 0, 1, 2]) {
       const before = getCoverTransform(boundary - 0.00001)
       const after = getCoverTransform(boundary + 0.00001)
-      for (const property of ['x', 'z', 'rotateY', 'scale', 'opacity'] as const) {
+      for (const property of ['x', 'z', 'rotateY', 'opacity'] as const) {
         expect(Math.abs(after[property] - before[property])).toBeLessThan(0.01)
       }
     }
   })
 
-  it('keeps overlapping nearby content opaque and scales spacing with card width', () => {
-    expect(getCoverTransform(2).opacity).toBe(1)
-    expect(getCoverTransform(1, false, 300).x).toBeCloseTo(
-      getCoverTransform(1, false, 400).x * 0.75,
-    )
+  it('fades smoothly between seven and eight positions away', () => {
+    expect(getCoverTransform(7).opacity).toBe(1)
+    expect(getCoverTransform(7.5).opacity).toBeCloseTo(0.5)
+    expect(getCoverTransform(-8).opacity).toBe(0)
+  })
+
+  it('stacks covers nearer the center above farther covers', () => {
+    expect(coverStackOrder(0)).toBeGreaterThan(coverStackOrder(0.4))
+    expect(coverStackOrder(-1)).toBe(coverStackOrder(1))
+    expect(coverStackOrder(1)).toBeGreaterThan(coverStackOrder(2))
   })
 })

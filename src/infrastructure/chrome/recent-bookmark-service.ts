@@ -69,3 +69,7 @@ export async function recordRecentBookmark(
   await writeValue(next)
   return next
 }
+
+export async function clearRecentBookmarks(): Promise<void> {
+  await writeValue([])
+}

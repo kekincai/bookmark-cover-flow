@@ -1,60 +1,74 @@
 import type { NavigationCommand } from '../../domain/navigation'
 
+/** Holding an arrow key advances one cover per 90 ms regardless of the OS repeat rate. */
+const REPEAT_INTERVAL_MS = 90
+/** Regions that handle their own arrow, Home/End and Enter keys. */
+const SELF_NAVIGATING = '.sidebar, .bookmark-list, .settings-dialog'
+const TEXT_ENTRY = 'input, textarea, select, [contenteditable="true"]'
+
 export function attachKeyboardController(
   dispatch: (command: NavigationCommand) => void,
   searchInput: HTMLInputElement,
 ): () => void {
-  const onKeyDown = (event: KeyboardEvent): void => {
-    const isSearchFocused = document.activeElement === searchInput
+  let lastRepeatAt = 0
 
-    if (event.key === 'Escape' && isSearchFocused) {
-      searchInput.value = ''
-      searchInput.blur()
-      dispatch({ type: 'search', query: '' })
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (event.defaultPrevented || event.altKey) return
+    const target = event.target instanceof Element ? event.target : null
+    const command = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k'
+
+    if (event.key === 'Escape') {
+      if (target?.closest('.settings-dialog')) return
+      if (target === searchInput && searchInput.value === '') searchInput.blur()
+      dispatch({ type: 'escape' })
       event.preventDefault()
       return
     }
-    if (isSearchFocused) return
-    if (
-      event.defaultPrevented ||
-      event.altKey ||
-      event.ctrlKey ||
-      (event.metaKey && event.key.toLowerCase() !== 'k')
-    )
+    if (command) {
+      searchInput.focus()
+      searchInput.select()
+      event.preventDefault()
       return
-    const target = event.target instanceof Element ? event.target : null
-    if (
-      target?.closest(
-        'input, textarea, select, [contenteditable="true"], .preferences-menu__panel',
-      ) !== null &&
-      target !== null
-    )
+    }
+    if (target?.closest(TEXT_ENTRY) || target?.closest('.settings-dialog')) return
+    if (event.ctrlKey && event.key !== 'Enter') return
+    if (event.metaKey && event.key !== 'Enter') return
+
+    if (event.key === '/') {
+      searchInput.focus()
+      searchInput.select()
+      event.preventDefault()
       return
+    }
+    if (event.key.toLowerCase() === 'f' && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
+      dispatch({ type: 'toggle-fullscreen' })
+      event.preventDefault()
+      return
+    }
+
+    if (target?.closest(SELF_NAVIGATING)) return
     if (event.key === 'Enter' && target?.closest('button, a') && !target.closest('.cover-card'))
       return
 
-    const command: NavigationCommand | undefined = (() => {
+    const navigation: NavigationCommand | undefined = (() => {
       if (event.key === 'ArrowLeft') return { type: 'previous' }
       if (event.key === 'ArrowRight') return { type: 'next' }
-      if (event.key === 'Enter') return { type: 'open' }
+      if (event.key === 'Enter') return { type: 'open', background: event.metaKey || event.ctrlKey }
       if (event.key === 'Home') return { type: 'first' }
       if (event.key === 'End') return { type: 'last' }
       if (event.key === 'PageUp') return { type: 'page-previous' }
       if (event.key === 'PageDown') return { type: 'page-next' }
       return undefined
     })()
-
-    if (command !== undefined) {
-      dispatch(command)
-      event.preventDefault()
-      return
+    if (navigation === undefined) return
+    event.preventDefault()
+    if (event.repeat) {
+      if (event.timeStamp - lastRepeatAt < REPEAT_INTERVAL_MS) return
+      lastRepeatAt = event.timeStamp
+    } else {
+      lastRepeatAt = event.timeStamp
     }
-
-    if (event.key === '/' || (event.key.toLocaleLowerCase() === 'k' && event.metaKey)) {
-      searchInput.focus()
-      searchInput.select()
-      event.preventDefault()
-    }
+    dispatch(navigation)
   }
 
   window.addEventListener('keydown', onKeyDown)

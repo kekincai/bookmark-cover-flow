@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extractPreviewImage } from '../../src/background/preview-metadata'
+import { extractPreviewImage, extractThemeColor } from '../../src/background/preview-metadata'
 
 describe('extractPreviewImage', () => {
   it('extracts and resolves an Open Graph image regardless of attribute order', () => {
@@ -19,5 +19,23 @@ describe('extractPreviewImage', () => {
   it('rejects non-http image URLs', () => {
     const html = '<meta property="og:image" content="data:image/png;base64,abc">'
     expect(extractPreviewImage(html, 'https://example.com')).toBeUndefined()
+  })
+})
+
+describe('extractThemeColor', () => {
+  it('prefers the light or unconditional theme color', () => {
+    const html =
+      '<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111">' +
+      '<meta name="theme-color" content="#3178c6">'
+    expect(extractThemeColor(html)).toBe('#3178C6')
+  })
+
+  it('falls back to a dark-only color and ignores invalid values', () => {
+    expect(
+      extractThemeColor(
+        '<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111">',
+      ),
+    ).toBe('#111111')
+    expect(extractThemeColor('<meta name="theme-color" content="var(--x)">')).toBeUndefined()
   })
 })

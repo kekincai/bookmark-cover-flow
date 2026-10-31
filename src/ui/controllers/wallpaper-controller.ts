@@ -4,6 +4,7 @@ import {
   resetWallpaper,
   saveWallpaperAdjustment,
   saveWallpaperMedia,
+  saveWallpaperPreset,
 } from '../../infrastructure/wallpaper-store'
 import type {
   WallpaperAction,
@@ -16,7 +17,11 @@ import {
   type PreparedWallpaper,
 } from '../components/wallpaper-surface'
 
-export function createWallpaperController(controls: WallpaperControls): {
+/** Owns the stage background: `mount` is the Cover Flow stage the surface fills. */
+export function createWallpaperController(
+  controls: WallpaperControls,
+  mount: HTMLElement,
+): {
   init(): Promise<void>
   destroy(): void
 } {
@@ -36,7 +41,7 @@ export function createWallpaperController(controls: WallpaperControls): {
     state = { ...state, playbackError: error ?? '' }
     publish()
   })
-  document.body.prepend(surface.element)
+  mount.prepend(surface.element)
   const failure = (error: unknown): void => {
     state = {
       ...state,
@@ -77,6 +82,13 @@ export function createWallpaperController(controls: WallpaperControls): {
         state = { ...state, settings: saved, playbackError: '' }
         surface.setMedia(prepared, saved)
         prepared = undefined
+      } else if (action.type === 'preset') {
+        // A built-in background replaces any stored photo or video.
+        await saveWallpaperPreset(action.preset)
+        if (destroyed) return
+        saved = { ...defaultWallpaper, preset: action.preset }
+        state = { ...state, settings: saved, playbackError: '' }
+        surface.setMedia(undefined, saved)
       } else if (action.type === 'reset') {
         await resetWallpaper()
         if (destroyed) return

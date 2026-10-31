@@ -1,7 +1,6 @@
 import type { Bookmark } from '../domain/bookmark'
 import type { CoverItem } from '../domain/cover'
-
-const accents = ['#5a7ff5', '#5f8f7a', '#8b75ab', '#b68058', '#677d9a', '#9a6f77'] as const
+import { createCoverArt } from './cover-art'
 
 function safeUrl(value: string): URL | undefined {
   try {
@@ -16,22 +15,44 @@ function faviconUrl(url: string): string | undefined {
   return chrome.runtime.getURL(`/_favicon/?pageUrl=${encodeURIComponent(url)}&size=64`)
 }
 
-export function resolveCover(bookmark: Bookmark, index = 0): CoverItem {
+export interface FiledBookmark extends Bookmark {
+  readonly folderTitle: string
+}
+
+export interface ResolveCoverOptions {
+  /** When false the cover is generated immediately and no preview is ever requested. */
+  readonly preferPreview: boolean
+  /** Site colors already learned this session, keyed by hostname. */
+  readonly siteColors?: ReadonlyMap<string, string>
+}
+
+export function resolveCover(bookmark: FiledBookmark, options: ResolveCoverOptions): CoverItem {
   const parsedUrl = safeUrl(bookmark.url)
   const subtitle = parsedUrl?.hostname.replace(/^www\./, '') ?? bookmark.url
-  const image = faviconUrl(bookmark.url)
+  const title = bookmark.title.trim() || subtitle
+  const favicon = faviconUrl(bookmark.url)
+  const canPreview = options.preferPreview && parsedUrl !== undefined && favicon !== undefined
 
   return {
     bookmarkId: bookmark.id,
-    title: bookmark.title.trim() || subtitle,
+    title,
     subtitle,
     url: bookmark.url,
-    ...(image === undefined ? {} : { image, favicon: image }),
-    imageKind: image === undefined ? 'generated' : 'favicon',
-    fallbackKind: image === undefined ? 'generated' : 'favicon',
-    accent: accents[index % accents.length] ?? accents[0],
+    folderTitle: bookmark.folderTitle,
+    ...(bookmark.dateAdded === undefined ? {} : { dateAdded: bookmark.dateAdded }),
+    ...(favicon === undefined ? {} : { favicon }),
+    imageKind: canPreview ? 'pending' : 'generated',
+    art: createCoverArt(title, subtitle, options.siteColors?.get(subtitle)),
   }
 }
 
-export const resolveCovers = (bookmarks: readonly Bookmark[]): readonly CoverItem[] =>
-  bookmarks.map(resolveCover)
+export const resolveCovers = (
+  bookmarks: readonly FiledBookmark[],
+  options: ResolveCoverOptions,
+): readonly CoverItem[] => bookmarks.map((bookmark) => resolveCover(bookmark, options))
+
+/** Re-derive the generated art from a site color without touching the preview state. */
+export function applySiteColor(item: CoverItem, color: string): CoverItem {
+  if (item.art.background === color) return item
+  return { ...item, art: createCoverArt(item.title, item.subtitle, color) }
+}

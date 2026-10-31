@@ -1,33 +1,30 @@
 import { describe, expect, it } from 'vitest'
 import { searchBookmarks } from '../../src/application/search-bookmarks'
-import type { CoverItem } from '../../src/domain/cover'
+import { coverItem } from '../support/cover-item'
 
-const covers: readonly CoverItem[] = [
-  {
+const covers = [
+  coverItem({
     bookmarkId: '1',
     title: 'Design Notes',
     subtitle: 'notion.so',
     url: 'https://notion.so/design',
-    imageKind: 'generated',
-    fallbackKind: 'generated',
-    accent: '#000',
-  },
-  {
+    folderTitle: 'Reading',
+  }),
+  coverItem({
     bookmarkId: '2',
     title: 'Code',
     subtitle: 'github.com',
     url: 'https://github.com/example',
-    imageKind: 'generated',
-    fallbackKind: 'generated',
-    accent: '#000',
-  },
+    folderTitle: 'Development',
+  }),
 ]
 
 describe('searchBookmarks', () => {
-  it('searches title, hostname, and URL case-insensitively', () => {
+  it('searches title, hostname, URL and folder case-insensitively', () => {
     expect(searchBookmarks(covers, 'DESIGN')).toHaveLength(1)
     expect(searchBookmarks(covers, 'github.com')).toHaveLength(1)
     expect(searchBookmarks(covers, '/example')).toHaveLength(1)
+    expect(searchBookmarks(covers, 'develop')).toHaveLength(1)
   })
 
   it('returns the original collection for a blank query', () => {

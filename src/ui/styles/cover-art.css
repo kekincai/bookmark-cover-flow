@@ -1,0 +1,154 @@
+/* Generated covers are laid out on a 240 px canvas and scaled to the real cover size. */
+.cover-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--art-bg);
+  color: var(--art-fg);
+}
+.cover-art__canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 240px;
+  overflow: hidden;
+  transform: scale(var(--art-scale, 1));
+  transform-origin: 0 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.cover-art__canvas::after {
+  position: absolute;
+  inset: 0;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 7%),
+    inset 0 0 0 0.5px rgb(0 0 0 / 25%);
+  content: '';
+}
+.cover-art__caption {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cover-art__name,
+.cover-art__host {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cover-art__name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.cover-art__host {
+  font-size: 10px;
+  opacity: 0.72;
+}
+.cover-art__rule {
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--art-accent);
+}
+.cover-art__glyph {
+  position: absolute;
+  top: 2px;
+  left: 16px;
+  font-size: 176px;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.cover-art__glyph[data-pair='true'] {
+  font-size: 132px;
+}
+.cover-art__mark {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+  white-space: nowrap;
+}
+.cover-art__accent {
+  color: var(--art-accent);
+}
+.cover-art__caption--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+}
+.cover-art__caption--row .cover-art__host {
+  opacity: 0.75;
+}
+.cover-art__dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--art-accent);
+}
+.cover-art__disc {
+  position: absolute;
+  top: -34px;
+  right: -42px;
+  width: 196px;
+  height: 196px;
+  border-radius: 50%;
+  background: var(--art-accent);
+}
+.cover-art__ring {
+  position: absolute;
+  top: 42px;
+  right: 28px;
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--art-bg);
+  border-radius: 50%;
+  opacity: 0.55;
+}
+[data-template='circle'] .cover-art__name {
+  display: -webkit-box;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.cover-art__bands {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 112px;
+  background: repeating-linear-gradient(180deg, var(--art-accent) 0 5px, transparent 5px 13px);
+}
+.cover-art__caption--top {
+  top: 20px;
+  bottom: auto;
+}
+[data-template='bands'] .cover-art__name {
+  display: -webkit-box;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}

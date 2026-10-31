@@ -26,8 +26,12 @@ describe('automatic locale resolution', () => {
     expect(t('settings')).toBe('設定')
   })
   it('supports substitutions without altering user titles', () => {
-    expect(translate('backFolder', 'zh_CN', ['My folder'])).toBe('返回My folder')
-    expect(translate('backFolder', 'ja', ['My folder'])).toBe('My folder に戻る')
+    expect(translate('positionValue', 'zh_CN', ['3', '42'])).toBe('第 3 个，共 42 个')
+    expect(translate('positionValue', 'ja', ['3', '42'])).toBe('42 件中 3 件目')
+    expect(translate('matchCount', 'zh_CN', ['2', 'My $1 folder'])).toBe('2 个匹配“My $1 folder”')
+    expect(translate('matchCount', 'ja', ['2', 'My folder'])).toBe(
+      '「My folder」に一致する項目 2 件',
+    )
   })
   it('all shipped catalogs are complete and nonempty', () => {
     for (const catalog of [zhCN, zhTW, ja]) {

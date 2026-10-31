@@ -1,272 +1,363 @@
-import type { Preferences, SortMode, ThemeMode } from '../../domain/preferences'
-import { createWallpaperControls, type WallpaperControls } from './wallpaper-controls'
+import {
+  MAX_COVER_ANGLE,
+  MIN_COVER_ANGLE,
+  type Preferences,
+  type SortMode,
+  type ThemeMode,
+} from '../../domain/preferences'
+import type { PreviewCacheService } from '../../infrastructure/chrome/preview-cache-service'
 import { t } from '../../shared/i18n'
+import { trapTab } from '../focus-trap'
+import { icons } from './icons'
+import {
+  createButton,
+  createElement,
+  createRange,
+  createSelect,
+  createSwitch,
+  createTileGroup,
+  createWallpaperControls,
+  setUnavailable,
+  settingsGroup,
+  settingsHeading,
+  settingsId,
+  settingsRow,
+  type WallpaperControls,
+} from './wallpaper-controls'
 
 export interface PreferencesMenuView {
-  readonly element: HTMLElement
   readonly wallpaper: WallpaperControls
   render(preferences: Preferences): void
   onChange(listener: (change: Partial<Preferences>) => void): void
   destroy(): void
 }
 
-type Choice<T extends string> = { readonly value: T; readonly label: string }
-
-function choiceGroup<T extends string>(
-  label: string,
-  choices: readonly Choice<T>[],
-  onSelect: (value: T) => void,
-): { readonly field: HTMLElement; readonly buttons: readonly HTMLButtonElement[] } {
-  const field = document.createElement('section')
-  field.className = 'preferences-menu__field'
-  const heading = document.createElement('p')
-  heading.className = 'preferences-menu__label'
-  heading.textContent = label
-  const group = document.createElement('div')
-  group.className = 'preferences-menu__choices'
-  group.setAttribute('role', 'radiogroup')
-  group.setAttribute('aria-label', label)
-  const buttons = choices.map((choice) => {
-    const button = document.createElement('button')
-    button.type = 'button'
-    button.className = 'preferences-menu__choice'
-    button.dataset.liquidItem = ''
-    button.dataset.value = choice.value
-    button.setAttribute('role', 'radio')
-    button.setAttribute('aria-checked', 'false')
-    button.textContent = choice.label
-    button.addEventListener('click', () => onSelect(choice.value))
-    group.append(button)
-    return button
-  })
-  group.addEventListener('keydown', (event) => {
-    const index = buttons.findIndex((button) => button === document.activeElement)
-    if (index < 0) return
-    const delta =
-      event.key === 'ArrowRight' || event.key === 'ArrowDown'
-        ? 1
-        : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
-          ? -1
-          : 0
-    if (!delta) return
-    const next = buttons[(index + delta + buttons.length) % buttons.length]
-    next?.focus()
-    next?.click()
-    event.preventDefault()
-    event.stopPropagation()
-  })
-  field.append(heading, group)
-  return { field, buttons }
+export interface PreferencesMenuOptions {
+  /** Gear button in the sidebar; the menu owns its click handler and aria-expanded. */
+  readonly trigger: HTMLButtonElement
+  readonly previewCache: PreviewCacheService
+  readonly clearRecent: () => Promise<void>
 }
 
-export function createPreferencesMenu(): PreferencesMenuView {
-  const element = document.createElement('div')
-  element.className = 'preferences-menu'
-  const trigger = document.createElement('button')
-  trigger.type = 'button'
-  trigger.className = 'preferences-menu__trigger'
-  trigger.dataset.liquidItem = ''
-  trigger.setAttribute('aria-label', t('viewOptions'))
-  trigger.setAttribute('aria-haspopup', 'dialog')
-  trigger.setAttribute('aria-expanded', 'false')
-  trigger.innerHTML =
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M7 14v6"/></svg>'
+const SORT_MODES: readonly SortMode[] = ['bookmark', 'title', 'domain', 'recent']
+const CLEARED_MS = 2000
+/** A miniature Cover Flow: two angled side covers around a centre cover. */
+const THEME_THUMB =
+  '<span class="theme-thumb__side"></span><span class="theme-thumb__cover"></span><span class="theme-thumb__side"></span>'
 
-  const panel = document.createElement('div')
-  panel.className = 'preferences-menu__panel settings-drawer'
-  panel.setAttribute('role', 'dialog')
-  panel.setAttribute('aria-label', t('settings'))
-  panel.setAttribute('aria-modal', 'true')
-  panel.hidden = true
+export function createPreferencesMenu(options: PreferencesMenuOptions): PreferencesMenuView {
+  const { trigger, previewCache, clearRecent } = options
+  let change: (next: Partial<Preferences>) => void = () => undefined
+  const timers = new Set<number>()
 
-  const panelHeader = document.createElement('header')
-  panelHeader.className = 'settings-header'
-  panelHeader.innerHTML = `<div><span class="settings-eyebrow">Bookmark Cover Flow</span><h2>${t('settings')}</h2></div><button type="button" class="settings-close" aria-label="${t('closeSettings')}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button>`
-  const scrim = document.createElement('div')
-  scrim.className = 'settings-scrim'
-  scrim.hidden = true
-  const wallpaper = createWallpaperControls()
-  const appearance = document.createElement('section')
-  appearance.innerHTML = `<header class="settings-pane-header"><h3>${t('appearance')}</h3><p>${t('appearanceDescription')}</p></header>`
-  appearance.className = 'settings-pane'
-  const body = document.createElement('div')
-  body.className = 'settings-body'
-  const tabs = document.createElement('nav')
-  tabs.className = 'settings-tabs'
-  tabs.setAttribute('role', 'tablist')
-  tabs.setAttribute('aria-label', t('categories'))
-  tabs.setAttribute('aria-orientation', 'horizontal')
-  const panes = [appearance, wallpaper.element]
-  const tabButtons = [t('appearance'), t('background')].map((name, index) => {
-    const button = document.createElement('button')
-    button.type = 'button'
-    button.id = `settings-tab-${index}`
-    button.dataset.liquidItem = ''
-    button.setAttribute('role', 'tab')
-    button.setAttribute('aria-controls', `settings-pane-${index}`)
-    button.className = 'settings-tab'
-    button.textContent = name
-    button.addEventListener('click', () => selectTab(index))
-    tabs.append(button)
-    const pane = panes[index]!
-    pane.id = `settings-pane-${index}`
-    pane.setAttribute('role', 'tabpanel')
-    pane.setAttribute('aria-labelledby', button.id)
-    return button
+  /* ---------- Appearance ---------- */
+  const appearanceHeading = settingsHeading(t('appearance'))
+  const themes = createTileGroup<ThemeMode>(
+    appearanceHeading.id,
+    [
+      {
+        value: 'light',
+        label: t('light'),
+        thumbClass: 'theme-thumb theme-thumb--light',
+        thumbHtml: THEME_THUMB,
+      },
+      {
+        value: 'dark',
+        label: t('dark'),
+        thumbClass: 'theme-thumb theme-thumb--dark',
+        thumbHtml: THEME_THUMB,
+      },
+      {
+        value: 'system',
+        label: t('system'),
+        thumbClass: 'theme-thumb theme-thumb--system',
+        thumbHtml: THEME_THUMB,
+      },
+    ],
+    (theme) => change({ theme }),
+  )
+  themes.element.classList.add('settings-tiles--themes')
+  const themeGroup = settingsGroup(themes.element)
+  themeGroup.classList.add('settings-group--tiles')
+  const themeSection = createElement('div', 'settings-section')
+  themeSection.append(appearanceHeading, themeGroup)
+
+  const sort = createSelect<SortMode>('sort', [
+    { value: 'bookmark', label: t('sortBookmark') },
+    { value: 'title', label: t('sortTitle') },
+    { value: 'domain', label: t('sortWebsite') },
+    { value: 'recent', label: t('recent') },
+  ])
+  const reflection = createSwitch('reflection')
+  const preferPreview = createSwitch('prefer-preview')
+  const angle = createRange('angle', MIN_COVER_ANGLE, MAX_COVER_ANGLE)
+  const reduceFlip = createSwitch('reduce-flip')
+  const coverGroup = settingsGroup(
+    settingsRow(t('sortBookmarks'), [sort.wrapper], { labelFor: sort.select }).row,
+    settingsRow(t('reflection'), [reflection], { labelFor: reflection }).row,
+    settingsRow(t('preferPreview'), [preferPreview], {
+      sub: t('preferPreviewHint'),
+      labelFor: preferPreview,
+    }).row,
+  )
+  const motionGroup = settingsGroup(
+    settingsRow(t('coverAngle'), [angle.input, angle.value], { labelFor: angle.input }).row,
+    settingsRow(t('reduceFlip'), [reduceFlip], {
+      sub: t('reduceFlipHint'),
+      labelFor: reduceFlip,
+    }).row,
+  )
+  const appearance = createElement('section', 'settings-pane')
+  appearance.append(themeSection, coverGroup, motionGroup)
+
+  sort.select.addEventListener('change', () => {
+    const sortMode = SORT_MODES.find((mode) => mode === sort.select.value)
+    if (sortMode) change({ sortMode })
   })
-  const selectTab = (selected: number): void => {
-    tabButtons.forEach((button, index) => {
-      button.setAttribute('aria-selected', String(index === selected))
-      button.classList.toggle('is-active', index === selected)
-      button.tabIndex = index === selected ? 0 : -1
-      panes[index]!.hidden = index !== selected
+  reflection.addEventListener('change', () => change({ showReflection: reflection.checked }))
+  preferPreview.addEventListener('change', () =>
+    change({ preferPreviewImages: preferPreview.checked }),
+  )
+  const showAngle = (): void => {
+    angle.value.textContent = `${angle.input.value}°`
+    angle.input.setAttribute('aria-valuetext', `${angle.input.value}°`)
+  }
+  angle.input.addEventListener('input', () => {
+    showAngle()
+    change({ coverAngle: Number(angle.input.value) })
+  })
+  reduceFlip.addEventListener('change', () => change({ reduceFlipMotion: reduceFlip.checked }))
+
+  /* ---------- Background ---------- */
+  const wallpaper = createWallpaperControls()
+
+  /* ---------- Privacy ---------- */
+  const statements = (
+    [
+      ['success', icons.check, 'privacyLocal', 'privacyLocalBody'],
+      ['accent', icons.cross, 'privacyNoTracking', 'privacyNoTrackingBody'],
+      ['warning', icons.info, 'privacyPreviews', 'privacyPreviewsBody'],
+    ] as const
+  ).map(([tone, icon, title, body]) => {
+    const row = createElement('div', 'settings-row settings-statement')
+    const badge = createElement(
+      'span',
+      `settings-statement__icon settings-statement__icon--${tone}`,
+    )
+    badge.innerHTML = icon
+    const text = createElement('div', 'settings-row__text')
+    text.append(
+      createElement('span', 'settings-statement__title', t(title)),
+      createElement('span', 'settings-row__sub', t(body)),
+    )
+    row.append(badge, text)
+    return row
+  })
+
+  /** Show "Cleared" in a row's secondary text for a moment, then the regular text. */
+  const flashCleared = (sub: HTMLElement, restore: () => void): void => {
+    sub.textContent = t('cleared')
+    const timer = window.setTimeout(() => {
+      timers.delete(timer)
+      restore()
+    }, CLEARED_MS)
+    timers.add(timer)
+  }
+  const clearAction = (
+    button: HTMLButtonElement,
+    sub: HTMLElement,
+    run: () => Promise<void>,
+    restore: () => void,
+  ): void => {
+    button.addEventListener('click', () => {
+      if (button.hasAttribute('aria-disabled')) return
+      setUnavailable(button, true)
+      run()
+        .then(() => flashCleared(sub, restore))
+        .catch((error: unknown) => console.warn('Unable to clear local data.', error))
+        .finally(() => setUnavailable(button, false))
     })
   }
-  selectTab(0)
-  tabs.addEventListener('keydown', (event) => {
-    if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key))
-      return
-    const current = tabButtons.indexOf(document.activeElement as HTMLButtonElement)
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? 1 : (current + 1) % 2
-    selectTab(next)
-    tabButtons[next]?.focus()
+
+  const dataRows: HTMLElement[] = []
+  let refreshCache = (): void => undefined
+  if (previewCache.available) {
+    const clearCache = createButton(t('clear'))
+    const cacheRow = settingsRow(t('previewCache'), [clearCache], {
+      sub: '',
+      describe: [clearCache],
+    })
+    const cacheSub = cacheRow.sub!
+    cacheSub.setAttribute('aria-live', 'polite')
+    let generation = 0
+    refreshCache = (): void => {
+      const current = ++generation
+      previewCache
+        .count()
+        .then((count) => {
+          if (current === generation) cacheSub.textContent = t('previewCacheCount', String(count))
+        })
+        .catch(() => {
+          if (current === generation) cacheSub.textContent = ''
+        })
+    }
+    clearAction(clearCache, cacheSub, () => previewCache.clear(), refreshCache)
+    dataRows.push(cacheRow.row)
+  }
+  const clearHistory = createButton(t('clear'))
+  const historyRow = settingsRow(t('recentHistory'), [clearHistory], {
+    sub: t('recentHistoryHint'),
+    describe: [clearHistory],
+  })
+  const historySub = historyRow.sub!
+  historySub.setAttribute('aria-live', 'polite')
+  clearAction(clearHistory, historySub, clearRecent, () => {
+    historySub.textContent = t('recentHistoryHint')
+  })
+  dataRows.push(historyRow.row)
+
+  const privacy = createElement('section', 'settings-pane')
+  privacy.append(settingsGroup(...statements), settingsGroup(...dataRows))
+
+  /* ---------- Dialog chrome ---------- */
+  const overlay = createElement('div', 'settings-overlay')
+  overlay.hidden = true
+  const dialog = createElement('div', 'settings-dialog')
+  dialog.id = settingsId('dialog')
+  dialog.setAttribute('role', 'dialog')
+  dialog.setAttribute('aria-modal', 'true')
+  const title = createElement('h2', 'settings-dialog__title', t('settings'))
+  title.id = settingsId('dialog-title')
+  dialog.setAttribute('aria-labelledby', title.id)
+
+  const tablist = createElement('div', 'settings-tabs')
+  tablist.setAttribute('role', 'tablist')
+  tablist.setAttribute('aria-label', t('categories'))
+  const panes = [appearance, wallpaper.element, privacy]
+  const tabs = (['appearance', 'background', 'privacy'] as const).map((key, index) => {
+    const tab = createElement('button', 'settings-tab', t(key))
+    tab.type = 'button'
+    tab.id = `settings-tab-${key}`
+    tab.dataset.tab = key
+    tab.setAttribute('role', 'tab')
+    const pane = panes[index]!
+    pane.id = `settings-pane-${key}`
+    pane.setAttribute('role', 'tabpanel')
+    pane.setAttribute('aria-labelledby', tab.id)
+    tab.setAttribute('aria-controls', pane.id)
+    tab.addEventListener('click', () => selectTab(index))
+    tablist.append(tab)
+    return tab
+  })
+  let selected = 0
+  const selectTab = (index: number): void => {
+    selected = index
+    tabs.forEach((tab, tabIndex) => {
+      const active = tabIndex === index
+      tab.setAttribute('aria-selected', String(active))
+      tab.tabIndex = active ? 0 : -1
+      panes[tabIndex]!.hidden = !active
+    })
+    body.scrollTop = 0
+  }
+  tablist.addEventListener('keydown', (event) => {
+    const last = tabs.length - 1
+    const next =
+      event.key === 'Home'
+        ? 0
+        : event.key === 'End'
+          ? last
+          : event.key === 'ArrowRight' || event.key === 'ArrowDown'
+            ? selected === last
+              ? 0
+              : selected + 1
+            : event.key === 'ArrowLeft' || event.key === 'ArrowUp'
+              ? selected === 0
+                ? last
+                : selected - 1
+              : undefined
+    if (next === undefined) return
     event.preventDefault()
+    selectTab(next)
+    tabs[next]?.focus()
+  })
+
+  const header = createElement('header', 'settings-dialog__header')
+  header.append(title, tablist, createElement('span', 'settings-dialog__spacer'))
+  const body = createElement('div', 'settings-dialog__body')
+  body.append(...panes)
+  const footer = createElement('footer', 'settings-dialog__footer')
+  const done = createElement('button', 'settings-done', t('done'))
+  done.type = 'button'
+  footer.append(createElement('span', 'settings-dialog__note', t('changesApplyNow')), done)
+  dialog.append(header, body, footer)
+  overlay.append(dialog)
+  document.body.append(overlay)
+  selectTab(0)
+
+  /* ---------- Open / close ---------- */
+  let open = false
+  let appWasInert = false
+  const setOpen = (next: boolean): void => {
+    if (next === open) return
+    open = next
+    const app = document.querySelector<HTMLElement>('#app')
+    if (next) {
+      appWasInert = app?.inert ?? false
+      if (app) app.inert = true
+      overlay.hidden = false
+      refreshCache()
+      tabs[selected]?.focus()
+    } else {
+      overlay.hidden = true
+      if (app) app.inert = appWasInert
+      trigger.focus()
+    }
+    trigger.setAttribute('aria-expanded', String(next))
+  }
+  const onTrigger = (): void => setOpen(!open)
+  trigger.setAttribute('aria-haspopup', 'dialog')
+  trigger.setAttribute('aria-controls', dialog.id)
+  trigger.setAttribute('aria-expanded', 'false')
+  trigger.addEventListener('click', onTrigger)
+  done.addEventListener('click', () => setOpen(false))
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) setOpen(false)
+  })
+  // Every key handled here stays here: arrows adjust controls and must never move covers.
+  overlay.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      setOpen(false)
+    } else {
+      trapTab(dialog, event)
+    }
     event.stopPropagation()
   })
 
-  let change: (next: Partial<Preferences>) => void = () => undefined
-  const sort = choiceGroup<SortMode>(
-    t('sortBookmarks'),
-    [
-      { value: 'bookmark', label: t('sortBookmark') },
-      { value: 'title', label: t('sortTitle') },
-      { value: 'domain', label: t('sortWebsite') },
-      { value: 'recent', label: t('recent') },
-    ],
-    (sortMode) => change({ sortMode }),
-  )
-  const theme = choiceGroup<ThemeMode>(
-    t('colorTheme'),
-    [
-      { value: 'system', label: t('system') },
-      { value: 'light', label: t('light') },
-      { value: 'dark', label: t('dark') },
-    ],
-    (themeMode) => change({ theme: themeMode }),
-  )
-
-  const reflection = document.createElement('input')
-  reflection.type = 'checkbox'
-  reflection.setAttribute('aria-label', t('showReflection'))
-  reflection.className = 'preferences-menu__toggle-input'
-  const reflectionField = document.createElement('label')
-  reflectionField.className = 'preferences-menu__reflection'
-  const reflectionCopy = document.createElement('span')
-  reflectionCopy.innerHTML = `<strong>${t('reflection')}</strong><small>${t('reflectionDescription')}</small>`
-  const toggle = document.createElement('span')
-  toggle.className = 'liquid-toggle-track'
-  toggle.setAttribute('aria-hidden', 'true')
-  toggle.innerHTML = '<span class="liquid-toggle-thumb"></span>'
-  const liquidToggle = document.createElement('liquid-toggle')
-  liquidToggle.append(reflection, toggle)
-  reflectionField.classList.add('toggle-row')
-  reflectionField.append(reflectionCopy, liquidToggle)
-  const basic = document.createElement('section')
-  basic.className = 'settings-group'
-  basic.innerHTML = `<h4>${t('basicPreferences')}</h4>`
-  basic.append(sort.field, theme.field)
-  const visuals = document.createElement('section')
-  visuals.className = 'settings-group settings-list'
-  visuals.innerHTML = `<h4>${t('visualExperience')}</h4>`
-  visuals.append(reflectionField)
-  appearance.append(basic, visuals)
-  body.append(tabs, ...panes)
-  panel.append(panelHeader, body)
-  element.append(trigger)
-  document.body.append(scrim, panel)
-
-  let previouslyInert = false
-  let openState = false
-  let closeTimer = 0
-  const setOpen = (open: boolean): void => {
-    if (open === openState) return
-    openState = open
-    window.clearTimeout(closeTimer)
-    const app = document.querySelector<HTMLElement>('#app')
-    if (open) {
-      previouslyInert = app?.inert ?? false
-      panel.hidden = false
-    } else {
-      closeTimer = window.setTimeout(() => {
-        panel.hidden = true
-      }, 360)
-    }
-    panel.inert = !open
-    panel.setAttribute('aria-hidden', String(!open))
-    panel.classList.toggle('is-open', open)
-    scrim.hidden = !open
-    if (app) app.inert = open || previouslyInert
-    trigger.setAttribute('aria-expanded', String(open))
-    if (open) panelHeader.querySelector('button')!.focus()
-    else trigger.focus()
-  }
-
-  trigger.addEventListener('click', () => setOpen(!openState))
-  panelHeader.querySelector('button')!.addEventListener('click', () => setOpen(false))
-  scrim.addEventListener('click', () => setOpen(false))
-  reflection.addEventListener('change', () => change({ showReflection: reflection.checked }))
-
-  const onKeyDown = (event: KeyboardEvent): void => {
-    if (!openState) return
-    if (event.key === 'Escape') {
-      setOpen(false)
-      event.preventDefault()
-      event.stopPropagation()
-    } else if (event.key === 'Tab') {
-      const focusable = Array.from(
-        panel.querySelectorAll<HTMLElement>('button, input, [tabindex="0"]'),
-      ).filter(
-        (node) =>
-          node.tabIndex >= 0 && !node.matches(':disabled') && node.getClientRects().length > 0,
-      )
-      const first = focusable[0]
-      const last = focusable.at(-1)
-      if (event.shiftKey && document.activeElement === first) {
-        last?.focus()
-        event.preventDefault()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        first?.focus()
-        event.preventDefault()
-      }
-    }
-  }
-  document.addEventListener('keydown', onKeyDown)
-
   return {
-    element,
     wallpaper,
     render(preferences): void {
-      sort.buttons.forEach((button) => {
-        button.setAttribute('aria-checked', String(button.dataset.value === preferences.sortMode))
-        button.tabIndex = button.dataset.value === preferences.sortMode ? 0 : -1
-      })
-      theme.buttons.forEach((button) => {
-        button.setAttribute('aria-checked', String(button.dataset.value === preferences.theme))
-        button.tabIndex = button.dataset.value === preferences.theme ? 0 : -1
-      })
+      themes.setChecked(preferences.theme)
+      sort.select.value = preferences.sortMode
       reflection.checked = preferences.showReflection
-      liquidToggle.classList.toggle('is-checked', reflection.checked)
+      preferPreview.checked = preferences.preferPreviewImages
+      const coverAngle = String(preferences.coverAngle)
+      if (angle.input.value !== coverAngle) angle.input.value = coverAngle
+      showAngle()
+      reduceFlip.checked = preferences.reduceFlipMotion
     },
     onChange(listener): void {
       change = listener
     },
     destroy(): void {
-      if (!panel.hidden) setOpen(false)
-      window.clearTimeout(closeTimer)
-      document.removeEventListener('keydown', onKeyDown)
+      if (open) setOpen(false)
+      timers.forEach((timer) => window.clearTimeout(timer))
+      timers.clear()
+      trigger.removeEventListener('click', onTrigger)
+      trigger.removeAttribute('aria-controls')
       wallpaper.destroy()
-      panel.remove()
-      scrim.remove()
+      overlay.remove()
     },
   }
 }

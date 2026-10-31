@@ -1,210 +1,159 @@
+/* The flow fills its stage; covers hang from a zero-width anchor at the horizontal center. */
 .cover-flow {
-  position: relative;
+  position: absolute;
   z-index: 1;
-  min-height: 0;
-  perspective: var(--perspective);
-  perspective-origin: 50% 47%;
+  inset: 0;
   touch-action: none;
   user-select: none;
 }
 .cover-flow__stage {
   position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
+  top: 40px;
+  left: 50%;
+  width: 0;
+  height: var(--cover-size);
+  perspective: 1100px;
+  perspective-origin: 50% 55%;
   pointer-events: none;
 }
 .cover-card {
   position: absolute;
-  top: 47%;
-  left: 50%;
-  display: flex;
-  flex-direction: column;
-  width: var(--cover-width);
-  height: var(--cover-height);
+  top: 0;
+  left: calc(var(--cover-size) / -2);
+  width: var(--cover-size);
+  height: var(--cover-size);
   padding: 0;
-  border: 1px solid var(--glass-line);
-  border-radius: var(--cover-radius);
-  background: linear-gradient(145deg, rgb(255 255 255 / 9%), rgb(255 255 255 / 2%));
-  box-shadow:
-    0 20px 50px rgb(12 20 38 / 14%),
-    inset 0 1px 0 rgb(255 255 255 / 38%);
-  color: var(--text-on-cover);
-  text-align: left;
-  transform-origin: center;
+  border-radius: calc(var(--cover-size) * 0.042);
   pointer-events: auto;
-  -webkit-box-reflect: below 10px linear-gradient(transparent 78%, rgb(0 0 0 / 8%));
   will-change: transform, opacity;
 }
-.cover-card::before {
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  box-shadow:
-    inset 1px 1px 0 var(--specular-line),
-    inset -1px -1px 0 rgb(114 213 255 / 18%);
-  content: '';
-  pointer-events: none;
+.cover-card:focus-visible {
+  box-shadow: none;
 }
-.cover-card__media {
-  position: relative;
-  display: block;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  border-radius: var(--cover-radius) var(--cover-radius) 0 0;
-  background: transparent;
+.cover-card:focus-visible .cover-card__art {
+  outline: 3px solid var(--focus-ring-color);
+  outline-offset: 4px;
 }
-.cover-card__fallback {
+.cover-card__art {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--fill);
+  box-shadow: var(--cover-shadow);
+  -webkit-box-reflect: below 2px var(--reflection);
+}
+html[data-reflection='false'] .cover-card__art {
+  -webkit-box-reflect: unset;
+}
+.cover-card__placeholder,
+.cover-card__preview,
+.cover-card__shade {
+  position: absolute;
+  inset: 0;
+}
+.cover-card__placeholder {
   display: flex;
-  flex-direction: column;
-  gap: 22px;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(
-    ellipse at 10% 10%,
-    color-mix(in srgb, var(--cover-accent) 15%, transparent),
-    transparent 70%
-  );
+  background: linear-gradient(90deg, #ededf0 0%, #f7f7f9 50%, #ededf0 100%);
+  background-size: var(--cover-size) 100%;
+  opacity: 0;
+  transition: opacity 200ms linear;
 }
-.cover-card__monogram {
-  display: grid;
-  width: 88px;
-  height: 88px;
-  place-items: center;
-  border: 1px solid var(--glass-line);
-  border-radius: 24px;
-  background: rgb(255 255 255 / 12%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%);
-  color: var(--text-primary);
-  font-size: 32px;
-  font-weight: 650;
-  letter-spacing: -0.05em;
+:root[data-theme='dark'] .cover-card__placeholder {
+  background-image: linear-gradient(90deg, #2c2c2e 0%, #3a3a3c 50%, #2c2c2e 100%);
 }
-.cover-card__fallback-domain {
-  max-width: 88%;
-  overflow: hidden;
-  color: var(--text-secondary);
-  font-size: 13px;
-  text-overflow: ellipsis;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .cover-card__placeholder {
+    background-image: linear-gradient(90deg, #2c2c2e 0%, #3a3a3c 50%, #2c2c2e 100%);
+  }
+}
+.cover-card__initial {
+  color: #aeaeb2;
+  font-size: calc(var(--cover-size) * 0.3);
+  font-weight: 700;
+}
+/* Pending: the placeholder covers the art until the preview (or its absence) is known. */
+.cover-card[data-state='pending'] .cover-card__placeholder,
+.cover-card[data-state='preview']:not(:has(.cover-card__preview[data-loaded='true']))
+  .cover-card__placeholder {
+  opacity: 1;
+  /* Shimmer only while visible; a hidden infinite animation repaints every cover each frame. */
+  animation: shimmer 1.4s linear infinite;
 }
 .cover-card__preview {
-  position: absolute;
-  inset: 24px;
-  display: block;
-  width: calc(100% - 48px);
-  height: calc(100% - 48px);
-  border-radius: 12px;
-  background: transparent;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   opacity: 0;
+  transition: opacity 200ms linear;
 }
 .cover-card__preview[data-loaded='true'] {
-  opacity: 0.88;
+  opacity: 1;
 }
-.cover-card[data-image-kind='preview'] .cover-card__fallback {
-  visibility: hidden;
+.cover-card__shade {
+  opacity: var(--shade-amount, 0);
+  pointer-events: none;
+  transition: opacity 0.3s;
 }
-.cover-card__footer {
+.cover-card[data-side='right'] .cover-card__shade {
+  background: linear-gradient(to right, var(--shade-near), var(--shade-far));
+}
+.cover-card[data-side='left'] .cover-card__shade {
+  background: linear-gradient(to left, var(--shade-near), var(--shade-far));
+}
+.cover-card:hover .cover-card__shade {
+  opacity: calc(var(--shade-amount, 0) * 0.5);
+}
+.cover-card__hint {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
   display: flex;
-  flex: 0 0 78px;
+  height: 28px;
   align-items: center;
-  gap: 12px;
-  padding: 14px 20px;
-  border-top: 1px solid rgb(255 255 255 / 16%);
-  border-radius: 0 0 var(--cover-radius) var(--cover-radius);
-  background: rgb(255 255 255 / 14%);
-}
-.cover-card__icon {
-  position: relative;
-  display: grid;
-  flex: 0 0 34px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid var(--border-subtle);
-  border-radius: 11px;
-  background: rgb(255 255 255 / 14%);
-  font-size: 11px;
-  font-weight: 650;
-}
-.cover-card__favicon {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-}
-.cover-card__copy {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  flex-direction: column;
   gap: 5px;
-}
-.cover-card__title {
-  overflow: hidden;
-  font-size: 15px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: -0.025em;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-50%);
+  transition: opacity 0.2s;
+  pointer-events: none;
 }
-.cover-card__hostname {
-  overflow: hidden;
-  color: var(--text-secondary);
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.cover-card__hint .icon {
+  width: 10px;
+  height: 10px;
 }
-.cover-card__open {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: var(--text-secondary);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.cover-card[aria-current='true']:hover .cover-card__hint,
+.cover-card[aria-current='true']:focus-visible .cover-card__hint,
+.cover-card[data-opening='true'] .cover-card__hint {
+  opacity: 1;
 }
-/* Contrast is local to the labels. The media window never gets an opaque backing. */
-body:has(.wallpaper-surface__media) .cover-card__footer {
-  background: rgb(12 18 28 / 56%);
-  color: #fff;
-  --text-secondary: rgb(255 255 255 / 82%);
-}
-body:has(.wallpaper-surface__media) .cover-card__monogram {
-  color: #fff;
-  background: rgb(12 18 28 / 28%);
-  text-shadow: 0 1px 8px rgb(0 0 0 / 50%);
-}
-body:has(.wallpaper-surface__media) .cover-card__fallback-domain {
-  color: #fff;
-  padding: 5px 10px;
-  border-radius: 8px;
-  background: rgb(12 18 28 / 48%);
+.cover-flow[data-moving='true'] .cover-card__hint {
+  opacity: 0;
 }
 .cover-flow[data-dragging='true'],
 .cover-flow[data-dragging='true'] .cover-card {
   cursor: grabbing;
 }
-html[data-reflection='false'] .cover-card {
-  -webkit-box-reflect: unset;
-}
-@media (prefers-reduced-motion: reduce) {
-  .cover-card {
-    -webkit-box-reflect: unset;
+@keyframes shimmer {
+  from {
+    background-position: calc(var(--cover-size) * -1) 0;
+  }
+  to {
+    background-position: var(--cover-size) 0;
   }
 }
 @media (forced-colors: active) {
-  .cover-card,
-  .preferences-menu__panel,
-  .preferences-menu__choice {
+  .cover-card__art {
     border: 1px solid CanvasText;
-  }
-  .cover-card {
     -webkit-box-reflect: unset;
-  }
-}
-@media (max-height: 720px) {
-  :root {
-    --cover-width: clamp(216px, 24vw, 304px);
   }
 }

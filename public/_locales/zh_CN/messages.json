@@ -12,10 +12,7 @@
     "message": "设置"
   },
   "viewOptions": {
-    "message": "打开设置"
-  },
-  "closeSettings": {
-    "message": "关闭设置"
+    "message": "偏好设置"
   },
   "categories": {
     "message": "设置分类"
@@ -24,19 +21,7 @@
     "message": "外观"
   },
   "background": {
-    "message": "壁纸"
-  },
-  "appearanceDescription": {
-    "message": "调整封面排列与视觉体验。"
-  },
-  "backgroundDescription": {
-    "message": "让书签空间适配图片、视频和不同明暗背景。"
-  },
-  "basicPreferences": {
-    "message": "基础偏好"
-  },
-  "visualExperience": {
-    "message": "视觉体验"
+    "message": "背景"
   },
   "sortBookmarks": {
     "message": "书签排序"
@@ -53,11 +38,8 @@
   "recent": {
     "message": "最近打开"
   },
-  "colorTheme": {
-    "message": "颜色主题"
-  },
   "system": {
-    "message": "跟随系统"
+    "message": "自动"
   },
   "light": {
     "message": "浅色"
@@ -68,50 +50,20 @@
   "reflection": {
     "message": "封面倒影"
   },
-  "showReflection": {
-    "message": "显示封面倒影"
-  },
-  "reflectionDescription": {
-    "message": "在封面下方显示镜面倒影"
-  },
-  "wallpaperSource": {
-    "message": "壁纸来源"
-  },
   "chooseMedia": {
-    "message": "上传本地图片或视频"
+    "message": "选择图片或视频"
   },
   "mediaHint": {
-    "message": "视频自动静音循环 · 仅保存在本机"
-  },
-  "mediaLimit": {
-    "message": "保留原文件 · 最大 512 MB · 不上传到服务器"
+    "message": "保留原文件与 HDR 信息 · 最大 512 MB · 只存在本机，不会上传。视频始终静音循环。"
   },
   "restoreBackground": {
     "message": "恢复默认背景"
   },
-  "adjustments": {
-    "message": "画面调节"
-  },
   "photoBlur": {
-    "message": "照片模糊度"
+    "message": "模糊"
   },
   "dimming": {
     "message": "暗度"
-  },
-  "mediaDetails": {
-    "message": "播放与存储说明"
-  },
-  "nativeVideoNote": {
-    "message": "保留原始视频与 HDR 元数据，不转码、不经画布处理。"
-  },
-  "codecNote": {
-    "message": "格式支持取决于 Chrome 与系统解码器；视频不使用模糊滤镜，以保留原生播放路径。"
-  },
-  "hdrDisplay": {
-    "message": "检测到 HDR 显示能力，实际效果仍取决于视频、解码器与显示设置。"
-  },
-  "sdrDisplay": {
-    "message": "当前显示环境为 SDR，受支持的 HDR 视频由 Chrome 进行色调映射。"
   },
   "defaultBackground": {
     "message": "默认渐变背景"
@@ -176,9 +128,6 @@
   "genericError": {
     "message": "无法保存背景，请重试。"
   },
-  "bookmarks": {
-    "message": "书签"
-  },
   "searchBookmarks": {
     "message": "搜索书签"
   },
@@ -187,15 +136,6 @@
   },
   "coverFlow": {
     "message": "书签封面浏览"
-  },
-  "backFolder": {
-    "message": "返回$1"
-  },
-  "back": {
-    "message": "返回"
-  },
-  "noResults": {
-    "message": "没有找到结果"
   },
   "noRecent": {
     "message": "还没有最近打开的书签"
@@ -210,9 +150,207 @@
     "message": "正在读取书签…"
   },
   "bookmarksFailed": {
-    "message": "无法读取 Chrome 书签。"
+    "message": "无法读取 Chrome 书签"
   },
   "openFailed": {
     "message": "无法打开书签"
+  },
+  "privacy": {
+    "message": "隐私"
+  },
+  "done": {
+    "message": "完成"
+  },
+  "changesApplyNow": {
+    "message": "更改会立即生效"
+  },
+  "preferPreview": {
+    "message": "优先使用网站预览图"
+  },
+  "preferPreviewHint": {
+    "message": "没有预览图时，按网站名称和主题色生成封面。"
+  },
+  "coverAngle": {
+    "message": "封面角度"
+  },
+  "reduceFlip": {
+    "message": "减弱翻页动画"
+  },
+  "reduceFlipHint": {
+    "message": "封面直接淡入就位。系统开启“减弱动态效果”时自动生效。"
+  },
+  "stageBackground": {
+    "message": "舞台背景"
+  },
+  "presetDefault": {
+    "message": "默认"
+  },
+  "presetMist": {
+    "message": "雾蓝"
+  },
+  "presetNight": {
+    "message": "夜色"
+  },
+  "presetMedia": {
+    "message": "照片或视频"
+  },
+  "dropMedia": {
+    "message": "将图片或视频拖到这里，或"
+  },
+  "chooseFile": {
+    "message": "选择文件…"
+  },
+  "photoBlurHint": {
+    "message": "只对照片生效，视频保持原画质。"
+  },
+  "restore": {
+    "message": "恢复"
+  },
+  "privacyLocal": {
+    "message": "书签不离开这台电脑"
+  },
+  "privacyLocalBody": {
+    "message": "直接读取 Chrome 书签，不需要账户、服务器或同步。"
+  },
+  "privacyNoTracking": {
+    "message": "没有统计与追踪"
+  },
+  "privacyNoTrackingBody": {
+    "message": "不收集任何使用数据，“最近打开”只记录在本机。"
+  },
+  "privacyPreviews": {
+    "message": "预览图来自网站本身"
+  },
+  "privacyPreviewsBody": {
+    "message": "封面使用网站公开的预览图（Open Graph），获取时会访问该网站，结果缓存在本机。"
+  },
+  "previewCache": {
+    "message": "预览缓存"
+  },
+  "previewCacheCount": {
+    "message": "已缓存 $1 张预览图"
+  },
+  "clear": {
+    "message": "清除"
+  },
+  "recentHistory": {
+    "message": "“最近打开”记录"
+  },
+  "recentHistoryHint": {
+    "message": "只保存在本机"
+  },
+  "cleared": {
+    "message": "已清除"
+  },
+  "clearSearch": {
+    "message": "清除搜索"
+  },
+  "library": {
+    "message": "资料库"
+  },
+  "allBookmarks": {
+    "message": "全部书签"
+  },
+  "recentlyAdded": {
+    "message": "最近添加"
+  },
+  "localOnly": {
+    "message": "书签仅保存在本机"
+  },
+  "bookmarkCount": {
+    "message": "$1 个书签"
+  },
+  "bookmarkCountOne": {
+    "message": "1 个书签"
+  },
+  "searchResults": {
+    "message": "搜索结果"
+  },
+  "matchCount": {
+    "message": "$1 个匹配“$2”"
+  },
+  "matchCountOne": {
+    "message": "1 个匹配“$1”"
+  },
+  "view": {
+    "message": "视图"
+  },
+  "viewCoverFlow": {
+    "message": "Cover Flow"
+  },
+  "viewGrid": {
+    "message": "网格"
+  },
+  "viewList": {
+    "message": "列表"
+  },
+  "comingSoon": {
+    "message": "即将推出"
+  },
+  "enterFullscreen": {
+    "message": "全屏 Cover Flow"
+  },
+  "exitFullscreen": {
+    "message": "退出全屏"
+  },
+  "position": {
+    "message": "浏览位置"
+  },
+  "positionValue": {
+    "message": "第 $1 个，共 $2 个"
+  },
+  "previousBookmark": {
+    "message": "上一个书签"
+  },
+  "nextBookmark": {
+    "message": "下一个书签"
+  },
+  "open": {
+    "message": "打开"
+  },
+  "opening": {
+    "message": "正在打开…"
+  },
+  "noResultsFor": {
+    "message": "没有找到“$1”"
+  },
+  "tryOtherKeywords": {
+    "message": "试试其他关键词，或在“全部书签”中搜索"
+  },
+  "noRecentHint": {
+    "message": "打开过的书签会显示在这里"
+  },
+  "bookmarksFailedHint": {
+    "message": "请确认已授予书签权限，然后重试。"
+  },
+  "retry": {
+    "message": "重试"
+  },
+  "bookmarkList": {
+    "message": "书签列表"
+  },
+  "columnName": {
+    "message": "名称"
+  },
+  "columnSite": {
+    "message": "网站"
+  },
+  "columnFolder": {
+    "message": "文件夹"
+  },
+  "columnAdded": {
+    "message": "添加日期"
+  },
+  "columnLastOpened": {
+    "message": "上次打开"
+  },
+  "never": {
+    "message": "从未"
+  },
+  "todayAt": {
+    "message": "今天 $1"
+  },
+  "yesterdayAt": {
+    "message": "昨天 $1"
   }
 }

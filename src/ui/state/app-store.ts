@@ -10,10 +10,8 @@ export interface AppState extends Preferences {
   readonly visibleCovers: readonly CoverItem[]
   readonly selectedIndex: number
   readonly query: string
-  readonly isSearching: boolean
   readonly recentBookmarks: readonly RecentBookmark[]
-  readonly status: 'loading' | 'ready' | 'empty' | 'error'
-  readonly errorMessage?: string
+  readonly status: 'loading' | 'ready' | 'error'
 }
 
 export interface Store<T> {
