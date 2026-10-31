@@ -22,7 +22,7 @@ test('F toggles full-screen Cover Flow, which stays in sync with the stage', asy
     .locator('.cover-card')
     .first()
     .evaluate((element) => (element as HTMLElement).offsetWidth)
-  expect(coverSize).toBe(340)
+  expect(coverSize).toBe(380)
 
   await page.keyboard.press('ArrowRight')
   await expect(page.locator('.fullscreen__heading')).toHaveText(`All Bookmarks · 2 / ${DEMO_TOTAL}`)

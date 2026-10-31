@@ -30,7 +30,7 @@
     0 24px 64px rgb(0 0 0 / 24%);
   color: var(--label);
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -58,7 +58,7 @@
 }
 .settings-dialog__title {
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.015em;
 }
@@ -79,7 +79,7 @@
   background: transparent;
   color: var(--icon);
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   white-space: nowrap;
   cursor: default;
 }
@@ -115,7 +115,7 @@
 .settings-heading {
   margin: 0 0 8px 4px;
   color: var(--label);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -156,7 +156,7 @@
 .settings-row__sub,
 .settings-note {
   color: var(--secondary);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
 }
 .settings-row.is-disabled .settings-row__title {
@@ -183,7 +183,7 @@
   background: transparent;
   color: var(--label);
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   cursor: default;
 }
 .settings-tile__thumb {
@@ -330,7 +330,7 @@
   background: var(--fill);
   color: var(--label);
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   cursor: default;
   appearance: none;
 }
@@ -401,7 +401,7 @@
   background: var(--fill);
   color: var(--label);
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   white-space: nowrap;
   cursor: default;
 }
@@ -426,7 +426,7 @@
 }
 .settings-dialog__note {
   color: var(--secondary);
-  font-size: 11px;
+  font-size: 12px;
 }
 .settings-done {
   height: 30px;
@@ -437,7 +437,7 @@
   background: var(--accent);
   color: #ffffff;
   font: inherit;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: default;
 }
@@ -466,14 +466,14 @@
 }
 .wallpaper-dropzone__text {
   color: var(--icon);
-  font-size: 13px;
+  font-size: 14px;
 }
 .wallpaper-media .settings-note,
 .wallpaper-current,
 .wallpaper-status,
 .wallpaper-error {
   margin: 8px 0 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
 }
 .wallpaper-current {

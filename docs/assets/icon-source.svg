@@ -1,9 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <rect width="1024" height="1024" rx="224" fill="#171719"/>
-  <path d="M150 314c0-41 33-74 74-74h164v544H224c-41 0-74-33-74-74V314Z" fill="#d9d9dd" opacity=".72"/>
-  <path d="M874 314c0-41-33-74-74-74H636v544h164c41 0 74-33 74-74V314Z" fill="#d9d9dd" opacity=".72"/>
-  <rect x="292" y="160" width="440" height="704" rx="74" fill="#f7f7f5"/>
-  <path d="M399 300c0-22 18-40 40-40h146c22 0 40 18 40 40v252L512 483 399 552V300Z" fill="#668cff"/>
-  <path d="M384 688h256" stroke="#c5c5ca" stroke-width="36" stroke-linecap="round"/>
-  <path d="M432 760h160" stroke="#d7d7da" stroke-width="28" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e8e8ed"/>
+    </linearGradient>
+    <linearGradient id="cover" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b8af0"/>
+      <stop offset="1" stop-color="#0071e3"/>
+    </linearGradient>
+    <linearGradient id="left" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#b9b9c0"/>
+      <stop offset="1" stop-color="#8e8e95"/>
+    </linearGradient>
+    <linearGradient id="right" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b9b9c0"/>
+      <stop offset="1" stop-color="#8e8e95"/>
+    </linearGradient>
+    <linearGradient id="reflection" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0071e3" stop-opacity=".24"/>
+      <stop offset=".7" stop-color="#0071e3" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="side-reflection" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8e8e95" stop-opacity=".22"/>
+      <stop offset=".7" stop-color="#8e8e95" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#tile)"/>
+  <!-- Side covers turned toward the center, outer edges receding. -->
+  <path d="M120 338 L292 296 L292 700 L120 658 Z" fill="url(#left)"/>
+  <path d="M904 338 L732 296 L732 700 L904 658 Z" fill="url(#right)"/>
+  <path d="M120 666 L292 708 L292 800 L120 760 Z" fill="url(#side-reflection)"/>
+  <path d="M904 666 L732 708 L732 800 L904 760 Z" fill="url(#side-reflection)"/>
+  <!-- Center cover with a bookmark ribbon, and its mirror reflection. -->
+  <rect x="300" y="248" width="424" height="424" rx="44" fill="url(#cover)"/>
+  <rect x="300" y="684" width="424" height="190" rx="44" fill="url(#reflection)"/>
+  <path d="M440 344 h144 a14 14 0 0 1 14 14 v206 l-86 -56 l-86 56 v-206 a14 14 0 0 1 14 -14 z" fill="#ffffff"/>
 </svg>

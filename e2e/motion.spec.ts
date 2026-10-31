@@ -7,7 +7,7 @@ import { DEMO_TOTAL, coverFlow, openApp, position } from './helpers'
 test('tiny wheel deltas scrub continuously, then snap once', async ({ page }) => {
   await openApp(page)
   const flow = coverFlow(page)
-  // 60 px of travel per 240 px cover: 6 px is a tenth of a cover.
+  // 60 px of travel per 240 px of cover width (70 px at 280 px): 6 px is under a tenth.
   await flow.dispatchEvent('wheel', { deltaX: 6, deltaY: 0, deltaMode: 0 })
   await expect.poll(() => position(page)).toBeGreaterThan(0)
   const during = await position(page)

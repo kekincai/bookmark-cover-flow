@@ -42,9 +42,9 @@
     -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
-  --sidebar-width: 232px;
-  --stage-height: 480px;
-  --cover-size: 240px;
+  --sidebar-width: 248px;
+  --stage-height: 540px;
+  --cover-size: 280px;
   font-family: var(--font);
 }
 

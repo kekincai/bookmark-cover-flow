@@ -5,7 +5,7 @@
   overflow: hidden;
   background: #000;
   color: #f5f5f7;
-  --cover-size: 340px;
+  --cover-size: 380px;
   --cover-shadow: 0 30px 60px -20px rgb(0 0 0 / 90%);
   --shade-near: rgb(0 0 0 / 10%);
   --shade-far: rgb(0 0 0 / 60%);
@@ -75,7 +75,7 @@
   margin: 0;
   overflow: hidden;
   color: rgb(245 245 247 / 60%);
-  font-size: 13px;
+  font-size: 14px;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -99,13 +99,13 @@
 }
 .bookmark-meta--fullscreen .bookmark-meta__title {
   color: #f5f5f7;
-  font-size: 26px;
+  font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 .bookmark-meta--fullscreen .bookmark-meta__subtitle {
   color: rgb(245 245 247 / 60%);
-  font-size: 14px;
+  font-size: 15px;
 }
 .fullscreen__actions {
   display: flex;
@@ -130,7 +130,7 @@
   border-radius: 18px;
   background: #f5f5f7;
   color: #1d1d1f;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 .fullscreen__open:hover {
@@ -151,6 +151,6 @@
 }
 @media (max-height: 760px) {
   .fullscreen {
-    --cover-size: 260px;
+    --cover-size: 300px;
   }
 }

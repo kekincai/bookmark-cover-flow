@@ -17,7 +17,7 @@ export interface BookmarkListView {
   destroy(): void
 }
 
-export const LIST_ROW_HEIGHT = 28
+export const LIST_ROW_HEIGHT = 32
 const HEADER_HEIGHT = 30
 const BODY_PADDING_TOP = 4
 const PAGE_STEP = 10

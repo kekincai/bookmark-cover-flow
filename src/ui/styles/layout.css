@@ -35,7 +35,7 @@
 }
 .search-box > .icon {
   position: absolute;
-  top: 7px;
+  top: 9px;
   left: 9px;
   width: 14px;
   height: 14px;
@@ -43,13 +43,13 @@
 }
 .search-box__input {
   width: 100%;
-  height: 28px;
-  padding: 0 26px 0 28px;
+  height: 32px;
+  padding: 0 28px 0 30px;
   border: 0;
   border-radius: 8px;
   background: var(--fill);
   color: var(--label);
-  font-size: 13px;
+  font-size: 14px;
   outline: none;
 }
 .search-box__input::placeholder {
@@ -63,8 +63,8 @@
 }
 .search-box__clear {
   position: absolute;
-  top: 7px;
-  right: 7px;
+  top: 9px;
+  right: 9px;
   display: flex;
   width: 14px;
   height: 14px;
@@ -94,19 +94,19 @@
   margin: 0;
   padding: 10px 10px 4px;
   color: var(--secondary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 .sidebar-item {
   display: flex;
   width: 100%;
-  height: 28px;
+  height: 32px;
   align-items: center;
   gap: 9px;
   padding: 0 10px 0 calc(10px + var(--depth, 0) * 14px);
   border-radius: 7px;
   color: var(--label);
-  font-size: 13px;
+  font-size: 14px;
   text-align: left;
 }
 .sidebar-item .icon {
@@ -129,7 +129,7 @@
 .sidebar-item__count {
   margin-left: auto;
   color: var(--secondary);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 400;
 }
 .sidebar__footer {
@@ -146,7 +146,7 @@
 }
 .sidebar__note {
   color: var(--secondary);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* Main column */
@@ -181,7 +181,7 @@
 .title-bar__title {
   margin: 0;
   overflow: hidden;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.02em;
   text-overflow: ellipsis;
@@ -189,7 +189,7 @@
 }
 .title-bar__detail {
   color: var(--secondary);
-  font-size: 13px;
+  font-size: 14px;
   white-space: nowrap;
 }
 .title-bar__tools {
@@ -212,7 +212,7 @@
   padding: 0 14px;
   border-radius: 6px;
   color: var(--secondary);
-  font-size: 13px;
+  font-size: 14px;
 }
 .segmented__option--icon {
   width: 34px;
@@ -272,7 +272,7 @@
 .bookmark-meta {
   position: absolute;
   z-index: 2;
-  top: calc(40px + var(--cover-size) + 82px);
+  top: calc(40px + var(--cover-size) + 88px);
   right: 0;
   left: 0;
   display: flex;
@@ -296,13 +296,13 @@
 }
 .bookmark-meta__title {
   color: var(--stage-label);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   letter-spacing: -0.015em;
 }
 .bookmark-meta__subtitle {
   color: var(--stage-secondary);
-  font-size: 13px;
+  font-size: 14px;
 }
 .scrubber {
   position: absolute;
@@ -403,13 +403,13 @@
 }
 .stage-status__title {
   margin: 0;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
 }
 .stage-status__detail {
   margin: 0;
   color: var(--stage-secondary);
-  font-size: 13px;
+  font-size: 14px;
 }
 .stage-status .pill-button {
   margin-top: 6px;
@@ -485,8 +485,8 @@
 }
 @media (max-width: 640px) {
   :root {
-    --cover-size: 180px;
-    --stage-height: 400px;
+    --cover-size: 200px;
+    --stage-height: 440px;
   }
   .title-bar {
     padding-left: 16px;
