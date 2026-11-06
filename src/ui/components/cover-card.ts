@@ -10,7 +10,7 @@ export function createCoverCard(item: CoverItem, index: number, total: number): 
   const card = document.createElement('button')
   card.className = 'cover-card'
   card.type = 'button'
-  card.innerHTML = `<span class="cover-card__art" aria-hidden="true"><span class="cover-art"></span><span class="cover-card__placeholder"><span class="cover-card__initial"></span></span><span class="cover-card__shade"></span></span><span class="cover-card__hint" aria-hidden="true"><span class="cover-card__hint-label"></span>${OPEN_ICON}</span>`
+  card.innerHTML = `<span class="cover-card__art" aria-hidden="true"><span class="cover-art"></span><span class="cover-card__placeholder"><span class="cover-card__initial"></span></span><span class="cover-card__shade"></span></span><span class="cover-card__hint glass" data-kind="dark" aria-hidden="true"><span class="cover-card__hint-label"></span>${OPEN_ICON}</span>`
   setCoverHint(card, false)
   updateCoverCard(card, item, index, total)
   return card

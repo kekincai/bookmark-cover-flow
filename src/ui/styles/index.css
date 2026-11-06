@@ -9,6 +9,7 @@
 @import './fullscreen.css' layer(components);
 @import './settings.css' layer(components);
 @import './wallpaper.css' layer(components);
+@import './glass.css' layer(components);
 @import './motion.css' layer(utilities);
 
 @layer reset, tokens, base, layout, components, utilities;

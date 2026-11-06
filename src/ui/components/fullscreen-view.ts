@@ -1,6 +1,7 @@
 import type { CoverItem } from '../../domain/cover'
 import { t } from '../../shared/i18n'
 import { trapTab } from '../focus-trap'
+import { liquidGlass } from '../glass/lens'
 import { createBookmarkMeta } from './bookmark-meta'
 import { createCoverFlow, type CoverFlowView } from './cover-flow'
 import { icons } from './icons'
@@ -34,7 +35,8 @@ export function createFullscreenView(): FullscreenView {
   glow.setAttribute('aria-hidden', 'true')
   const closeButton = document.createElement('button')
   closeButton.type = 'button'
-  closeButton.className = 'glass-button fullscreen__close'
+  closeButton.className = 'glass glass-button fullscreen__close'
+  closeButton.dataset.kind = 'dark'
   closeButton.setAttribute('aria-label', t('exitFullscreen'))
   closeButton.setAttribute('aria-keyshortcuts', 'Escape F')
   closeButton.innerHTML = icons.close
@@ -50,7 +52,8 @@ export function createFullscreenView(): FullscreenView {
     [next, t('nextBookmark'), icons.next],
   ] as const) {
     button.type = 'button'
-    button.className = 'glass-button fullscreen__step'
+    button.className = 'glass glass-button fullscreen__step'
+    button.dataset.kind = 'dark'
     button.setAttribute('aria-label', label)
     button.innerHTML = icon
   }
@@ -68,6 +71,10 @@ export function createFullscreenView(): FullscreenView {
   footer.className = 'fullscreen__footer'
   footer.append(meta.element, actions, scrubber.element)
   element.append(glow, coverFlow.element, closeButton, heading, footer)
+  // Rim refraction (Chromium only); each lens refits itself when the overlay is shown.
+  const lenses = [closeButton, previous, next].map((button) =>
+    liquidGlass(button, { rim: 40, edge: 1.1, power: 2.6, dispersion: 0.15 }),
+  )
 
   let openState = false
   let returnFocus: HTMLElement | null = null
@@ -144,6 +151,7 @@ export function createFullscreenView(): FullscreenView {
     },
     destroy(): void {
       window.clearTimeout(openingTimer)
+      for (const lens of lenses) lens.destroy()
       coverFlow.destroy()
       element.remove()
     },

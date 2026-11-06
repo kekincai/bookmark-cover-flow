@@ -116,9 +116,8 @@ html[data-reflection='false'] .cover-card__art {
   gap: 5px;
   padding: 0 12px;
   border-radius: 14px;
-  background: rgb(0 0 0 / 55%);
-  backdrop-filter: blur(12px);
-  color: #fff;
+  /* Liquid glass (glass.css): white text over any cover art needs at least half tint for 4.5:1. */
+  --floor: 0.5;
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
