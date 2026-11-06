@@ -1,38 +1,59 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <defs>
     <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5cb0ff"/>
+      <stop offset="1" stop-color="#1a6cf0"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#ffffff"/>
-      <stop offset="1" stop-color="#e8e8ed"/>
+      <stop offset="1" stop-color="#eef3fc"/>
     </linearGradient>
-    <linearGradient id="cover" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2b8af0"/>
-      <stop offset="1" stop-color="#0071e3"/>
+    <linearGradient id="side" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".78"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".55"/>
     </linearGradient>
-    <linearGradient id="left" x1="1" y1="0" x2="0" y2="0">
-      <stop offset="0" stop-color="#b9b9c0"/>
-      <stop offset="1" stop-color="#8e8e95"/>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".28"/>
     </linearGradient>
-    <linearGradient id="right" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#b9b9c0"/>
-      <stop offset="1" stop-color="#8e8e95"/>
+    <linearGradient id="ribbon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a9dff"/>
+      <stop offset="1" stop-color="#1664e8"/>
     </linearGradient>
-    <linearGradient id="reflection" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0071e3" stop-opacity=".24"/>
-      <stop offset=".7" stop-color="#0071e3" stop-opacity="0"/>
+    <linearGradient id="fade" x1="0" y1="600" x2="0" y2="820" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="side-reflection" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#8e8e95" stop-opacity=".22"/>
-      <stop offset=".7" stop-color="#8e8e95" stop-opacity="0"/>
-    </linearGradient>
+    <mask id="reflect"><rect width="1024" height="1024" fill="url(#fade)"/></mask>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur stdDeviation="26"/></filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur stdDeviation="10"/></filter>
   </defs>
   <rect width="1024" height="1024" rx="228" fill="url(#tile)"/>
-  <!-- Side covers turned toward the center, outer edges receding. -->
-  <path d="M120 338 L292 296 L292 700 L120 658 Z" fill="url(#left)"/>
-  <path d="M904 338 L732 296 L732 700 L904 658 Z" fill="url(#right)"/>
-  <path d="M120 666 L292 708 L292 800 L120 760 Z" fill="url(#side-reflection)"/>
-  <path d="M904 666 L732 708 L732 800 L904 760 Z" fill="url(#side-reflection)"/>
-  <!-- Center cover with a bookmark ribbon, and its mirror reflection. -->
-  <rect x="300" y="248" width="424" height="424" rx="44" fill="url(#cover)"/>
-  <rect x="300" y="684" width="424" height="190" rx="44" fill="url(#reflection)"/>
-  <path d="M440 344 h144 a14 14 0 0 1 14 14 v206 l-86 -56 l-86 56 v-206 a14 14 0 0 1 14 -14 z" fill="#ffffff"/>
+
+  <!-- Reflections -->
+  <g mask="url(#reflect)">
+    <polygon points="88,548 228,580 228,842 88,760" fill="#fff" opacity=".4"/>
+    <polygon points="936,548 796,580 796,842 936,760" fill="#fff" opacity=".4"/>
+    <polygon points="172,572 322,608 322,922 172,838" fill="#fff" opacity=".7"/>
+    <polygon points="852,572 702,608 702,922 852,838" fill="#fff" opacity=".7"/>
+    <rect x="332" y="620" width="360" height="360" rx="40" fill="#fff"/>
+    <path d="M452 884 v-186 l60 44 l60 -44 v186 a12 12 0 0 1 -12 12 h-96 a12 12 0 0 1 -12 -12 z" fill="url(#ribbon)" opacity=".7"/>
+  </g>
+
+  <!-- Side cards: frosted glass, outer edges receding -->
+  <g>
+    <polygon points="88,316 228,284 228,580 88,548" fill="#0a3f9c" opacity=".18" filter="url(#soft)" transform="translate(0,14)"/>
+    <polygon points="936,316 796,284 796,580 936,548" fill="#0a3f9c" opacity=".18" filter="url(#soft)" transform="translate(0,14)"/>
+    <polygon points="88,316 228,284 228,580 88,548" fill="url(#far)"/>
+    <polygon points="936,316 796,284 796,580 936,548" fill="url(#far)"/>
+    <polygon points="172,292 322,256 322,608 172,572" fill="#0a3f9c" opacity=".22" filter="url(#soft)" transform="translate(0,16)"/>
+    <polygon points="852,292 702,256 702,608 852,572" fill="#0a3f9c" opacity=".22" filter="url(#soft)" transform="translate(0,16)"/>
+    <polygon points="172,292 322,256 322,608 172,572" fill="url(#side)"/>
+    <polygon points="852,292 702,256 702,608 852,572" fill="url(#side)"/>
+  </g>
+
+  <!-- Center card -->
+  <rect x="332" y="292" width="360" height="360" rx="40" fill="#07306f" opacity=".35" filter="url(#shadow)"/>
+  <rect x="332" y="260" width="360" height="360" rx="40" fill="url(#card)"/>
+  <path d="M452 352 a12 12 0 0 1 12 -12 h96 a12 12 0 0 1 12 12 v186 l-60 -44 l-60 44 z" fill="url(#ribbon)"/>
 </svg>
