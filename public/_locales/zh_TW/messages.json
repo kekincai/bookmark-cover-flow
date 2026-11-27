@@ -1,12 +1,12 @@
 {
   "extensionName": {
-    "message": "書籤 Cover Flow"
+    "message": "書籤書架"
   },
   "extensionDescription": {
-    "message": "以流暢的立體封面瀏覽 Chrome 書籤。"
+    "message": "像翻看書架上的封面一樣瀏覽 Chrome 書籤。"
   },
   "openExtension": {
-    "message": "開啟書籤 Cover Flow"
+    "message": "開啟書籤書架"
   },
   "settings": {
     "message": "設定"
@@ -276,7 +276,7 @@
     "message": "顯示方式"
   },
   "viewCoverFlow": {
-    "message": "Cover Flow"
+    "message": "封面"
   },
   "viewGrid": {
     "message": "網格"
@@ -285,7 +285,7 @@
     "message": "列表"
   },
   "enterFullscreen": {
-    "message": "全螢幕 Cover Flow"
+    "message": "全螢幕封面"
   },
   "exitFullscreen": {
     "message": "結束全螢幕"

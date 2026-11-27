@@ -1,12 +1,12 @@
 {
   "extensionName": {
-    "message": "书签 Cover Flow"
+    "message": "书签书架"
   },
   "extensionDescription": {
-    "message": "用流畅的立体封面浏览 Chrome 书签。"
+    "message": "像翻看书架上的封面一样浏览 Chrome 书签。"
   },
   "openExtension": {
-    "message": "打开书签 Cover Flow"
+    "message": "打开书签书架"
   },
   "settings": {
     "message": "设置"
@@ -276,7 +276,7 @@
     "message": "视图"
   },
   "viewCoverFlow": {
-    "message": "Cover Flow"
+    "message": "封面"
   },
   "viewGrid": {
     "message": "网格"
@@ -285,7 +285,7 @@
     "message": "列表"
   },
   "enterFullscreen": {
-    "message": "全屏 Cover Flow"
+    "message": "全屏封面"
   },
   "exitFullscreen": {
     "message": "退出全屏"

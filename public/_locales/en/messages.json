@@ -1,12 +1,12 @@
 {
   "extensionName": {
-    "message": "Bookmark Cover Flow"
+    "message": "Bookmark Shelf"
   },
   "extensionDescription": {
-    "message": "Browse Chrome bookmarks in a quiet, spatial Cover Flow."
+    "message": "Browse Chrome bookmarks as a quiet, spatial shelf of covers."
   },
   "openExtension": {
-    "message": "Open Bookmark Cover Flow"
+    "message": "Open Bookmark Shelf"
   },
   "settings": {
     "message": "Settings"
@@ -135,7 +135,7 @@
     "message": "Bookmark folders"
   },
   "coverFlow": {
-    "message": "Bookmark cover flow"
+    "message": "Bookmark covers"
   },
   "noRecent": {
     "message": "No recent bookmarks yet"
@@ -276,7 +276,7 @@
     "message": "View"
   },
   "viewCoverFlow": {
-    "message": "Cover Flow"
+    "message": "Covers"
   },
   "viewGrid": {
     "message": "Grid"
@@ -285,7 +285,7 @@
     "message": "List"
   },
   "enterFullscreen": {
-    "message": "Full-screen Cover Flow"
+    "message": "Full-screen covers"
   },
   "exitFullscreen": {
     "message": "Exit full screen"

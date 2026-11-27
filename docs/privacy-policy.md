@@ -1,14 +1,14 @@
-# Privacy Policy for Bookmark Cover Flow
+# Privacy Policy for Bookmark Shelf
 
 Last updated: November 27, 2026
 
-Bookmark Cover Flow is a Chrome extension that shows your existing Chrome bookmarks as covers, a grid and a list. It has no user account, analytics, advertising, telemetry or server run by the developer. Nothing the extension reads or stores is sent to the developer.
+Bookmark Shelf is a Chrome extension that shows your existing Chrome bookmarks as covers, a grid and a list. It has no user account, analytics, advertising, telemetry or server run by the developer. Nothing the extension reads or stores is sent to the developer.
 
 ## What data the extension uses
 
 - **Bookmarks.** Your bookmark titles, addresses and folders are read from Chrome on your device to draw the covers, grid and list. The extension does not create, change or delete bookmarks.
 - **Preferences.** Your view settings (theme, sort order, view, cover angle, reflection, reduced flip animation, single-key shortcuts, website previews on or off, and the last folder you had open) are saved in the extension's local storage.
-- **Recently Opened.** When you open a bookmark from Bookmark Cover Flow, the extension records that bookmark's ID, title, address and the time you opened it. The list holds at most 50 entries, newest first. Only bookmarks opened from this extension are recorded; Chrome's browsing history is not requested or read.
+- **Recently Opened.** When you open a bookmark from Bookmark Shelf, the extension records that bookmark's ID, title, address and the time you opened it. The list holds at most 50 entries, newest first. Only bookmarks opened from this extension are recorded; Chrome's browsing history is not requested or read.
 - **Preview cache.** If you turn on website previews, the extension stores, for each page it checked, the page address, the preview image address the page declared (if any, and only if shorter than about 2 KB) and the page's theme color.
 - **Background photo or video.** If you choose a photo or video for the stage background, only the file you pick in the system file picker is read. An unchanged copy is stored in the extension's local database (IndexedDB) on this device. It is never uploaded, sent to any website or synchronized.
 - **Site icons.** Bookmark icons come from Chrome's own local icon cache; showing them does not contact any website.
@@ -27,7 +27,7 @@ With previews on and access granted:
 
 - **Which pages.** The extension requests only the bookmarks you are looking at: the selected cover and up to eight on either side, or the tiles visible in the grid. The selected cover is requested first. While a page's result is in the local cache, the page is not requested again.
 - **Which addresses are skipped.** Only `http` and `https` addresses on public hosts are requested. The extension does not start requests to `localhost`, loopback, private-network or link-local IP addresses, names ending in `.local`, `.internal`, `.lan`, `.home.arpa` or `.intranet`, single-label intranet names, addresses that include a user name or password, or addresses longer than 2,048 characters. If a public page redirects to a private-network address, the response is discarded before its content is read.
-- **What is sent.** The request goes directly to the bookmarked website, not through any server run by the developer. It is sent **without cookies** and **without a referrer**. The website receives the bookmark's address and the information any web request carries, such as your IP address and browser user agent. Chrome may also add an `Origin: chrome-extension://<extension ID>` header, which can reveal to that website that Bookmark Cover Flow is installed.
+- **What is sent.** The request goes directly to the bookmarked website, not through any server run by the developer. It is sent **without cookies** and **without a referrer**. The website receives the bookmark's address and the information any web request carries, such as your IP address and browser user agent. Chrome may also add an `Origin: chrome-extension://<extension ID>` header, which can reveal to that website that Bookmark Shelf is installed.
 - **What is read.** The extension reads only the beginning of the page, up to the end of its `<head>` section and never more than about 512 KB, to find the page's declared preview image (Open Graph or Twitter card image) and its `theme-color`. The rest of the page is not downloaded. Requests time out after 8 seconds.
 - **Preview images.** The preview image is then shown as an ordinary image inside the extension, loaded over `https` (a plain `http` image address is upgraded to `https`) and without a referrer. The image may be hosted on a different server chosen by the website, such as a content delivery network. Unlike the page request, image loads follow Chrome's normal cookie rules, so the image server may receive its own cookies depending on your third-party cookie settings.
 
@@ -75,6 +75,6 @@ If the extension's data practices change, this policy will be updated before the
 
 ## Contact
 
-Privacy questions: TODO: contact email
+Privacy questions: [me@kejincai.dev](mailto:me@kejincai.dev)
 
 You can also open an issue at <https://github.com/kekincai/bookmark-cover-flow/issues>. Please report security vulnerabilities privately as described in [SECURITY.md](../SECURITY.md).

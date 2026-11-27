@@ -2,9 +2,9 @@
 
 ## Reporting a vulnerability
 
-Please report suspected vulnerabilities privately through GitHub Security Advisories for `kekincai/bookmark-cover-flow`. For anything that cannot go through GitHub, write to TODO: contact email.
+Please report suspected vulnerabilities privately through GitHub Security Advisories for `kekincai/bookmark-cover-flow`. For anything that cannot go through GitHub, write to [me@kejincai.dev](mailto:me@kejincai.dev).
 
-Do not include personal bookmark exports, browsing data, authentication cookies, or session tokens in a report. Bookmark Cover Flow does not require an account or project-operated server.
+Do not include personal bookmark exports, browsing data, authentication cookies, or session tokens in a report. Bookmark Shelf does not require an account or project-operated server.
 
 ## Security model
 

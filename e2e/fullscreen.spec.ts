@@ -11,7 +11,7 @@ test('F toggles full-screen Cover Flow, which stays in sync with the stage', asy
   await expect(fullscreen).toBeVisible()
   // A native modal: the browser makes the page inert and contains focus.
   expect(await fullscreen.evaluate((element) => element.matches(':modal'))).toBe(true)
-  await expect(page.getByRole('dialog', { name: 'Full-screen Cover Flow' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Full-screen covers' })).toBeVisible()
   const close = page.getByRole('button', { name: 'Exit full screen' })
   await expect(close).toBeFocused()
   await expect(page.locator('.fullscreen__heading')).toHaveText(`All Bookmarks · 1 / ${DEMO_TOTAL}`)
@@ -57,7 +57,7 @@ test('F toggles full-screen Cover Flow, which stays in sync with the stage', asy
 test('the title-bar button enters and Escape or the close button exits', async ({ page }) => {
   await openApp(page)
   const fullscreen = page.locator('.fullscreen')
-  const enter = page.getByRole('button', { name: 'Full-screen Cover Flow' })
+  const enter = page.getByRole('button', { name: 'Full-screen covers' })
   await page.getByRole('searchbox', { name: 'Search bookmarks' }).fill('git')
   await enter.click()
   await expect(fullscreen).toBeVisible()

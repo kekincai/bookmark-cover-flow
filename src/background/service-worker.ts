@@ -16,7 +16,7 @@ async function openApp(): Promise<void> {
   try {
     await chrome.tabs.create({ url: chrome.runtime.getURL('index.html') })
   } catch (error: unknown) {
-    console.error('Unable to open Bookmark Cover Flow.', error)
+    console.error('Unable to open Bookmark Shelf.', error)
   }
 }
 

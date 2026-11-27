@@ -1,12 +1,12 @@
 {
   "extensionName": {
-    "message": "Bookmark Cover Flow"
+    "message": "Bookmark Shelf"
   },
   "extensionDescription": {
-    "message": "Chrome のブックマークを、なめらかな Cover Flow で閲覧。"
+    "message": "Chrome のブックマークを、棚に並ぶカバーのように閲覧。"
   },
   "openExtension": {
-    "message": "Bookmark Cover Flow を開く"
+    "message": "Bookmark Shelf を開く"
   },
   "settings": {
     "message": "設定"
@@ -135,7 +135,7 @@
     "message": "ブックマークフォルダー"
   },
   "coverFlow": {
-    "message": "ブックマークの Cover Flow"
+    "message": "ブックマークのカバー"
   },
   "noRecent": {
     "message": "最近開いたブックマークはありません"
@@ -276,7 +276,7 @@
     "message": "表示"
   },
   "viewCoverFlow": {
-    "message": "Cover Flow"
+    "message": "カバー"
   },
   "viewGrid": {
     "message": "グリッド"
@@ -285,7 +285,7 @@
     "message": "リスト"
   },
   "enterFullscreen": {
-    "message": "フルスクリーン Cover Flow"
+    "message": "フルスクリーンのカバー"
   },
   "exitFullscreen": {
     "message": "フルスクリーンを解除"

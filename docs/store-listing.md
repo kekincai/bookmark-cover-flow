@@ -4,9 +4,9 @@ The complete, current listing (short and detailed description, permission justif
 
 ## Name
 
-Bookmark Cover Flow
+Bookmark Shelf
 
-"Cover Flow" is a name Apple has used for one of its own features. Confirm the trademark status before submission; see Review Notes in `CHROMEWEBSTORE.md`.
+The extension was renamed from "Bookmark Cover Flow" so the name no longer uses "Cover Flow", a name Apple has used for its own feature.
 
 ## Short description
 

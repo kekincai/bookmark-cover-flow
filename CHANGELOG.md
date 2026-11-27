@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 — 2026-11-27
 
-Privacy, security and accessibility refactor. Requires Chrome 135 or later.
+Renamed to **Bookmark Shelf**, with a new icon, plus a privacy, security and accessibility refactor. Requires Chrome 135 or later.
 
+- Rename the extension from "Bookmark Cover Flow" to **Bookmark Shelf** (书签书架 / 書籤書架) and call the cover view **Covers**, so the name and store copy no longer use an Apple feature name.
+- New icon: a vermilion bookmark in front of covers fanning back on a warm paper tile, drawn with Canvas (`npm run icons`, `scripts/draw-icon.mjs`) with pixel-snapped 16 and 32 px versions.
 - Make website access optional: the install-time `http://*/*` and `https://*/*` host permissions are gone. **Prefer website preview images** is now off by default; turning it on asks Chrome for website access, and turning it off gives the access back.
 - Add the `alarms` permission for a daily sweep that deletes expired preview-cache entries (also on install and update) and caps the cache at 3,000 entries; image URLs over 2 KB are no longer stored, and entries are verified against the stored page URL.
 - Fetch previews only from public `http(s)` hosts: loopback, private-network, link-local, `.local`, `.internal` and single-label intranet hosts are skipped, and a redirect into a private network is dropped before its body is read. Requests send no cookies and no referrer, read the page only up to `</head>`, and prioritize the selected cover over its neighbours. Only the extension's own pages can ask for a preview.
@@ -15,6 +17,8 @@ Privacy, security and accessibility refactor. Requires Chrome 135 or later.
 - Centralize screen-reader announcements in one live region and expose the List view as a tree grid.
 - Improve performance: cover art is built only when a cover is shown, search text is cached, the sidebar updates incrementally, and background video pauses while hidden.
 - Raise `minimum_chrome_version` from 120 to 135.
+- Fix public IPv6 bookmarks being refused previews; multicast addresses are never fetched.
+- Update development dependencies; `npm audit` reports no vulnerabilities.
 
 ## 1.2.0 — 2026-10-31
 

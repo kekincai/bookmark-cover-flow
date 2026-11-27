@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="public/icons/icon-128.png" width="96" height="96" alt="Bookmark Cover Flow icon">
+  <img src="public/icons/icon-128.png" width="96" height="96" alt="Bookmark Shelf icon">
 
-# Bookmark Cover Flow
+# Bookmark Shelf
 
 **Your Chrome bookmarks, flipping like album covers.**
 
@@ -14,9 +14,9 @@
 
 </div>
 
-![Bookmark Cover Flow showing real public bookmarks](docs/assets/screenshot.png)
+![Bookmark Shelf showing real public bookmarks](docs/assets/screenshot.png)
 
-Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click the extension button and it opens in a normal tab—never over your New Tab page. Real bookmark folders remain intact. The interface is flat and neutral, so every color on screen comes from your covers.
+Bookmark Shelf is a quiet, spatial way to browse Chrome bookmarks. Click the extension button and it opens in a normal tab—never over your New Tab page. Real bookmark folders remain intact. The interface is flat and neutral, so every color on screen comes from your covers.
 
 <div align="center">
   <a href="docs/motion-design.md"><strong>Explore the motion and optical design →</strong></a>
@@ -24,7 +24,7 @@ Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click th
 
 ## Why it feels different
 
-| Album-style covers                                                                                               | Classic Cover Flow motion                                                                             | Your folders, unchanged                                                                       |
+| Album-style covers                                                                                               | Smooth flip-through motion                                                                            | Your folders, unchanged                                                                       |
 | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | Site preview images, or a generated cover in one of four templates colored by the site's theme color or favicon. | 3D page turns with mirror reflections; trackpad, wheel, drag, keyboard and scrubber share one spring. | A sidebar of your real Chrome folders plus All Bookmarks, Recently Opened and Recently Added. |
 
@@ -32,10 +32,10 @@ Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click th
 
 - opens from the toolbar as a regular bookmarkable or pinnable extension tab
 - sidebar with search, a Library (All Bookmarks, Recently Opened, Recently Added) and your real Chrome folders with counts
-- Cover Flow stage with adjustable cover angle (45–80°), optional mirror reflection, a hover “Open ↗” pill and a slim scrubber
+- covers stage with adjustable cover angle (45–80°), optional mirror reflection, a hover “Open ↗” pill and a slim scrubber
 - album-style generated covers when a site has no preview: one of four templates (`mono`, `type`, `circle`, `bands`) chosen per domain, colored from the site's `theme-color` or favicon
-- three views that share one selection and are remembered: Cover Flow with a list under the stage, an album-style Grid, and a full-height List with name, website, folder, date added and last opened; search matches are highlighted
-- full-screen Cover Flow (`F`) on a dark stage tinted by the current cover
+- three views that share one selection and are remembered: Covers with a list under the stage, an album-style Grid, and a full-height List with name, website, folder, date added and last opened; search matches are highlighted
+- full-screen covers (`F`) on a dark stage tinted by the current cover
 - searches titles, hostnames, URLs and folder names instantly
 - four sorting modes, light, dark and automatic themes, and a choice of stage backgrounds: default, Mist, Night, or your own photo or video
 - website preview images are opt-in: until you turn on “Prefer website preview images” and allow website access, no website is ever contacted
@@ -45,7 +45,7 @@ Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click th
 
 ## Install
 
-Bookmark Cover Flow requires Chrome 135 or later.
+Bookmark Shelf requires Chrome 135 or later.
 
 ### From a release
 
@@ -54,7 +54,7 @@ Bookmark Cover Flow requires Chrome 135 or later.
 3. Open `chrome://extensions`.
 4. Enable **Developer mode**.
 5. Choose **Load unpacked** and select the unzipped folder.
-6. Pin **Bookmark Cover Flow**, then click its toolbar icon.
+6. Pin **Bookmark Shelf**, then click its toolbar icon.
 
 ### From source
 
@@ -71,16 +71,16 @@ Load the generated `dist` folder from `chrome://extensions`. Running `npm run de
 
 ## Keyboard
 
-| Key                   | Action                              |
-| --------------------- | ----------------------------------- |
-| `←` / `→`             | Previous / next bookmark            |
-| `Enter`               | Open the active bookmark            |
-| `⌘Enter`              | Open in a background tab            |
-| `/` or `⌘K`           | Focus search                        |
-| `Esc`                 | Clear search; exit full screen      |
-| `Home` / `End`        | First / last bookmark               |
-| `PageUp` / `PageDown` | Move five bookmarks                 |
-| `F`                   | Enter / exit full-screen Cover Flow |
+| Key                   | Action                          |
+| --------------------- | ------------------------------- |
+| `←` / `→`             | Previous / next bookmark        |
+| `Enter`               | Open the active bookmark        |
+| `⌘Enter`              | Open in a background tab        |
+| `/` or `⌘K`           | Focus search                    |
+| `Esc`                 | Clear search; exit full screen  |
+| `Home` / `End`        | First / last bookmark           |
+| `PageUp` / `PageDown` | Move five bookmarks             |
+| `F`                   | Enter / exit full-screen covers |
 
 Arrow keys act on the focused area: the stage, the list (`↑` / `↓`), the grid (arrows move by cover and by row) and the sidebar each navigate independently. Shortcuts never fire while you type in a field.
 
@@ -108,7 +108,7 @@ The interface automatically follows Chrome's UI language. Simplified Chinese, Tr
 
 Screenshots use an isolated Chrome profile with public bookmarks, never a personal bookmark library.
 
-- Backgrounds apply to the Cover Flow stage only. Local photos and videos up to 512 MB are saved as original Blobs in IndexedDB, never uploaded or synchronized. Reopening the extension restores the selected file.
+- Backgrounds apply to the covers stage only. Local photos and videos up to 512 MB are saved as original Blobs in IndexedDB, never uploaded or synchronized. Reopening the extension restores the selected file.
 - Videos loop silently using the native video element. They pause while the tab is hidden; a manual pause is remembered. Reduced-motion users start new videos paused.
 - HDR video bytes and color metadata are retained without transcoding or canvas processing. Actual HDR output requires a compatible file/codec, Chrome/system decoder, and HDR-enabled display. Unsupported files show an error without replacing the previous background.
 - Photos support blur; both photos and videos support dimming. Video blur is intentionally unavailable to keep playback free of CSS filters. Use zero dimming for the unmodified video appearance.
@@ -132,7 +132,7 @@ The isolated extension test seeds 15 public bookmarks plus a 5,000-item stress f
 
 | Permission                               | Why it is needed                                                                       |
 | ---------------------------------------- | -------------------------------------------------------------------------------------- |
-| `bookmarks`                              | Read the bookmark tree displayed in Cover Flow, Grid and List                          |
+| `bookmarks`                              | Read the bookmark tree displayed in Covers, Grid and List                              |
 | `storage`                                | Remember view preferences, Recently Opened and the preview cache on this device        |
 | `favicon`                                | Show site icons from Chrome's local favicon cache                                      |
 | `alarms`                                 | Delete expired preview-cache entries once a day                                        |
@@ -145,8 +145,8 @@ Website access is not granted at install. Turning on **Prefer website preview im
 - **v0.1–v0.5 ✓** — architecture, bookmarks, motion, folders, search, sorting, performance, accessibility
 - **v1.0 ✓** — stable APIs, packaging, documentation, and store-ready release
 - **v1.1 ✓** — editorial cover system, fixed breadcrumb header, spatial graphite stage, redesigned view options
-- **v1.2 ✓** — modern redesign: sidebar library, Cover Flow / Grid / List views, generated album covers, full-screen Cover Flow, stage backgrounds, settings with Appearance/Background/Privacy tabs, new icon
-- **Next (unreleased)** — opt-in website access, Chrome 135 baseline, stricter security policy, native dialogs, accessibility and performance work
+- **v1.2 ✓** — modern redesign: sidebar library, Covers / Grid / List views, generated album covers, full-screen covers, stage backgrounds, settings with Appearance/Background/Privacy tabs, new icon
+- **v1.3 ✓** — renamed to Bookmark Shelf with a new icon; opt-in website access, Chrome 135 baseline, stricter security policy, native dialogs, accessibility and performance work
 
 ## Contributing
 

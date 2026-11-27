@@ -1,4 +1,4 @@
-# Chrome Web Store Listing — Bookmark Cover Flow
+# Chrome Web Store Listing — Bookmark Shelf
 
 > Last Updated: 2026-11-27
 
@@ -8,7 +8,7 @@ This file is the single source of truth for the Chrome Web Store dashboard: list
 
 **Extension Name** [REQUIRED]
 
-Bookmark Cover Flow
+Bookmark Shelf
 
 (Matches `extensionName` in `public/_locales/*/messages.json`, which `manifest.json` uses through `__MSG_extensionName__`.)
 
@@ -18,14 +18,14 @@ Bookmark Cover Flow
 Browse your Chrome bookmarks as flipping covers, a grid or a list, with instant search. No account, no tracking, no uploads.
 ```
 
-The manifest description (`extensionDescription`, shown in `chrome://extensions`) is "Browse Chrome bookmarks in a quiet, spatial Cover Flow." It does not have to match word for word, but keep the two consistent in meaning.
+The manifest description (`extensionDescription`, shown in `chrome://extensions`) is "Browse Chrome bookmarks as a quiet, spatial shelf of covers." It does not have to match word for word, but keep the two consistent in meaning.
 
 **Detailed Description** [REQUIRED]
 
 Paste as plain text; the store strips Markdown.
 
 ```text
-Bookmark Cover Flow shows the bookmarks you already have in Chrome as a row of covers you can flip through, so finding a saved page feels like browsing a record shelf instead of scrolling a long list.
+Bookmark Shelf shows the bookmarks you already have in Chrome as a row of covers you can flip through, so finding a saved page feels like browsing a record shelf instead of scrolling a long list.
 
 FEATURES
 • Your real bookmark folders in a sidebar, plus All Bookmarks, Recently Opened and Recently Added
@@ -40,7 +40,7 @@ FEATURES
 • English, Simplified Chinese, Traditional Chinese and Japanese
 
 HOW TO USE
-1. Click the Bookmark Cover Flow icon in the toolbar. It opens in a normal tab and does not replace your New Tab page.
+1. Click the Bookmark Shelf icon in the toolbar. It opens in a normal tab and does not replace your New Tab page.
 2. Pick a folder in the sidebar, or type to search.
 3. Flip with a trackpad, mouse wheel, drag or the arrow keys. Press Enter to open the bookmark in the middle.
 4. Open Settings from the gear at the bottom of the sidebar to change the view, theme or background.
@@ -52,7 +52,7 @@ Website preview images are off by default. If you turn them on, Chrome asks you 
 Settings > Privacy has buttons to clear the preview cache and the Recently Opened list at any time.
 
 PERMISSIONS
-• Read and change your bookmarks: needed to show your bookmark folders as covers. Bookmark Cover Flow does not add, edit or delete bookmarks.
+• Read and change your bookmarks: needed to show your bookmark folders as covers. Bookmark Shelf does not add, edit or delete bookmarks.
 • Read and change all your data on all websites (only if you turn on website previews): needed to read each bookmarked page's public preview image. It is requested only when you turn on the setting and released when you turn it off.
 
 SUPPORT
@@ -77,23 +77,23 @@ English. The listing can also be localized in Simplified Chinese (`zh_CN`), Trad
 
 ## Graphics & Assets
 
-| Asset                          | Dimensions          | Status          | Filename                                                                                                |
-| ------------------------------ | ------------------- | --------------- | ------------------------------------------------------------------------------------------------------- |
-| Store Icon [REQUIRED]          | 128×128 PNG         | ✅ Ready        | `public/icons/icon-128.png`                                                                             |
-| Toolbar/extension icons        | 16, 32, 48 PNG      | ✅ Ready        | `public/icons/icon-16.png`, `icon-32.png`, `icon-48.png`                                                |
-| Screenshot 1 [REQUIRED]        | 1280×800            | 🟡 Needs update | `docs/assets/store-screenshot-1280x800.png`                                                             |
-| Screenshot 2 [RECOMMENDED]     | 1280×800            | 🟡 Needs update | `docs/assets/settings.png` (Settings; must now show "Single-key shortcuts" and previews off by default) |
-| Screenshot 3 [RECOMMENDED]     | 1280×800 or 640×400 | ⬜ Not created  | Grid or List view                                                                                       |
-| Screenshot 4                   | 1280×800 or 640×400 | ⬜ Not created  | Full-screen cover view                                                                                  |
-| Screenshot 5                   | 1280×800 or 640×400 | ⬜ Not created  | Search with highlighted matches                                                                         |
-| Small Promo Tile [RECOMMENDED] | 440×280             | ⬜ Not created  |                                                                                                         |
-| Marquee Promo Tile             | 1400×560            | ⬜ Not created  |                                                                                                         |
+| Asset                          | Dimensions          | Status         | Filename                                                             |
+| ------------------------------ | ------------------- | -------------- | -------------------------------------------------------------------- |
+| Store Icon [REQUIRED]          | 128×128 PNG         | ✅ Ready       | `public/icons/icon-128.png`                                          |
+| Toolbar/extension icons        | 16, 32, 48 PNG      | ✅ Ready       | `public/icons/icon-16.png`, `icon-32.png`, `icon-48.png`             |
+| Screenshot 1 [REQUIRED]        | 1280×800            | ✅ Ready       | `docs/assets/store-screenshot-1280x800.png` (Covers view, light)     |
+| Screenshot 2 [RECOMMENDED]     | 1280×800            | ✅ Ready       | `docs/assets/settings.png` (Settings)                                |
+| Screenshot 3 [RECOMMENDED]     | 1280×800            | ✅ Ready       | `docs/assets/store-screenshot-fullscreen-1280x800.png` (full screen) |
+| Screenshot 4                   | 1280×800            | ✅ Ready       | `docs/assets/store-screenshot-dark-1280x800.png` (dark theme)        |
+| Screenshot 5                   | 1280×800 or 640×400 | ⬜ Not created | Search with highlighted matches                                      |
+| Small Promo Tile [RECOMMENDED] | 440×280             | ⬜ Not created |                                                                      |
+| Marquee Promo Tile             | 1400×560            | ⬜ Not created |                                                                      |
 
 `docs/assets/screenshot.png` is 1440×900 and is used by the README only; it is not a valid store size.
 
 ### Screenshot Notes
 
-All existing screenshots predate this refactor. The Settings dialog, focus rings, theme colors and the preview default changed, so every screenshot must be retaken before submission. Capture them from an isolated Chrome profile seeded with public bookmarks (`npm run test:extension` or `scripts/capture-demo.mjs`), never a personal bookmark library. If previews appear in a screenshot, the profile must have granted website access in Settings first.
+Screenshots 1–4 were retaken for 1.3.0 in English with `npm run screenshots`, from an isolated headless Chrome profile seeded only with public bookmarks (see `docs/release.md`). That profile grants website access, so previews appear. Never capture from a personal bookmark library.
 
 1. Cover view with a folder selected in the sidebar and the list under the stage.
 2. Settings, Appearance tab.
@@ -140,7 +140,7 @@ Suggested answers for the dashboard's data-type checklist (owner to confirm): Pe
 
 ### Disclosures reviewers may check
 
-- Preview page requests are sent straight to the bookmarked website, with no cookies, no referrer, an 8-second timeout, and only the start of the page (up to the end of `<head>`) read. Chrome may add an `Origin: chrome-extension://<id>` header, which can tell the website that Bookmark Cover Flow is installed.
+- Preview page requests are sent straight to the bookmarked website, with no cookies, no referrer, an 8-second timeout, and only the start of the page (up to the end of `<head>`) read. Chrome may add an `Origin: chrome-extension://<id>` header, which can tell the website that Bookmark Shelf is installed.
 - Preview images are shown as ordinary images (no referrer). They can come from a different server chosen by the website, such as a content delivery network, and that server may receive its own cookies, depending on the user's third-party cookie settings.
 - No remote code is loaded. All scripts are bundled; the page security policy allows scripts only from the extension itself.
 
@@ -161,7 +161,7 @@ The repository must be public and the file must be on `main` for this URL to loa
 
 **Publisher Name** [REQUIRED]: kekincai (confirm the name shown on the developer account)
 
-**Contact Email** [REQUIRED]: TODO: contact email
+**Contact Email** [REQUIRED]: [me@kejincai.dev](mailto:me@kejincai.dev)
 
 **Support URL** [RECOMMENDED]: https://github.com/kekincai/bookmark-cover-flow/issues
 
@@ -169,10 +169,10 @@ The repository must be public and the file must be on `main` for this URL to loa
 
 ## Version History
 
-| Version    | Date       | Changes                                                                                                                                                                                                                                                                                                                                                                                                                          | Status |
-| ---------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Unreleased | —          | Website access becomes optional and opt-in (previews off by default; access released when turned off); new `alarms` permission for a daily cache cleanup; minimum Chrome 135; stricter preview fetching (public hosts only, no cookies, no referrer); stricter page security policy; Settings and full screen as native dialogs; single-key shortcuts toggle; accessibility and performance work. Version number not yet bumped. | Draft  |
-| 1.2.0      | 2026-10-31 | Redesign with sidebar library, cover / grid / list views, generated covers, full screen, stage backgrounds, settings tabs, four languages, new icon.                                                                                                                                                                                                                                                                             | Draft  |
+| Version | Date       | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                      | Status |
+| ------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 1.3.0   | 2026-11-27 | Renamed to Bookmark Shelf with a new icon. Website access becomes optional and opt-in (previews off by default; access released when turned off); new `alarms` permission for a daily cache cleanup; minimum Chrome 135; stricter preview fetching (public hosts only, no cookies, no referrer); stricter page security policy; Settings and full screen as native dialogs; single-key shortcuts toggle; accessibility and performance work. | Draft  |
+| 1.2.0   | 2026-10-31 | Redesign with sidebar library, cover / grid / list views, generated covers, full screen, stage backgrounds, settings tabs, four languages, new icon.                                                                                                                                                                                                                                                                                         | Draft  |
 
 Update the Status column when a version is submitted or published. The next upload must use a version higher than any version already uploaded.
 
@@ -180,30 +180,30 @@ Update the Status column when a version is submitted or published. The next uplo
 
 ### Known Issues / Limitations
 
-- **Trademark risk — "Cover Flow".** "Cover Flow" is a name Apple has used for its own product feature. The extension name is unchanged in this revision, but store reviewers can reject listings that use another company's product names. The owner should confirm the trademark status of "Cover Flow" (and decide whether to rename) before submission. Store copy no longer describes the design as "Apple-style" or refers to Apple products.
+- **Trademark — resolved.** The extension was renamed from "Bookmark Cover Flow" to "Bookmark Shelf" so the name and store copy no longer use "Cover Flow", a name Apple has used for its own feature. The view that shows covers is labelled "Covers". The repository and package file keep the technical name `bookmark-cover-flow`, which users do not see.
 - Upgrade path from 1.2.0 needs a manual check: 1.2.0 granted website access at install and stored previews as on by default. Verify in a profile upgraded from 1.2.0 whether Chrome keeps the earlier access and whether previews stay on, and make sure the Settings switch reflects the real state.
 - Preview availability depends on each website; many sites do not declare a preview image, and those bookmarks keep their generated cover.
 - Screenshots predate the current UI (see Graphics & Assets).
 
 ### Pre-Publish Checklist Status
 
-| Item                                               | Status                                                                                   |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `manifest_version` is 3                            | ✅                                                                                       |
-| Version bumped above the last uploaded version     | ⬜ Manifest still says 1.2.0                                                             |
-| Name matches this file                             | ✅ "Bookmark Cover Flow"                                                                 |
-| Manifest description ≤ 132 characters              | ✅ (English: 55 characters)                                                              |
-| ZIP excludes dev files                             | ✅ Only `dist/` is zipped; source maps are disabled in `vite.config.ts`                  |
-| Minimum permissions; no unused permissions         | ✅ Host access is optional; verify `alarms` stays in use if the cleanup changes          |
-| Every permission justified                         | ✅ See table above                                                                       |
-| Single purpose is narrow                           | ✅                                                                                       |
-| No trademark problems in name, copy or screenshots | 🟡 "Cover Flow" in the name needs owner confirmation; Apple references removed from copy |
-| Contact email valid and monitored                  | ⬜ `TODO: contact email`                                                                 |
-| At least one current 1280×800 screenshot           | 🟡 Exists but must be retaken                                                            |
-| Privacy policy URL live                            | ⬜ Verify after the policy update is merged to `main`                                    |
-| Privacy policy matches the data-use form           | ✅ Policy rewritten for opt-in previews; re-check after final wording of the form        |
-| No remote code, no obfuscation                     | ✅ Bundled scripts only; `script-src 'self'`                                             |
-| Extension tested unpacked in a clean profile       | ⬜ Re-run `npm run test:extension` and a manual pass after the refactor lands            |
+| Item                                               | Status                                                                            |
+| -------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `manifest_version` is 3                            | ✅                                                                                |
+| Version bumped above the last uploaded version     | ✅ 1.3.0                                                                          |
+| Name matches this file                             | ✅ "Bookmark Shelf"                                                               |
+| Manifest description ≤ 132 characters              | ✅ (English: 55 characters)                                                       |
+| ZIP excludes dev files                             | ✅ Only `dist/` is zipped; source maps are disabled in `vite.config.ts`           |
+| Minimum permissions; no unused permissions         | ✅ Host access is optional; verify `alarms` stays in use if the cleanup changes   |
+| Every permission justified                         | ✅ See table above                                                                |
+| Single purpose is narrow                           | ✅                                                                                |
+| No trademark problems in name, copy or screenshots | ✅ Renamed to "Bookmark Shelf"; no Apple names in the listing                     |
+| Contact email valid and monitored                  | ✅ me@kejincai.dev                                                                |
+| At least one current 1280×800 screenshot           | ✅ Retaken in English for 1.3.0 (`docs/assets/store-screenshot-1280x800.png`)     |
+| Privacy policy URL live                            | ⬜ Verify after the policy update is merged to `main`                             |
+| Privacy policy matches the data-use form           | ✅ Policy rewritten for opt-in previews; re-check after final wording of the form |
+| No remote code, no obfuscation                     | ✅ Bundled scripts only; `script-src 'self'`                                      |
+| Extension tested unpacked in a clean profile       | ⬜ Re-run `npm run test:extension` and a manual pass after the refactor lands     |
 
 ### Rejection History
 

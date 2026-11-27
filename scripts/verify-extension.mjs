@@ -1,6 +1,6 @@
 import { chromium } from '@playwright/test'
 import assert from 'node:assert/strict'
-import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -11,6 +11,7 @@ import { join, resolve } from 'node:path'
  * Playwright's `locale` option is deliberately not used because it changes getUILanguage() but
  * not chrome.i18n.getMessage(), which would mix languages.
  * Set SCREENSHOT_DIR to also save light/dark, full-screen and settings screenshots for review.
+ * Set ENGLISH_UI=1 to force the English interface (store and README screenshots are English).
  */
 
 const profilePath = await mkdtemp(join(tmpdir(), 'bookmark-cover-flow-verify-'))
@@ -26,6 +27,12 @@ await cp(resolve('dist'), extensionPath, { recursive: true })
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
   manifest.host_permissions = manifest.optional_host_permissions
   await writeFile(manifestPath, JSON.stringify(manifest))
+  // ENGLISH_UI=1 (for store screenshots): keep only the English catalog in the copy, so
+  // chrome.i18n falls back to it whatever the OS language, and report en-US as the UI language.
+  if (process.env.ENGLISH_UI) {
+    for (const locale of await readdir(join(extensionPath, '_locales')))
+      if (locale !== 'en') await rm(join(extensionPath, '_locales', locale), { recursive: true })
+  }
 }
 const storeScreenshotPath = resolve('docs/assets/store-screenshot-1280x800.png')
 const readmeScreenshotPath = resolve('docs/assets/screenshot.png')
@@ -58,7 +65,7 @@ const publicFolders = [
   {
     title: 'Reading',
     bookmarks: [
-      ['Cover Flow', 'https://en.wikipedia.org/wiki/Cover_Flow'],
+      ['Bookmark (digital)', 'https://en.wikipedia.org/wiki/Bookmark_(digital)'],
       ['Internet Archive', 'https://archive.org/'],
       ['Project Gutenberg', 'https://www.gutenberg.org/'],
       ['NASA', 'https://www.nasa.gov/'],
@@ -127,6 +134,7 @@ try {
     // HEADLESS=1 runs without a window: the `chromium` channel's new headless mode loads
     // extensions (the default headless shell does not).
     ...(process.env.HEADLESS ? { channel: 'chromium', headless: true } : { headless: false }),
+    ...(process.env.ENGLISH_UI ? { locale: 'en-US' } : {}),
     args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`],
   })
 
@@ -267,7 +275,7 @@ try {
   assert.equal(await stageCovers(page).count(), 5)
   await sidebarItem(page, 'Reading').click()
   await page.locator('.title-bar__title', { hasText: 'Reading' }).waitFor()
-  assert.equal(await stageTitle(page).innerText(), 'Cover Flow')
+  assert.equal(await stageTitle(page).innerText(), 'Bookmark (digital)')
   await sidebarItem(page, labels.allBookmarks).click()
   await page.locator('.title-bar__title', { hasText: labels.allBookmarks }).waitFor()
 

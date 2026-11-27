@@ -20,7 +20,7 @@ test('loads the demo library and supports the primary keyboard and search flow',
   page.on('pageerror', (error) => errors.push(error.message))
 
   await openApp(page)
-  await expect(page).toHaveTitle('Bookmark Cover Flow')
+  await expect(page).toHaveTitle('Bookmark Shelf')
   await expect(page.locator('.title-bar__detail')).toHaveText(`${DEMO_TOTAL} bookmarks`)
   // Virtualized to selectedIndex ± 7: index 0 renders covers 0…7.
   await expect(covers(page)).toHaveCount(8)

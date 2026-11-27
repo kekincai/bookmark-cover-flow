@@ -12,7 +12,7 @@ try {
   await bootstrap(root)
 } catch (error: unknown) {
   // A failure before the first render would otherwise leave a blank page.
-  console.error('Bookmark Cover Flow failed to start.', error)
+  console.error('Bookmark Shelf failed to start.', error)
   const message = document.createElement('p')
   message.setAttribute('role', 'alert')
   message.className = 'fatal-error'

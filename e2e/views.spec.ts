@@ -1,12 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
 import { DEMO_TOTAL, listRows, openApp, position, stageTitle } from './helpers'
 
-const viewButton = (page: Page, name: 'Cover Flow' | 'Grid' | 'List') =>
+const viewButton = (page: Page, name: 'Covers' | 'Grid' | 'List') =>
   page.getByRole('group', { name: 'View' }).getByRole('button', { name, exact: true })
 
 test('switches between Cover Flow, Grid and List and remembers the choice', async ({ page }) => {
   await openApp(page)
-  await expect(viewButton(page, 'Cover Flow')).toHaveAttribute('aria-pressed', 'true')
+  await expect(viewButton(page, 'Covers')).toHaveAttribute('aria-pressed', 'true')
 
   await viewButton(page, 'Grid').click()
   await expect(viewButton(page, 'Grid')).toHaveAttribute('aria-pressed', 'true')
@@ -27,7 +27,7 @@ test('switches between Cover Flow, Grid and List and remembers the choice', asyn
   await expect(viewButton(page, 'List')).toHaveAttribute('aria-pressed', 'true')
   await expect(page.locator('.stage')).toBeHidden()
 
-  await viewButton(page, 'Cover Flow').click()
+  await viewButton(page, 'Covers').click()
   await expect(page.locator('.stage')).toBeVisible()
   await expect(page.locator('.bookmark-list')).toBeVisible()
 })
@@ -66,7 +66,7 @@ test('the grid selects instantly, moves by rows and keeps Cover Flow in sync', a
   )
   expect(await position(page)).toBe(DEMO_TOTAL - 1)
 
-  await viewButton(page, 'Cover Flow').click()
+  await viewButton(page, 'Covers').click()
   await expect(stageTitle(page)).toHaveText('Longreads')
 })
 
