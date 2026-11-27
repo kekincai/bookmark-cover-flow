@@ -6,6 +6,8 @@ import {
   type WallpaperSettings,
 } from '../../domain/wallpaper'
 import { localizeError, t } from '../../shared/i18n'
+import { setUnavailable } from '../dom/controls'
+import { fragment, type Markup } from '../dom/markup'
 import { icons } from './icons'
 
 export type WallpaperAction =
@@ -118,8 +120,7 @@ export function createSelect<T extends string>(
   const select = createElement('select', 'settings-select__control')
   select.id = settingsId(name)
   choices.forEach((choice) => select.add(new Option(choice.label, choice.value)))
-  wrapper.append(select)
-  wrapper.insertAdjacentHTML('beforeend', icons.chevronDown)
+  wrapper.append(select, fragment(icons.chevronDown))
   return { wrapper, select }
 }
 
@@ -145,17 +146,13 @@ export function createButton(label: string): HTMLButtonElement {
   return button
 }
 
-/** aria-disabled keeps focus on the control while an operation runs; clicks are ignored. */
-export function setUnavailable(button: HTMLButtonElement, unavailable: boolean): void {
-  if (unavailable) button.setAttribute('aria-disabled', 'true')
-  else button.removeAttribute('aria-disabled')
-}
+export { setUnavailable } from '../dom/controls'
 
 export interface TileChoice<T extends string> {
   readonly value: T
   readonly label: string
   readonly thumbClass: string
-  readonly thumbHtml?: string
+  readonly thumb?: Markup
 }
 
 /** Thumbnail radio group. Arrow keys move focus and select (unless `onPick` ignores 'arrow'). */
@@ -176,7 +173,7 @@ export function createTileGroup<T extends string>(
     tile.tabIndex = -1
     const thumb = createElement('span', `settings-tile__thumb ${choice.thumbClass}`)
     thumb.setAttribute('aria-hidden', 'true')
-    if (choice.thumbHtml) thumb.innerHTML = choice.thumbHtml
+    if (choice.thumb) thumb.append(fragment(choice.thumb))
     tile.append(thumb, createElement('span', 'settings-tile__label', choice.label))
     tile.addEventListener('click', () => onPick(choice.value, 'click'))
     element.append(tile)
@@ -256,7 +253,7 @@ export function createWallpaperControls(): WallpaperControls {
         value: 'media',
         label: t('presetMedia'),
         thumbClass: 'wallpaper-thumb--media',
-        thumbHtml: icons.plus,
+        thumb: icons.plus,
       },
     ],
     (value, source) => {
@@ -282,12 +279,12 @@ export function createWallpaperControls(): WallpaperControls {
   dropzone.append(createElement('span', 'wallpaper-dropzone__text', t('dropMedia')), choose)
   const hint = createElement('p', 'settings-note', t('mediaHint'))
   const current = createElement('p', 'wallpaper-current')
+  // Both live regions stay rendered and only change text: a region that appears together with its
+  // message is not announced reliably. CSS collapses them while empty.
   const status = createElement('p', 'wallpaper-status')
   status.setAttribute('role', 'status')
-  status.setAttribute('aria-live', 'polite')
   const error = createElement('p', 'wallpaper-error')
   error.setAttribute('role', 'alert')
-  error.hidden = true
   const mediaGroup = settingsGroup(dropzone, input, hint, current, status, error)
   mediaGroup.classList.add('wallpaper-media')
 
@@ -316,10 +313,16 @@ export function createWallpaperControls(): WallpaperControls {
 
   const formatValue = (name: 'blur' | 'dim', range: HTMLInputElement): string =>
     name === 'blur' ? (range.disabled ? '—' : `${range.value} px`) : `${range.value}%`
+  /** The visible value is aria-hidden; the slider itself announces it with its unit. */
+  const showValue = (name: 'blur' | 'dim', range: HTMLInputElement, value: HTMLElement): void => {
+    const text = formatValue(name, range)
+    value.textContent = text
+    range.setAttribute('aria-valuetext', text)
+  }
 
   ranges.forEach(({ name, input: range, value }) => {
     range.addEventListener('input', () => {
-      value.textContent = formatValue(name, range)
+      showValue(name, range, value)
       action({ type: 'preview', patch: { [name]: Number(range.value) } })
     })
     range.addEventListener('change', () =>
@@ -377,15 +380,16 @@ export function createWallpaperControls(): WallpaperControls {
 
       current.textContent = media ? `${settings.name} · ${settings.width} × ${settings.height}` : ''
       current.hidden = !media
-      status.textContent = next.busy
+      const statusText = next.busy
         ? t('savingMedia')
         : settings.kind === 'video'
           ? settings.paused
             ? t('videoPaused')
             : t('videoSelected')
           : ''
-      error.textContent = localizeError(next.error || next.playbackError)
-      error.hidden = !error.textContent
+      if (status.textContent !== statusText) status.textContent = statusText
+      const message = localizeError(next.error || next.playbackError)
+      if (error.textContent !== message) error.textContent = message
 
       playRow.row.hidden = settings.kind !== 'video'
       playRow.title.textContent = settings.name
@@ -397,7 +401,7 @@ export function createWallpaperControls(): WallpaperControls {
         range.disabled = name === 'blur' ? settings.kind !== 'image' : settings.kind === 'gradient'
         const stored = String(settings[name])
         if (range.value !== stored) range.value = stored
-        value.textContent = formatValue(name, range)
+        showValue(name, range, value)
         range.closest('.settings-row')?.classList.toggle('is-disabled', range.disabled)
       })
     },

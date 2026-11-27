@@ -13,14 +13,17 @@ export function resolveLocale(language: string): Locale {
   return /^ja(?:-|$)/.test(normalized) ? 'ja' : 'en'
 }
 
+/** The browser's full UI language tag (e.g. `en-GB`), which carries region and calendar. */
+export function uiLanguage(): string {
+  return typeof chrome !== 'undefined' && chrome.i18n?.getUILanguage
+    ? chrome.i18n.getUILanguage()
+    : typeof navigator !== 'undefined'
+      ? navigator.language
+      : 'en'
+}
+
 export function currentLocale(): Locale {
-  const language =
-    typeof chrome !== 'undefined' && chrome.i18n?.getUILanguage
-      ? chrome.i18n.getUILanguage()
-      : typeof navigator !== 'undefined'
-        ? navigator.language
-        : 'en'
-  return resolveLocale(language)
+  return resolveLocale(uiLanguage())
 }
 
 export function translate(

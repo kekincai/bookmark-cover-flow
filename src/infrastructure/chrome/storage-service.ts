@@ -42,6 +42,7 @@ export function parsePreferences(value: unknown): Preferences {
     view: viewModes.includes(record.view as ViewMode)
       ? (record.view as ViewMode)
       : defaultPreferences.view,
+    singleKeyShortcuts: boolean('singleKeyShortcuts', defaultPreferences.singleKeyShortcuts),
   }
 }
 

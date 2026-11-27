@@ -31,23 +31,25 @@ function dominantColor(image: HTMLImageElement): string | undefined {
   )
 }
 
+/** Never rejects: an icon that fails to load or decode has no brand color. */
+async function loadFaviconColor(faviconUrl: string): Promise<string | undefined> {
+  try {
+    const image = new Image()
+    image.decoding = 'async'
+    image.src = faviconUrl
+    // decode() waits for the load, then for decoded pixels; it rejects on a broken image.
+    await image.decode()
+    return dominantColor(image)
+  } catch {
+    return undefined
+  }
+}
+
 /** Chrome's same-origin favicon endpoint, so reading pixels never taints the canvas. */
 export function readFaviconColor(faviconUrl: string): Promise<string | undefined> {
   const cached = cache.get(faviconUrl)
   if (cached !== undefined) return cached
-  const pending = new Promise<string | undefined>((resolve) => {
-    const image = new Image()
-    image.decoding = 'async'
-    image.onload = () => {
-      try {
-        resolve(dominantColor(image))
-      } catch {
-        resolve(undefined)
-      }
-    }
-    image.onerror = () => resolve(undefined)
-    image.src = faviconUrl
-  })
+  const pending = loadFaviconColor(faviconUrl)
   cache.set(faviconUrl, pending)
   return pending
 }

@@ -6,8 +6,10 @@ export interface PreviewResult {
   readonly themeColor?: string
 }
 
+export type PreviewPriority = 'high' | 'low'
+
 export interface PreviewProvider {
-  resolve(url: string): Promise<PreviewResult>
+  resolve(url: string, priority?: PreviewPriority): Promise<PreviewResult>
 }
 
 /** A missing preview settles the cover on its generated art instead of leaving it pending. */
@@ -24,6 +26,8 @@ export async function preloadBookmarkPreviews(
   onPreview: (bookmarkId: string, result: PreviewResult) => void,
   isCurrent: () => boolean,
   concurrency = 4,
+  /** The selected cover is fetched at high priority, its neighbours at low priority. */
+  priorityOf: (item: CoverItem) => PreviewPriority = () => 'low',
 ): Promise<void> {
   let nextIndex = 0
   const worker = async (): Promise<void> => {
@@ -32,8 +36,14 @@ export async function preloadBookmarkPreviews(
       nextIndex += 1
       const item = items[index]
       if (item === undefined) continue
-      const result = await provider.resolve(item.url)
-      if (isCurrent()) onPreview(item.bookmarkId, result)
+      const result = await provider.resolve(item.url, priorityOf(item))
+      if (!isCurrent()) continue
+      // One failing callback must not abandon the rest of the batch.
+      try {
+        onPreview(item.bookmarkId, result)
+      } catch (error: unknown) {
+        console.warn('Unable to apply a bookmark preview.', error)
+      }
     }
   }
 

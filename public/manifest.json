@@ -4,7 +4,7 @@
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "version": "1.2.0",
-  "minimum_chrome_version": "120",
+  "minimum_chrome_version": "135",
   "homepage_url": "https://github.com/kekincai/bookmark-cover-flow",
   "icons": {
     "16": "icons/icon-16.png",
@@ -12,8 +12,8 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["bookmarks", "storage", "favicon"],
-  "host_permissions": ["https://*/*", "http://*/*"],
+  "permissions": ["bookmarks", "storage", "favicon", "alarms"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "action": {
     "default_title": "__MSG_openExtension__",
     "default_icon": {
@@ -26,6 +26,6 @@
     "type": "module"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'none'; img-src 'self' https: http: data: blob:; media-src 'self' blob:;"
+    "extension_pages": "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; img-src 'self' https: data: blob:; media-src 'self' blob:; connect-src 'self' https: http:; require-trusted-types-for 'script'; trusted-types static-markup;"
   }
 }

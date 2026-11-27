@@ -13,65 +13,90 @@ export interface WallpaperSnapshot {
   readonly blob: Blob | null
 }
 
+/** Opens (and on first use creates) the store; a connection that opens after a failure is closed. */
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
+    let failed = false
+    const fail = (error: Error): void => {
+      failed = true
+      reject(error)
+    }
     const request = indexedDB.open(DATABASE, 1)
     request.onupgradeneeded = () => {
       request.result.createObjectStore(STORE)
     }
-    request.onsuccess = () => resolve(request.result)
+    request.onsuccess = () => {
+      const database = request.result
+      if (failed) {
+        database.close()
+        return
+      }
+      // Never block a newer version of the extension from upgrading the store.
+      database.onversionchange = () => database.close()
+      resolve(database)
+    }
     request.onerror = () =>
-      reject(request.error ?? new Error('Unable to open local background storage.'))
+      fail(request.error ?? new Error('Unable to open local background storage.'))
     request.onblocked = () =>
-      reject(new Error('Background storage is busy. Close other extension tabs and try again.'))
+      fail(new Error('Background storage is busy. Close other extension tabs and try again.'))
+  })
+}
+
+/** Resolves when the transaction commits; rejects with its error when it fails or aborts. */
+function committed(transaction: IDBTransaction, fallback: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const listening = new AbortController()
+    const options = { once: true, signal: listening.signal }
+    const fail = (): void => {
+      listening.abort()
+      reject(transaction.error ?? new Error(fallback))
+    }
+    transaction.addEventListener(
+      'complete',
+      () => {
+        listening.abort()
+        resolve()
+      },
+      options,
+    )
+    transaction.addEventListener('error', fail, options)
+    transaction.addEventListener('abort', fail, options)
   })
 }
 
 /** Native Blob storage. Never serialize media through chrome.storage or data URLs. */
 export async function readWallpaper(): Promise<WallpaperSnapshot> {
   const database = await openDatabase()
-  return new Promise((resolve, reject) => {
+  try {
     const transaction = database.transaction(STORE, 'readonly')
     const store = transaction.objectStore(STORE)
     const settings = store.get('settings')
     const media = store.get('media')
-    transaction.oncomplete = () => {
-      database.close()
-      const value: unknown = media.result
-      resolve({
-        settings: parseWallpaper(settings.result),
-        blob: value instanceof Blob ? value : null,
-      })
+    await committed(transaction, 'Unable to read the saved background.')
+    const value: unknown = media.result
+    return {
+      settings: parseWallpaper(settings.result),
+      blob: value instanceof Blob ? value : null,
     }
-    transaction.onabort = transaction.onerror = () => {
-      database.close()
-      reject(transaction.error ?? new Error('Unable to read the saved background.'))
-    }
-  })
+  } finally {
+    database.close()
+  }
 }
 
 async function mutate(operation: (store: IDBObjectStore) => void): Promise<void> {
   const database = await openDatabase()
-  return new Promise((resolve, reject) => {
+  try {
     const transaction = database.transaction(STORE, 'readwrite')
-    transaction.oncomplete = () => {
-      database.close()
-      resolve()
-    }
-    transaction.onabort = transaction.onerror = () => {
-      database.close()
-      reject(
-        transaction.error ??
-          new Error('Unable to save the background. Check available disk space.'),
-      )
-    }
     try {
       operation(transaction.objectStore(STORE))
     } catch (error) {
       transaction.abort()
-      reject(error instanceof Error ? error : new Error('Unable to save the background.'))
+      throw error instanceof Error ? error : new Error('Unable to save the background.')
     }
-  })
+    await committed(transaction, 'Unable to save the background. Check available disk space.')
+  } finally {
+    database.close()
+  }
 }
 
 export async function saveWallpaperMedia(blob: Blob, settings: WallpaperSettings): Promise<void> {

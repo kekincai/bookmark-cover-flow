@@ -4,11 +4,15 @@ import type { NavigationCommand } from '../../domain/navigation'
 const REPEAT_INTERVAL_MS = 90
 /** Regions that handle their own arrow, Home/End and Enter keys. */
 const SELF_NAVIGATING = '.sidebar, .bookmark-list, .bookmark-grid, .settings-dialog'
-const TEXT_ENTRY = 'input, textarea, select, [contenteditable="true"]'
+/** Fields where letters are typed. Sliders, checkboxes and buttons keep the F and / shortcuts. */
+const TEXT_ENTRY =
+  'input:not([type="range"], [type="checkbox"], [type="radio"], [type="button"]), textarea, select, [contenteditable="true"]'
 
 export function attachKeyboardController(
   dispatch: (command: NavigationCommand) => void,
   searchInput: HTMLInputElement,
+  /** F and / are single-character shortcuts; users can turn them off (WCAG 2.1.4). */
+  singleKeyShortcuts: () => boolean = () => true,
 ): () => void {
   let lastRepeatAt = 0
 
@@ -18,7 +22,8 @@ export function attachKeyboardController(
     const command = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k'
 
     if (event.key === 'Escape') {
-      if (target?.closest('.settings-dialog')) return
+      // Native modal dialogs close on Esc themselves; a cancelled keydown would block that.
+      if (target?.closest('dialog')) return
       if (target === searchInput && searchInput.value === '') searchInput.blur()
       dispatch({ type: 'escape' })
       event.preventDefault()
@@ -34,13 +39,19 @@ export function attachKeyboardController(
     if (event.ctrlKey && event.key !== 'Enter') return
     if (event.metaKey && event.key !== 'Enter') return
 
-    if (event.key === '/') {
+    if (!singleKeyShortcuts()) {
+      // Shortcuts off: fall through to navigation without claiming F or /.
+    } else if (event.key === '/') {
       searchInput.focus()
       searchInput.select()
       event.preventDefault()
       return
-    }
-    if (event.key.toLowerCase() === 'f' && !event.metaKey && !event.ctrlKey && !event.shiftKey) {
+    } else if (
+      event.key.toLowerCase() === 'f' &&
+      !event.metaKey &&
+      !event.ctrlKey &&
+      !event.shiftKey
+    ) {
       dispatch({ type: 'toggle-fullscreen' })
       event.preventDefault()
       return

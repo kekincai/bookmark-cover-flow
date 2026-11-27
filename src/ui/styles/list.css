@@ -6,7 +6,6 @@
   border-top: 1px solid var(--separator);
   background: var(--bg);
   color: var(--label);
-  font-family: var(--font);
 }
 
 .bookmark-list__grid {
@@ -14,14 +13,13 @@
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
-  outline: none;
   scroll-behavior: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--thumb) transparent;
+  /* Default width (a thin bar is harder to grab); thumb ≥ 3:1 against the track. */
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .bookmark-list__grid:focus-visible {
-  box-shadow: inset var(--focus-ring);
+  outline-offset: -2px;
 }
 
 .bookmark-list__inner {
@@ -42,11 +40,11 @@
   grid-template-columns: 48px minmax(200px, 2.4fr) minmax(170px, 1.8fr) 112px 120px 128px;
   align-items: center;
   box-sizing: border-box;
+  /* Fixed: the virtual window positions rows by index × 32 px. */
   height: 32px;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   cursor: default;
-  user-select: none;
 }
 
 .bookmark-list__row--header {
@@ -54,7 +52,7 @@
   border-bottom: 1px solid var(--separator);
   border-radius: 0;
   color: var(--secondary);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -65,6 +63,7 @@
 .bookmark-list__body {
   position: relative;
   margin: 4px 0 8px;
+  contain: layout paint style;
 }
 
 .bookmark-list__body .bookmark-list__row {
@@ -83,7 +82,7 @@
 }
 
 .bookmark-list__cell {
-  overflow: hidden;
+  overflow: hidden; /* hidden, not clip: text-overflow needs a scroll container */
   padding: 0 10px;
   min-width: 0;
   text-overflow: ellipsis;
@@ -112,11 +111,13 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: clip;
   width: 20px;
   height: 20px;
   border-radius: 5px;
+  background: var(--art-bg);
   box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 15%);
+  color: var(--art-fg);
   font-size: 10px;
   font-weight: 800;
   line-height: 1;
@@ -126,13 +127,6 @@
   overflow: hidden;
   min-width: 0;
   text-overflow: ellipsis;
-}
-
-.bookmark-list mark {
-  border-radius: 3px;
-  padding: 0 1px;
-  background: var(--search-highlight);
-  color: inherit;
 }
 
 /* Selected row while focus is elsewhere (stage, sidebar, search). */
@@ -147,9 +141,17 @@
 /* Selected row while the list has focus. */
 .bookmark-list:focus-within .bookmark-list__body .bookmark-list__row.is-selected {
   background: var(--accent-fill);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .bookmark-list:focus-within .bookmark-list__row.is-selected .bookmark-list__cell--secondary {
-  color: rgb(255 255 255 / 85%);
+  color: color-mix(in oklab, var(--on-accent) 85%, transparent);
+}
+
+/* Forced colors drop the row background; draw the selection with system colors instead. */
+@media (forced-colors: active) {
+  .bookmark-list__body .bookmark-list__row.is-selected {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
 }

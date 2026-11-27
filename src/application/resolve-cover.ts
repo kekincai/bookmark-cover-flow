@@ -1,6 +1,22 @@
 import type { Bookmark } from '../domain/bookmark'
-import type { CoverItem } from '../domain/cover'
+import type { CoverArt, CoverItem } from '../domain/cover'
+import { isPreviewableUrl } from '../shared/preview-message'
 import { createCoverArt } from './cover-art'
+
+/** Bounded memo: the same site and title always produce the same art. */
+const artCache = new Map<string, CoverArt>()
+const ART_CACHE_LIMIT = 20_000
+
+function coverArt(title: string, hostname: string, color: string | undefined): CoverArt {
+  const key = `${title}\u0000${hostname}\u0000${color ?? ''}`
+  let art = artCache.get(key)
+  if (art === undefined) {
+    if (artCache.size >= ART_CACHE_LIMIT) artCache.clear()
+    art = createCoverArt(title, hostname, color)
+    artCache.set(key, art)
+  }
+  return art
+}
 
 function safeUrl(value: string): URL | undefined {
   try {
@@ -31,7 +47,9 @@ export function resolveCover(bookmark: FiledBookmark, options: ResolveCoverOptio
   const subtitle = parsedUrl?.hostname.replace(/^www\./, '') ?? bookmark.url
   const title = bookmark.title.trim() || subtitle
   const favicon = faviconUrl(bookmark.url)
-  const canPreview = options.preferPreview && parsedUrl !== undefined && favicon !== undefined
+  const canPreview =
+    options.preferPreview && favicon !== undefined && isPreviewableUrl(bookmark.url)
+  const color = options.siteColors?.get(subtitle)
 
   return {
     bookmarkId: bookmark.id,
@@ -42,7 +60,11 @@ export function resolveCover(bookmark: FiledBookmark, options: ResolveCoverOptio
     ...(bookmark.dateAdded === undefined ? {} : { dateAdded: bookmark.dateAdded }),
     ...(favicon === undefined ? {} : { favicon }),
     imageKind: canPreview ? 'pending' : 'generated',
-    art: createCoverArt(title, subtitle, options.siteColors?.get(subtitle)),
+    // Built on first read: a collection switch resolves every bookmark, but only the covers that
+    // are actually rendered ever need their art.
+    get art(): CoverArt {
+      return coverArt(title, subtitle, color)
+    },
   }
 }
 
@@ -54,5 +76,5 @@ export const resolveCovers = (
 /** Re-derive the generated art from a site color without touching the preview state. */
 export function applySiteColor(item: CoverItem, color: string): CoverItem {
   if (item.art.background === color) return item
-  return { ...item, art: createCoverArt(item.title, item.subtitle, color) }
+  return { ...item, art: coverArt(item.title, item.subtitle, color) }
 }

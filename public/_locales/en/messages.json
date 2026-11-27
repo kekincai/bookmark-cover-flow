@@ -168,7 +168,7 @@
     "message": "Prefer website preview images"
   },
   "preferPreviewHint": {
-    "message": "Without a preview, a cover is generated from the site's name and theme color."
+    "message": "Asks for website access when turned on. Without a preview, a cover is generated from the site's name and theme color."
   },
   "coverAngle": {
     "message": "Cover angle"
@@ -222,7 +222,7 @@
     "message": "Previews come from the websites themselves"
   },
   "privacyPreviewsBody": {
-    "message": "Covers use each site's public preview image (Open Graph). Fetching it visits that site; results are cached on this computer."
+    "message": "Off until you turn it on and allow website access. Covers then use each site's public preview image (Open Graph): fetching it visits that public site without cookies, never local or intranet addresses, and results are cached on this computer for up to a week."
   },
   "previewCache": {
     "message": "Preview cache"
@@ -352,5 +352,26 @@
   },
   "yesterdayAt": {
     "message": "Yesterday $1"
+  },
+  "carousel": {
+    "message": "carousel"
+  },
+  "unsupportedBookmark": {
+    "message": "This kind of bookmark can't be opened from here."
+  },
+  "singleKeyShortcuts": {
+    "message": "Single-key shortcuts"
+  },
+  "singleKeyShortcutsHint": {
+    "message": "F toggles full screen and / jumps to search. Turn off if you use speech input."
+  },
+  "previewAccessDenied": {
+    "message": "Website access wasn't granted, so covers stay generated."
+  },
+  "loadingBookmarksLabel": {
+    "message": "Loading bookmarks"
+  },
+  "selectedBookmark": {
+    "message": "$1, $2 of $3"
   }
 }

@@ -13,10 +13,9 @@ import {
 test('settings tabs, focus trap and Escape return focus to the gear', async ({ page }) => {
   await openApp(page)
   const gear = page.getByRole('button', { name: 'Open settings' })
-  await expect(gear).toHaveAttribute('aria-expanded', 'false')
   const dialog = await openSettings(page)
-  await expect(gear).toHaveAttribute('aria-expanded', 'true')
-  await expect(page.locator('#app')).toHaveAttribute('inert', '')
+  // A native modal <dialog>: page inert, focus contained, Esc handled by the browser.
+  expect(await dialog.evaluate((element) => element.matches('dialog:modal'))).toBe(true)
   // Measure once the open transition has settled.
   await expect.poll(async () => Math.round((await dialog.boundingBox())?.width ?? 0)).toBe(760)
 
@@ -43,19 +42,18 @@ test('settings tabs, focus trap and Escape return focus to the gear', async ({ p
   await expect(appearance).toHaveAttribute('aria-selected', 'true')
   await expect(coverFlow(page)).toHaveAttribute('data-position', '0.00000')
 
-  // Tab wraps from Done back to the selected tab, and Shift+Tab wraps the other way.
+  // The native modal keeps Tab out of the inert page (it may pass through the browser's own UI,
+  // which is the platform behaviour and why no hand-written trap is needed).
   const done = dialog.getByRole('button', { name: 'Done' })
   await done.focus()
-  await page.keyboard.press('Tab')
-  await expect(appearance).toBeFocused()
-  await page.keyboard.press('Shift+Tab')
+  for (let step = 0; step < 3; step += 1) {
+    await page.keyboard.press('Tab')
+    expect(
+      await page.evaluate(() => !document.querySelector('#app')!.contains(document.activeElement)),
+    ).toBe(true)
+  }
+  await done.focus()
   await expect(done).toBeFocused()
-  for (let step = 0; step < 12; step += 1) await page.keyboard.press('Tab')
-  expect(
-    await page.evaluate(() =>
-      document.querySelector('.settings-dialog')!.contains(document.activeElement),
-    ),
-  ).toBe(true)
 
   // Theme tiles are a radio group: arrows pick, and shortcuts stay inert inside the dialog.
   await dialog.getByRole('radio', { name: 'Light', exact: true }).focus()
@@ -72,8 +70,6 @@ test('settings tabs, focus trap and Escape return focus to the gear', async ({ p
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
   await expect(gear).toBeFocused()
-  await expect(gear).toHaveAttribute('aria-expanded', 'false')
-  await expect(page.locator('#app')).not.toHaveAttribute('inert', '')
 
   // Reopening keeps the last tab; Done and the backdrop close it too.
   await gear.click()
@@ -151,10 +147,13 @@ test('cover angle, reflection, theme and sort persist across reload', async ({ p
   expect(darkSidebar).not.toBe(lightSidebar)
 })
 
-test('preview preference: turning it off generates every cover locally', async ({ page }) => {
+test('preview preference is opt-in and off generates every cover locally', async ({ page }) => {
   await openApp(page)
   const dialog = await openSettings(page)
   const prefer = dialog.getByRole('switch', { name: 'Prefer website preview images' })
+  // Off by default: website access is only requested when the user turns it on.
+  await expect(prefer).not.toBeChecked()
+  await prefer.check()
   await expect(prefer).toBeChecked()
   await prefer.uncheck()
   await page.keyboard.press('Escape')

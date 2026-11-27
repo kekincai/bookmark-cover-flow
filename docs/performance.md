@@ -33,7 +33,7 @@ The current revision passed 41 unit tests and 27 headed browser tests, including
 
 The transparency regression captures the same empty patch inside a stationary card at two decoded video timestamps and verifies that the rendered pixels change. A separate isolated Chrome extension run used six public bookmarks and MDN's CC0 flower video; four sites supplied loaded previews. Native playback remained muted with zero volume and no CSS filter, and no application errors were observed. The local screenshots use this isolated profile, not the user's bookmarks. Hardware HDR luminance and physical trackpad feel remain outside these automated checks.
 
-## Apple-style redesign — October 31, 2026
+## 1.2.0 redesign — October 31, 2026
 
 Environment: Apple Silicon Mac (120 Hz display), headed Chromium supplied by Playwright, 1280 × 800 viewport, production build loaded from `dist`. `npm run test:extension` seeds 15 public bookmarks, then adds a 5,000-bookmark stress folder after the screenshots are taken. The Liquid Glass/WebGPU/HDR renderer no longer exists, so its shader and display-capability checks were removed.
 
@@ -57,3 +57,20 @@ Two rendering regressions were found and fixed while measuring:
 - Dragging the scrubber across 5,000 bookmarks replaced the whole ±7 window every frame, and creating new `-webkit-box-reflect` covers made pre-paint cost about 16 ms per frame (p50 33 ms, about 30 fps). Covers leaving the window are now recycled instead of recreated, bringing the drag to p50 16.6 ms (60 fps).
 
 Test counts at this checkpoint: 71 unit tests in 17 files, and 38 browser tests (37 passed, 1 skipped: the native-video wallpaper test runs only when `WALLPAPER_TEST_VIDEO` points at a decodable video). The browser suite covers sidebar collections and counts, search titles and highlighting, the no-results, empty and error/retry states, list ↔ stage selection, keyboard focus zones and the 90 ms key-repeat limit, full screen, the settings dialog (tabs, focus trap, Escape), persistence of theme, cover angle, reflection, sort and preview preferences, reduced motion, Mist/Night/photo backgrounds, a 390 px viewport, and four locales plus English fallback. Physical trackpad feel and screen-reader output were not tested automatically.
+
+## Unreleased refactor — measured 2026-11-27
+
+Measured with `npm run test:extension:headless` (Chrome's new headless mode, which loads the unpacked extension, 1280 × 800) on the same machine for the 1.2.0 build and the refactored build. The verification copy of the build grants the optional website access up front and turns previews on, so the preview path is exercised as before. Headless frame timing differs from the headed numbers above, so compare rows within this table only.
+
+| Measurement (headless, same machine)                     |          1.2.0 |       Refactor |
+| -------------------------------------------------------- | -------------: | -------------: |
+| Switching to the 5,000-bookmark folder                   |          94 ms |       77–94 ms |
+| Wheel frame interval over the 5,000-item stage (p50/p95) |   8.3 / 9.2 ms |   8.3 / 9.3 ms |
+| Scrubber drag end to end (p50/p95)                       | 16.5 / 24.2 ms | 16.7 / 25.1 ms |
+| Console errors with the extension CSP + Trusted Types    |              0 |              0 |
+
+Initial and All-Bookmarks render times stayed within the ±100 ms run-to-run spread noted above (194–344 ms and 232–417 ms across runs, partly with two browsers running at once), so no change is claimed for them. Lazy cover art and the cached search text did not produce a measurable difference in these scenarios; they reduce work that grows with library size, and the gain should be re-checked on a slower machine.
+
+One regression was found and fixed during the refactor: the first version of the `.truncate` reveal ran a scroll-timeline animation on every truncated cell at rest, which raised the scrubber p50 to 24.9 ms. The animation now runs only while a title is hovered or focused, which brought the drag back to 16.7 ms (`e2e/truncation.spec.ts` guards the behaviour).
+
+Not yet measured: the daily preview-cache sweep on a full 3,000-entry cache, and time to the selected cover's preview with the new fetch priorities.

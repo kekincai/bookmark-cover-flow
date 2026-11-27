@@ -26,7 +26,7 @@ test('loads the demo library and supports the primary keyboard and search flow',
   await expect(covers(page)).toHaveCount(8)
   await expect(page.locator('.stage .cover-card[aria-current="true"]')).toHaveAttribute(
     'aria-label',
-    'Design Notes, notion.so',
+    `Design Notes, notion.so, 1 of ${DEMO_TOTAL}`,
   )
   await expect(page.locator('.bookmark-meta__subtitle').first()).toHaveText('notion.so · Favorites')
 
@@ -170,7 +170,7 @@ test('search shows a no-results state, a clear button and highlights matches', a
 
 test('list rows sync the stage; list keys stay in the list', async ({ page }) => {
   await openApp(page)
-  const grid = page.getByRole('grid', { name: 'Bookmark list' })
+  const grid = page.getByRole('treegrid', { name: 'Bookmark list' })
   await expect(listRows(page).first()).toHaveAttribute('aria-selected', 'true')
 
   await page.locator('.bookmark-list__row[data-index="4"]').click()
@@ -261,8 +261,8 @@ test('shows locally recorded recent bookmarks', async ({ page }) => {
 test('exposes virtual position metadata and page navigation', async ({ page }) => {
   await openApp(page)
   const first = covers(page).first()
-  await expect(first).toHaveAttribute('aria-setsize', String(DEMO_TOTAL))
-  await expect(first).toHaveAttribute('aria-posinset', '1')
+  // Position is part of the name: aria-posinset/setsize are not supported on buttons.
+  await expect(first).toHaveAttribute('aria-label', new RegExp(`, 1 of ${DEMO_TOTAL}$`))
   await page.keyboard.press('PageDown')
   await expect(stageTitle(page)).toHaveText('Linear')
   await expect(coverFlow(page)).toHaveAttribute('data-position', '5.00000')
@@ -275,8 +275,8 @@ test('exposes virtual position metadata and page navigation', async ({ page }) =
   await page.keyboard.press('End')
   await expect(stageTitle(page)).toHaveText('Longreads')
   await expect(page.locator('.stage .cover-card[aria-current="true"]')).toHaveAttribute(
-    'aria-posinset',
-    String(DEMO_TOTAL),
+    'aria-label',
+    new RegExp(`, ${DEMO_TOTAL} of ${DEMO_TOTAL}$`),
   )
   await expect(page.getByRole('slider', { name: 'Browsing position' }).first()).toHaveAttribute(
     'aria-valuetext',
@@ -402,14 +402,18 @@ test('a failed bookmark read shows a retry state, then a delayed load shows the 
   await page.goto('/')
   const status = page.locator('.stage .stage-status')
   await expect(status).toHaveAttribute('data-kind', 'error')
-  await expect(status).toHaveAttribute('role', 'alert')
+  // The panel is not a live region; the error is announced once through the page alert region.
+  await expect(status).not.toHaveAttribute('role')
   await expect(status).toContainText("Can't read Chrome bookmarks")
+  await expect(page.locator('.app-shell [role="alert"]')).toHaveText("Can't read Chrome bookmarks")
   await expect(page.getByRole('navigation', { name: 'Bookmark folders' })).toBeVisible()
   await expect(page.getByRole('searchbox', { name: 'Search bookmarks' })).toBeEnabled()
 
   await status.getByRole('button', { name: 'Retry' }).click()
+  // Retry removes its own button; focus waits on the page title instead of falling to <body>.
+  await expect(page.locator('.title-bar__title')).toBeFocused()
   await expect(status).toHaveAttribute('data-kind', 'loading')
-  await expect(status.locator('.spinner')).toBeVisible()
+  await expect(status.getByRole('progressbar', { name: 'Loading bookmarks' })).toBeVisible()
   await expect(status).toContainText('Loading bookmarks…')
   await expect(stageTitle(page)).toHaveText('Example Domain')
   await expect(status).toBeHidden()

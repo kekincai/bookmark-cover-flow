@@ -1,13 +1,10 @@
-/* Cover transforms are owned by the spring, never by CSS transitions. */
+/*
+ * Reduced motion removes movement, not feedback. Components opt their moving animations in under
+ * `prefers-reduced-motion: no-preference`; color and opacity fades stay everywhere. Cover
+ * transforms are owned by the spring (which jumps instead), never by CSS transitions.
+ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0ms !important;
-  }
-  .cover-card__placeholder,
-  .spinner {
-    animation: none;
+  :root {
+    scroll-behavior: auto;
   }
 }

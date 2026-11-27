@@ -168,7 +168,7 @@
     "message": "優先使用網站預覽圖"
   },
   "preferPreviewHint": {
-    "message": "沒有預覽圖時，會依網站名稱和主題色彩產生封面。"
+    "message": "開啟時會請求網站存取權限。沒有預覽圖時，會依網站名稱和主題色彩產生封面。"
   },
   "coverAngle": {
     "message": "封面角度"
@@ -222,7 +222,7 @@
     "message": "預覽圖來自網站本身"
   },
   "privacyPreviewsBody": {
-    "message": "封面使用網站公開的預覽圖（Open Graph），取得時會連線至該網站，結果快取在本機。"
+    "message": "預設關閉，需你開啟並授予網站存取權限。開啟後，封面使用網站公開的預覽圖（Open Graph）：取得時會不帶 Cookie 連線至該公開網站，從不連線本機或內部網路位址，結果在本機最多快取一週。"
   },
   "previewCache": {
     "message": "預覽快取"
@@ -352,5 +352,26 @@
   },
   "yesterdayAt": {
     "message": "昨天 $1"
+  },
+  "carousel": {
+    "message": "輪播"
+  },
+  "unsupportedBookmark": {
+    "message": "無法從這裡開啟這類書籤。"
+  },
+  "singleKeyShortcuts": {
+    "message": "單鍵快速鍵"
+  },
+  "singleKeyShortcutsHint": {
+    "message": "按 F 切換全螢幕，按 / 跳至搜尋。使用語音輸入時可以關閉。"
+  },
+  "previewAccessDenied": {
+    "message": "未取得網站存取權限，封面將繼續使用產生的圖片。"
+  },
+  "loadingBookmarksLabel": {
+    "message": "正在載入書籤"
+  },
+  "selectedBookmark": {
+    "message": "$1，第 $2 個，共 $3 個"
   }
 }

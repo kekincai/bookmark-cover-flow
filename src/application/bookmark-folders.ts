@@ -24,18 +24,40 @@ export function findFirstUsableFolder(
 export const fileBookmarks = (folder: BookmarkFolder): readonly FiledBookmark[] =>
   folder.children.map((bookmark) => ({ ...bookmark, folderTitle: folder.title }))
 
-/** Every bookmark in tree order, each labelled with the folder that holds it. */
-export const listAllBookmarks = (folders: readonly BookmarkFolder[]): readonly FiledBookmark[] =>
-  flattenFolders(folders).flatMap(fileBookmarks)
+/** The tree is immutable once loaded; repeat calls for the same tree reuse one flattened list. */
+const allBookmarks = new WeakMap<readonly BookmarkFolder[], readonly FiledBookmark[]>()
 
+/** Every bookmark in tree order, each labelled with the folder that holds it. */
+export function listAllBookmarks(folders: readonly BookmarkFolder[]): readonly FiledBookmark[] {
+  let bookmarks = allBookmarks.get(folders)
+  if (bookmarks === undefined) {
+    bookmarks = flattenFolders(folders).flatMap(fileBookmarks)
+    allBookmarks.set(folders, bookmarks)
+  }
+  return bookmarks
+}
+
+const recentlyAdded = new WeakMap<readonly FiledBookmark[], Map<number, readonly FiledBookmark[]>>()
+
+/** Newest `limit` bookmarks; one partial selection pass instead of sorting the whole library. */
 export function listRecentlyAdded(
   bookmarks: readonly FiledBookmark[],
   limit: number,
 ): readonly FiledBookmark[] {
-  return bookmarks
-    .filter((bookmark) => bookmark.dateAdded !== undefined)
-    .sort((left, right) => (right.dateAdded ?? 0) - (left.dateAdded ?? 0))
-    .slice(0, limit)
+  const cached = recentlyAdded.get(bookmarks)?.get(limit)
+  if (cached !== undefined) return cached
+  const newest: FiledBookmark[] = []
+  for (const bookmark of bookmarks) {
+    if (bookmark.dateAdded === undefined) continue
+    if (newest.length === limit && bookmark.dateAdded <= (newest.at(-1)?.dateAdded ?? 0)) continue
+    const at = newest.findIndex((entry) => (entry.dateAdded ?? 0) < (bookmark.dateAdded ?? 0))
+    newest.splice(at === -1 ? newest.length : at, 0, bookmark)
+    if (newest.length > limit) newest.pop()
+  }
+  const perLimit = recentlyAdded.get(bookmarks) ?? new Map<number, readonly FiledBookmark[]>()
+  perLimit.set(limit, newest)
+  recentlyAdded.set(bookmarks, perLimit)
+  return newest
 }
 
 /** Maps every bookmark id and URL to its folder title, for collections built outside the tree. */

@@ -16,7 +16,7 @@
 
 ![Bookmark Cover Flow showing real public bookmarks](docs/assets/screenshot.png)
 
-Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click the extension button and it opens in a normal tab—never over your New Tab page. Real bookmark folders remain intact. The interface is flat and neutral, in the spirit of Apple Music and System Settings on macOS, so every color on screen comes from your covers.
+Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click the extension button and it opens in a normal tab—never over your New Tab page. Real bookmark folders remain intact. The interface is flat and neutral, so every color on screen comes from your covers.
 
 <div align="center">
   <a href="docs/motion-design.md"><strong>Explore the motion and optical design →</strong></a>
@@ -38,12 +38,14 @@ Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click th
 - full-screen Cover Flow (`F`) on a dark stage tinted by the current cover
 - searches titles, hostnames, URLs and folder names instantly
 - four sorting modes, light, dark and automatic themes, and a choice of stage backgrounds: default, Mist, Night, or your own photo or video
-- “Prefer website preview images” can be turned off so no website is ever contacted
+- website preview images are opt-in: until you turn on “Prefer website preview images” and allow website access, no website is ever contacted
 - virtualizes covers to `selectedIndex ± 7` and list rows to the visible window, so 5,000-bookmark folders stay at 60 fps
-- respects Reduce Motion (or the in-app “Reduce flip animation”), forced colors, keyboard focus zones and screen-reader metadata
+- respects Reduce Motion (or the in-app “Reduce flip animation”), forced colors, keyboard focus zones and screen-reader metadata; single-key shortcuts can be turned off for speech input
 - stays local-first with no analytics, account, backend, or bookmark uploads
 
 ## Install
+
+Bookmark Cover Flow requires Chrome 135 or later.
 
 ### From a release
 
@@ -56,7 +58,7 @@ Bookmark Cover Flow is a quiet, spatial way to browse Chrome bookmarks. Click th
 
 ### From source
 
-Requirements: Node.js 22+ and Chrome 120+.
+Requirements: Node.js 22+ and Chrome 135+.
 
 ```bash
 git clone https://github.com/kekincai/bookmark-cover-flow.git
@@ -82,6 +84,8 @@ Load the generated `dist` folder from `chrome://extensions`. Running `npm run de
 
 Arrow keys act on the focused area: the stage, the list (`↑` / `↓`), the grid (arrows move by cover and by row) and the sidebar each navigate independently. Shortcuts never fire while you type in a field.
 
+`F` and `/` are single-key shortcuts. If you use speech input, turn off **Single-key shortcuts** in Settings → Appearance; `⌘K` still focuses search and the full-screen button still works.
+
 ## Architecture
 
 ```text
@@ -96,7 +100,7 @@ Previews are site-provided images, not full-page screenshots.
 
 ## Backgrounds and settings
 
-Open settings with the gear at the bottom of the sidebar. The panel has three tabs: **Appearance** (theme, sorting, reflection, preview images, cover angle, reduced flip animation), **Background** (the stage background: Default, Mist, Night, or a photo or video), and **Privacy** (what stays local, plus buttons to clear the preview cache and the Recently Opened history). Changes apply immediately.
+Open settings with the gear at the bottom of the sidebar. The panel has three tabs: **Appearance** (theme, sorting, reflection, preview images, cover angle, reduced flip animation, single-key shortcuts), **Background** (the stage background: Default, Mist, Night, or a photo or video), and **Privacy** (what stays local, plus buttons to clear the preview cache and the Recently Opened history). Changes apply immediately.
 
 The interface automatically follows Chrome's UI language. Simplified Chinese, Traditional Chinese, Japanese and English are included; other languages fall back to English. In the development preview, the browser language is used instead. Settings, accessible labels, playback status, error messages and extension metadata share the same `_locales` catalogs. Bookmark titles and file names are never translated. Reopen the extension after changing Chrome's UI language.
 
@@ -126,21 +130,23 @@ The isolated extension test seeds 15 public bookmarks plus a 5,000-item stress f
 
 ## Permissions and privacy
 
-| Permission                  | Why it is needed                                                         |
-| --------------------------- | ------------------------------------------------------------------------ |
-| `bookmarks`                 | Read the bookmark tree displayed in Cover Flow                           |
-| `storage`                   | Remember local view preferences and preview metadata                     |
-| `favicon`                   | Resolve icons through Chrome's local favicon service                     |
-| `http://*/*`, `https://*/*` | Fetch public page metadata without credentials for nearby cover previews |
+| Permission                               | Why it is needed                                                                       |
+| ---------------------------------------- | -------------------------------------------------------------------------------------- |
+| `bookmarks`                              | Read the bookmark tree displayed in Cover Flow, Grid and List                          |
+| `storage`                                | Remember view preferences, Recently Opened and the preview cache on this device        |
+| `favicon`                                | Show site icons from Chrome's local favicon cache                                      |
+| `alarms`                                 | Delete expired preview-cache entries once a day                                        |
+| `https://*/*`, `http://*/*` _(optional)_ | Read a bookmarked public page's preview image, only after you turn on website previews |
 
-Requests omit credentials, time out after eight seconds, and are limited to nearby covers. See the full [privacy policy](docs/privacy-policy.md).
+Website access is not granted at install. Turning on **Prefer website preview images** shows Chrome's permission prompt; turning it off gives the access back. With previews on, the extension requests only public bookmarked pages near the selected cover (never local-network or intranet addresses), sends no cookies and no referrer, stops after the page's `<head>`, and times out after eight seconds. Preview images themselves load like ordinary images without a referrer, so the image server may receive its own cookies under your third-party cookie settings. See the full [privacy policy](docs/privacy-policy.md) and [security notes](SECURITY.md).
 
 ## Roadmap
 
 - **v0.1–v0.5 ✓** — architecture, bookmarks, motion, folders, search, sorting, performance, accessibility
 - **v1.0 ✓** — stable APIs, packaging, documentation, and store-ready release
 - **v1.1 ✓** — editorial cover system, fixed breadcrumb header, spatial graphite stage, redesigned view options
-- **v1.2 ✓** — modern Apple-style redesign: sidebar library, Cover Flow / Grid / List views, generated album covers, full-screen Cover Flow, stage backgrounds, settings with Appearance/Background/Privacy tabs, new icon
+- **v1.2 ✓** — modern redesign: sidebar library, Cover Flow / Grid / List views, generated album covers, full-screen Cover Flow, stage backgrounds, settings with Appearance/Background/Privacy tabs, new icon
+- **Next (unreleased)** — opt-in website access, Chrome 135 baseline, stricter security policy, native dialogs, accessibility and performance work
 
 ## Contributing
 

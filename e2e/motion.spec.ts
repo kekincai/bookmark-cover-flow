@@ -174,7 +174,7 @@ test('preview updates preserve live cards and do not rebuild focused DOM', async
     pendingPlaceholder: '1',
     placeholderOpacity: '0',
     artPreserved: true,
-    label: 'Public fixture, example.com',
+    label: 'Public fixture, example.com, 1 of 1',
     fallback: { sameCard: true, images: 0 },
   })
 })
@@ -191,7 +191,6 @@ test('cards recycled by a long scrub keep their own index, label and click targe
   const cards = await page.locator('.stage .cover-card').evaluateAll((elements) =>
     elements.map((element) => ({
       index: Number((element as HTMLElement).dataset.index),
-      posinset: Number(element.getAttribute('aria-posinset')),
       label: element.getAttribute('aria-label'),
     })),
   )
@@ -209,8 +208,7 @@ test('cards recycled by a long scrub keep their own index, label and click targe
     Array.from({ length: 15 }, (_, offset) => offset + 3),
   )
   for (const card of cards) {
-    expect(card.posinset).toBe(card.index + 1)
-    expect(card.label).toBe(titles[String(card.index)])
+    expect(card.label).toBe(`${titles[String(card.index)]}, ${card.index + 1} of ${DEMO_TOTAL}`)
   }
   const neighbour = page.locator('.stage .cover-card[data-index="11"]')
   const point = await neighbour.evaluate((element) => {

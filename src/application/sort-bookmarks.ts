@@ -17,16 +17,17 @@ export function sortBookmarks<T extends Bookmark>(
   recentOpenedAt: ReadonlyMap<string, number> = new Map(),
 ): readonly T[] {
   if (mode === 'bookmark') return bookmarks
-
-  return [...bookmarks].sort((left, right) => {
-    if (mode === 'title') return collator.compare(left.title, right.title)
-    if (mode === 'domain') {
-      const domainOrder = collator.compare(hostname(left.url), hostname(right.url))
-      return domainOrder === 0 ? collator.compare(left.title, right.title) : domainOrder
-    }
-
-    const leftOpenedAt = recentOpenedAt.get(left.id) ?? 0
-    const rightOpenedAt = recentOpenedAt.get(right.id) ?? 0
-    return rightOpenedAt - leftOpenedAt
+  if (mode === 'title')
+    return bookmarks.toSorted((left, right) => collator.compare(left.title, right.title))
+  if (mode === 'recent') {
+    return bookmarks.toSorted(
+      (left, right) => (recentOpenedAt.get(right.id) ?? 0) - (recentOpenedAt.get(left.id) ?? 0),
+    )
+  }
+  // Parse every URL once, not twice per comparison.
+  const hosts = new Map(bookmarks.map((bookmark) => [bookmark, hostname(bookmark.url)]))
+  return bookmarks.toSorted((left, right) => {
+    const domainOrder = collator.compare(hosts.get(left) ?? '', hosts.get(right) ?? '')
+    return domainOrder === 0 ? collator.compare(left.title, right.title) : domainOrder
   })
 }
