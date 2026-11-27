@@ -3,8 +3,10 @@
   position: absolute;
   z-index: 1;
   inset: 0;
-  touch-action: none;
+  /* Covers are dragged horizontally; vertical panning still scrolls the page on touch. */
+  touch-action: pan-y;
   user-select: none;
+  contain: layout paint;
 }
 .cover-flow__stage {
   position: absolute;
@@ -28,7 +30,7 @@
   will-change: transform, opacity;
 }
 .cover-card:focus-visible {
-  box-shadow: none;
+  outline: none;
 }
 .cover-card:focus-visible .cover-card__art {
   outline: 3px solid var(--focus-ring-color);
@@ -37,7 +39,7 @@
 .cover-card__art {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  overflow: clip;
   border-radius: inherit;
   background: var(--fill);
   box-shadow: var(--cover-shadow);
@@ -56,18 +58,23 @@ html[data-reflection='false'] .cover-card__art {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(90deg, #ededf0 0%, #f7f7f9 50%, #ededf0 100%);
-  background-size: var(--cover-size) 100%;
+  overflow: clip;
+  background: var(--placeholder-edge);
   opacity: 0;
   transition: opacity 200ms linear;
 }
-:root[data-theme='dark'] .cover-card__placeholder {
-  background-image: linear-gradient(90deg, #2c2c2e 0%, #3a3a3c 50%, #2c2c2e 100%);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .cover-card__placeholder {
-    background-image: linear-gradient(90deg, #2c2c2e 0%, #3a3a3c 50%, #2c2c2e 100%);
-  }
+/* The glint is its own layer so the shimmer moves it with `translate` on the compositor. */
+.cover-card__placeholder::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--placeholder-glint) 50%,
+    transparent 100%
+  );
+  content: '';
+  translate: -100% 0;
 }
 .cover-card__initial {
   color: #aeaeb2;
@@ -79,8 +86,14 @@ html[data-reflection='false'] .cover-card__art {
 .cover-card[data-state='preview']:not(:has(.cover-card__preview[data-loaded='true']))
   .cover-card__placeholder {
   opacity: 1;
-  /* Shimmer only while visible; a hidden infinite animation repaints every cover each frame. */
-  animation: shimmer 1.4s linear infinite;
+}
+/* Shimmer only while visible, and only when motion is welcome. */
+@media (prefers-reduced-motion: no-preference) {
+  .cover-card[data-state='pending'] .cover-card__placeholder::after,
+  .cover-card[data-state='preview']:not(:has(.cover-card__preview[data-loaded='true']))
+    .cover-card__placeholder::after {
+    animation: shimmer 1.4s linear infinite;
+  }
 }
 .cover-card__preview {
   width: 100%;
@@ -92,9 +105,21 @@ html[data-reflection='false'] .cover-card__art {
 .cover-card__preview[data-loaded='true'] {
   opacity: 1;
 }
+/*
+ * --shade-amount is written on the shade itself every frame. Registered as non-inherited, it
+ * restyles one leaf instead of the whole card, and the fade only runs once the covers rest, so it
+ * never lags behind the spring.
+ */
+@property --shade-amount {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
 .cover-card__shade {
-  opacity: var(--shade-amount, 0);
+  opacity: var(--shade-amount);
   pointer-events: none;
+}
+.cover-flow:not([data-moving='true']) .cover-card__shade {
   transition: opacity 0.3s;
 }
 .cover-card[data-side='right'] .cover-card__shade {
@@ -104,25 +129,25 @@ html[data-reflection='false'] .cover-card__art {
   background: linear-gradient(to left, var(--shade-near), var(--shade-far));
 }
 .cover-card:hover .cover-card__shade {
-  opacity: calc(var(--shade-amount, 0) * 0.5);
+  opacity: calc(var(--shade-amount) * 0.5);
 }
 .cover-card__hint {
   position: absolute;
   bottom: 14px;
   left: 50%;
   display: flex;
-  height: 28px;
+  min-height: 28px;
   align-items: center;
   gap: 5px;
-  padding: 0 12px;
-  border-radius: 14px;
+  padding: 4px 12px;
+  border-radius: 999px;
   /* Liquid glass (glass.css): white text over any cover art needs at least half tint for 4.5:1. */
   --floor: 0.5;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
   opacity: 0;
-  transform: translateX(-50%);
+  translate: -50% 0;
   transition: opacity 0.2s;
   pointer-events: none;
 }
@@ -144,10 +169,10 @@ html[data-reflection='false'] .cover-card__art {
 }
 @keyframes shimmer {
   from {
-    background-position: calc(var(--cover-size) * -1) 0;
+    translate: -100% 0;
   }
   to {
-    background-position: var(--cover-size) 0;
+    translate: 100% 0;
   }
 }
 @media (forced-colors: active) {

@@ -54,3 +54,25 @@ describe('bookmark collections', () => {
     expect(index.get('https://a.example')).toBe('Bookmarks bar')
   })
 })
+
+describe('listRecentlyAdded selection', () => {
+  it('matches a full stable sort, including ties and the limit edge', async () => {
+    const { listRecentlyAdded } = await import('../../src/application/bookmark-folders')
+    const dates = [5, 9, 1, 9, 3, undefined, 7, 9, 2, 7]
+    const bookmarks = dates.map((dateAdded, index) => ({
+      id: String(index),
+      title: `b${index}`,
+      url: `https://example.com/${index}`,
+      folderTitle: 'f',
+      ...(dateAdded === undefined ? {} : { dateAdded }),
+    }))
+    for (const limit of [1, 3, 4, 20]) {
+      const expected = bookmarks
+        .filter((bookmark) => bookmark.dateAdded !== undefined)
+        .toSorted((left, right) => (right.dateAdded ?? 0) - (left.dateAdded ?? 0))
+        .slice(0, limit)
+        .map((bookmark) => bookmark.id)
+      expect(listRecentlyAdded(bookmarks, limit).map((bookmark) => bookmark.id)).toEqual(expected)
+    }
+  })
+})

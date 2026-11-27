@@ -1,43 +1,76 @@
+/*
+ * One set of tokens for both themes. Each color pairs its light and dark value in light-dark(), and
+ * the used `color-scheme` picks one: `light dark` follows the system (Theme: System), and the
+ * Light/Dark preference pins it through `data-theme` on the root. A surface that sets its own
+ * `color-scheme` (the full-screen view) flips every token beneath it without redeclaring any.
+ */
 :root {
-  color-scheme: light;
-  --bg: #ffffff;
-  --sidebar: #f5f5f7;
-  --separator: #e5e5ea;
-  --label: #1d1d1f;
-  --secondary: #6e6e73;
-  --fill: rgb(118 118 128 / 12%);
-  --fill-strong: rgb(118 118 128 / 20%);
-  --hover: rgb(0 0 0 / 4%);
-  --selected-fill: rgb(0 0 0 / 7%);
-  --row-alt: #f9f9fb;
-  --row-selected-inactive: #e3e3e8;
-  --row-selected-inactive-label: #4a4a4f;
+  color-scheme: light dark;
+
+  --bg: light-dark(#ffffff, #1c1c1e);
+  --sidebar: light-dark(#f5f5f7, #252527);
+  --separator: light-dark(#e5e5ea, #38383a);
+  --label: light-dark(#1d1d1f, #f5f5f7);
+  --secondary: light-dark(#6e6e73, #a1a1a6);
+  --fill: light-dark(rgb(118 118 128 / 12%), rgb(118 118 128 / 24%));
+  --fill-strong: light-dark(rgb(118 118 128 / 20%), rgb(118 118 128 / 32%));
+  --hover: light-dark(rgb(0 0 0 / 4%), rgb(255 255 255 / 6%));
+  --selected-fill: light-dark(rgb(0 0 0 / 7%), rgb(255 255 255 / 11%));
+  --row-alt: light-dark(#f9f9fb, rgb(255 255 255 / 3%));
+  --row-selected-inactive: light-dark(#e3e3e8, #3a3a3c);
+  --row-selected-inactive-label: light-dark(#4a4a4f, #d1d1d6);
   --accent: #0071e3;
   --accent-hover: #0064cc;
-  --accent-icon: #0071e3;
+  --accent-icon: light-dark(#0071e3, #0a84ff);
   --accent-fill: #0071e3;
-  --icon: #3a3a3c;
-  --focus-ring: 0 0 0 3px rgb(0 113 227 / 45%);
-  --focus-ring-color: #0071e3;
-  --segment-on: #ffffff;
-  --switch-off: #d1d1d6;
-  --panel: #f5f5f7;
-  --group: #ffffff;
-  --group-border: #e5e5ea;
-  --group-separator: #ededf0;
-  --scrim: rgb(0 0 0 / 28%);
-  --stage-bg: linear-gradient(#ffffff, #f7f7f9);
+  --on-accent: #ffffff;
+  --icon: light-dark(#3a3a3c, #d1d1d6);
+  /* ≥ 3:1 against every surface it can sit on (white, sidebar, dark panels). */
+  --focus-ring-color: light-dark(#0071e3, #4aa3ff);
+  --selection: light-dark(rgb(0 113 227 / 22%), rgb(10 132 255 / 38%));
+  --segment-on: light-dark(#ffffff, #636366);
+  /* Switch and slider tracks: ≥ 3:1 against the group and against the white thumb. */
+  --switch-off: light-dark(#8e8e93, #7c7c80);
+  --control-thumb: #ffffff;
+  --panel: light-dark(#f5f5f7, #1c1c1e);
+  --group: light-dark(#ffffff, #2c2c2e);
+  --group-border: light-dark(#e5e5ea, #38383a);
+  --group-separator: light-dark(#ededf0, #38383a);
+  --scrim: light-dark(rgb(0 0 0 / 28%), rgb(0 0 0 / 50%));
+  --scrollbar-thumb: light-dark(rgb(0 0 0 / 50%), rgb(255 255 255 / 45%));
+  --stage-bg: radial-gradient(
+    120% 90% at 50% 0%,
+    light-dark(#ffffff, #2c2c2e),
+    light-dark(#fafafb, #141416) 55%,
+    light-dark(#f4f4f6, #0b0b0c)
+  );
   --stage-label: var(--label);
   --stage-secondary: var(--secondary);
-  --track: rgb(0 0 0 / 9%);
-  --thumb: rgb(0 0 0 / 40%);
-  --cover-shadow: 0 24px 40px -18px rgb(0 0 0 / 38%);
-  --shade-near: rgb(0 0 0 / 2%);
-  --shade-far: rgb(0 0 0 / 16%);
-  --reflection: linear-gradient(transparent 64%, rgb(255 255 255 / 20%));
+  /* Scrubber: track ≥ 3:1 against the stage, thumb ≥ 3:1 against the track. */
+  --track: light-dark(rgb(0 0 0 / 42%), rgb(255 255 255 / 40%));
+  --thumb: light-dark(rgb(0 0 0 / 78%), rgb(255 255 255 / 88%));
+  --cover-shadow: 0 24px 44px -17px light-dark(rgb(0 0 0 / 38%), rgb(0 0 0 / 90%));
+  --shade-near: light-dark(rgb(0 0 0 / 2%), rgb(0 0 0 / 10%));
+  --shade-far: light-dark(rgb(0 0 0 / 16%), rgb(0 0 0 / 50%));
+  --reflection: linear-gradient(
+    transparent 63%,
+    light-dark(rgb(255 255 255 / 20%), rgb(255 255 255 / 30%))
+  );
+  --placeholder-edge: light-dark(#ededf0, #2c2c2e);
+  --placeholder-glint: light-dark(#f7f7f9, #3a3a3c);
   --search-highlight: rgb(255 204 0 / 45%);
   --warning: #ff9500;
   --success: #34c759;
+  /* Badge fills that keep a white glyph at ≥ 3:1. */
+  --warning-strong: #c93400;
+  --success-strong: #248a3d;
+  --danger: light-dark(#d70015, #ff6961);
+  --spinner: #8e8e93;
+
+  /* Wallpaper presets, shared by the stage and the Settings thumbnails. */
+  --wallpaper-mist: linear-gradient(160deg, #e8f0fb, #c9d8ee);
+  --wallpaper-night: linear-gradient(160deg, #2a2d3a, #0e0f14);
+
   --font:
     -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'PingFang SC',
     'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -48,68 +81,23 @@
   font-family: var(--font);
 }
 
-/* Dark theme: explicit choice, or the system preference when the theme is Auto. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #1c1c1e;
-  --sidebar: #252527;
-  --separator: #38383a;
-  --label: #f5f5f7;
-  --secondary: #a1a1a6;
-  --fill: rgb(118 118 128 / 24%);
-  --fill-strong: rgb(118 118 128 / 32%);
-  --hover: rgb(255 255 255 / 6%);
-  --selected-fill: rgb(255 255 255 / 11%);
-  --row-alt: rgb(255 255 255 / 3%);
-  --row-selected-inactive: #3a3a3c;
-  --row-selected-inactive-label: #d1d1d6;
-  --accent-icon: #0a84ff;
-  --icon: #d1d1d6;
-  --segment-on: #636366;
-  --switch-off: #39393d;
-  --panel: #1c1c1e;
-  --group: #2c2c2e;
-  --group-border: #38383a;
-  --group-separator: #38383a;
-  --scrim: rgb(0 0 0 / 50%);
-  --stage-bg: radial-gradient(120% 90% at 50% 0%, #2c2c2e, #141416 55%, #0b0b0c);
-  --track: rgb(255 255 255 / 14%);
-  --thumb: rgb(255 255 255 / 60%);
-  --cover-shadow: 0 24px 48px -16px rgb(0 0 0 / 90%);
-  --shade-near: rgb(0 0 0 / 10%);
-  --shade-far: rgb(0 0 0 / 50%);
-  --reflection: linear-gradient(transparent 62%, rgb(255 255 255 / 30%));
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    color-scheme: dark;
-    --bg: #1c1c1e;
-    --sidebar: #252527;
-    --separator: #38383a;
-    --label: #f5f5f7;
-    --secondary: #a1a1a6;
-    --fill: rgb(118 118 128 / 24%);
-    --fill-strong: rgb(118 118 128 / 32%);
-    --hover: rgb(255 255 255 / 6%);
-    --selected-fill: rgb(255 255 255 / 11%);
-    --row-alt: rgb(255 255 255 / 3%);
-    --row-selected-inactive: #3a3a3c;
-    --row-selected-inactive-label: #d1d1d6;
-    --accent-icon: #0a84ff;
-    --icon: #d1d1d6;
-    --segment-on: #636366;
-    --switch-off: #39393d;
-    --panel: #1c1c1e;
-    --group: #2c2c2e;
-    --group-border: #38383a;
-    --group-separator: #38383a;
-    --scrim: rgb(0 0 0 / 50%);
-    --stage-bg: radial-gradient(120% 90% at 50% 0%, #2c2c2e, #141416 55%, #0b0b0c);
-    --track: rgb(255 255 255 / 14%);
-    --thumb: rgb(255 255 255 / 60%);
-    --cover-shadow: 0 24px 48px -16px rgb(0 0 0 / 90%);
-    --shade-near: rgb(0 0 0 / 10%);
-    --shade-far: rgb(0 0 0 / 50%);
-    --reflection: linear-gradient(transparent 62%, rgb(255 255 255 / 30%));
+
+/* Windows High Contrast and other forced palettes: map the tokens to system colors. */
+@media (forced-colors: active) {
+  :root {
+    --focus-ring-color: Highlight;
+    --accent: Highlight;
+    --accent-fill: Highlight;
+    --on-accent: HighlightText;
+    --switch-off: CanvasText;
+    --control-thumb: Canvas;
+    --track: CanvasText;
+    --thumb: Highlight;
   }
 }

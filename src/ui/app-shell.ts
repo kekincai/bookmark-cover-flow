@@ -7,6 +7,7 @@ import { createScrubber, type ScrubberView } from './components/scrubber'
 import { createSidebar, type SidebarView } from './components/sidebar'
 import { createStageStatus, type StageStatusView } from './components/stage-status'
 import { createTitleBar, type TitleBarView } from './components/title-bar'
+import { createAnnouncer, type Announcer } from './dom/announcer'
 
 export interface AppShell {
   readonly element: HTMLElement
@@ -25,6 +26,8 @@ export interface AppShell {
   readonly list: BookmarkListView
   readonly grid: BookmarkGridView
   readonly fullscreen: FullscreenView
+  /** The page's live regions. While a modal dialog is open, announce through the dialog's own. */
+  readonly announcer: Announcer
 }
 
 export function createAppShell(): AppShell {
@@ -51,7 +54,8 @@ export function createAppShell(): AppShell {
   body.className = 'app-body'
   body.append(stage, list.element, grid.element, browseStatus.element)
   main.append(titleBar.element, body)
-  element.append(sidebar.element, main)
+  const announcer = createAnnouncer()
+  element.append(sidebar.element, main, announcer.element)
   const fullscreen = createFullscreenView()
 
   return {
@@ -68,5 +72,6 @@ export function createAppShell(): AppShell {
     list,
     grid,
     fullscreen,
+    announcer,
   }
 }

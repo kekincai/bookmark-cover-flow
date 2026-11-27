@@ -1,5 +1,6 @@
 import type { BookmarkFolder } from '../../domain/bookmark'
 import { t } from '../../shared/i18n'
+import { fragment } from '../dom/markup'
 import { icons } from './icons'
 import { createSearchBox, type SearchBoxView } from './search-box'
 
@@ -59,6 +60,39 @@ export function folderEntries(root: BookmarkFolder): readonly SidebarEntry[] {
   ]
 }
 
+/** Everything that decides the sidebar's DOM shape; counts and the active source do not. */
+const structureKey = (groups: readonly SidebarGroup[]): string =>
+  JSON.stringify(
+    groups.map((group) => [
+      group.title,
+      group.entries.map((entry) => [entry.id, entry.title, entry.icon, entry.depth]),
+    ]),
+  )
+
+interface RenderedItem {
+  readonly id: string
+  readonly button: HTMLButtonElement
+  readonly count: HTMLSpanElement
+}
+
+function createItem(entry: SidebarEntry): RenderedItem {
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.className = 'sidebar-item'
+  button.dataset.sourceId = entry.id
+  button.style.setProperty('--depth', String(entry.depth))
+  // `.truncate` holds exactly one <span>, which slides to reveal a cut-off title on hover/focus.
+  const title = document.createElement('span')
+  title.className = 'sidebar-item__title truncate'
+  const text = document.createElement('span')
+  text.textContent = entry.title
+  title.append(text)
+  const count = document.createElement('span')
+  count.className = 'sidebar-item__count'
+  button.append(fragment(icons[entry.icon]), title, count)
+  return { id: entry.id, button, count }
+}
+
 export function createSidebar(): SidebarView {
   const element = document.createElement('nav')
   element.className = 'sidebar'
@@ -73,7 +107,7 @@ export function createSidebar(): SidebarView {
   settingsButton.className = 'icon-button'
   settingsButton.setAttribute('aria-label', t('viewOptions'))
   settingsButton.setAttribute('aria-haspopup', 'dialog')
-  settingsButton.innerHTML = icons.gear
+  settingsButton.append(fragment(icons.gear))
   const note = document.createElement('span')
   note.className = 'sidebar__note'
   note.textContent = t('localOnly')
@@ -81,12 +115,20 @@ export function createSidebar(): SidebarView {
   element.append(search.element, groupsElement, footer)
 
   let select: (id: string) => void = () => undefined
-  const items = (): HTMLButtonElement[] =>
-    Array.from(groupsElement.querySelectorAll<HTMLButtonElement>('.sidebar-item'))
+  let renderedKey: string | undefined
+  /** In DOM order, parallel to the entries of the non-empty groups last rendered. */
+  let rendered: RenderedItem[] = []
+
+  // One delegated listener for every source, so re-rendering never re-binds handlers.
+  groupsElement.addEventListener('click', (event) => {
+    const item = (event.target as Element | null)?.closest<HTMLButtonElement>('.sidebar-item')
+    const id = item?.dataset.sourceId
+    if (item && groupsElement.contains(item) && id !== undefined) select(id)
+  })
 
   // Arrow keys move between sources here and never reach the cover flow.
   groupsElement.addEventListener('keydown', (event) => {
-    const list = items()
+    const list = rendered.map((item) => item.button)
     const index = list.indexOf(document.activeElement as HTMLButtonElement)
     if (index < 0) return
     const target =
@@ -105,46 +147,57 @@ export function createSidebar(): SidebarView {
     event.preventDefault()
   })
 
+  const rebuild = (groups: readonly SidebarGroup[]): void => {
+    const focusedId = (document.activeElement as HTMLElement | null)?.dataset?.sourceId
+    const items: RenderedItem[] = []
+    groupsElement.replaceChildren(
+      ...groups.map((group) => {
+        const section = document.createElement('section')
+        section.className = 'sidebar__group'
+        const heading = document.createElement('h2')
+        heading.className = 'sidebar__heading'
+        heading.textContent = group.title
+        section.append(heading)
+        for (const entry of group.entries) {
+          const item = createItem(entry)
+          items.push(item)
+          section.append(item.button)
+        }
+        return section
+      }),
+    )
+    rendered = items
+    if (focusedId !== undefined)
+      items.find((item) => item.id === focusedId)?.button.focus({ preventScroll: true })
+  }
+
   return {
     element,
     search,
     settingsButton,
     render(groups, activeId): void {
-      const focusedId = (document.activeElement as HTMLElement | null)?.dataset?.sourceId
-      groupsElement.replaceChildren(
-        ...groups
-          .filter((group) => group.entries.length > 0)
-          .map((group) => {
-            const section = document.createElement('section')
-            section.className = 'sidebar__group'
-            const heading = document.createElement('h2')
-            heading.className = 'sidebar__heading'
-            heading.textContent = group.title
-            section.append(heading)
-            for (const entry of group.entries) {
-              const button = document.createElement('button')
-              button.type = 'button'
-              button.className = 'sidebar-item'
-              button.dataset.sourceId = entry.id
-              button.style.setProperty('--depth', String(entry.depth))
-              const active = entry.id === activeId
-              button.setAttribute('aria-current', active ? 'page' : 'false')
-              // Roving focus: Tab enters the sidebar once; arrows move within it.
-              button.tabIndex = active ? 0 : -1
-              button.innerHTML = `${icons[entry.icon]}<span class="sidebar-item__title"></span><span class="sidebar-item__count"></span>`
-              button.querySelector('.sidebar-item__title')!.textContent = entry.title
-              button.querySelector('.sidebar-item__count')!.textContent =
-                entry.count === undefined ? '' : String(entry.count)
-              button.addEventListener('click', () => select(entry.id))
-              section.append(button)
-            }
-            return section
-          }),
-      )
-      const rendered = items()
-      if (!rendered.some((item) => item.tabIndex === 0) && rendered[0]) rendered[0].tabIndex = 0
-      if (focusedId !== undefined)
-        rendered.find((item) => item.dataset.sourceId === focusedId)?.focus({ preventScroll: true })
+      const visible = groups.filter((group) => group.entries.length > 0)
+      const key = structureKey(visible)
+      if (key !== renderedKey) {
+        renderedKey = key
+        rebuild(visible)
+      }
+      // In-place update: selection, roving tab stop and counts change without touching the rest.
+      const entries = visible.flatMap((group) => group.entries)
+      let hasStop = false
+      rendered.forEach((item, index) => {
+        const entry = entries[index]
+        const active = entry?.id === activeId
+        const current = active ? 'page' : 'false'
+        if (item.button.getAttribute('aria-current') !== current)
+          item.button.setAttribute('aria-current', current)
+        // Roving focus: Tab enters the sidebar once; arrows move within it.
+        item.button.tabIndex = active ? 0 : -1
+        hasStop ||= active
+        const count = entry?.count === undefined ? '' : String(entry.count)
+        if (item.count.textContent !== count) item.count.textContent = count
+      })
+      if (!hasStop && rendered[0]) rendered[0].button.tabIndex = 0
     },
     onSelect(listener): void {
       select = listener

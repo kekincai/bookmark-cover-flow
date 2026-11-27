@@ -168,7 +168,7 @@
     "message": "优先使用网站预览图"
   },
   "preferPreviewHint": {
-    "message": "没有预览图时，按网站名称和主题色生成封面。"
+    "message": "开启时会请求网站访问权限。没有预览图时，按网站名称和主题色生成封面。"
   },
   "coverAngle": {
     "message": "封面角度"
@@ -222,7 +222,7 @@
     "message": "预览图来自网站本身"
   },
   "privacyPreviewsBody": {
-    "message": "封面使用网站公开的预览图（Open Graph），获取时会访问该网站，结果缓存在本机。"
+    "message": "默认关闭，需你开启并授予网站访问权限。开启后，封面使用网站公开的预览图（Open Graph）：获取时会不带 Cookie 访问该公开网站，从不访问本地或内网地址，结果在本机最多缓存一周。"
   },
   "previewCache": {
     "message": "预览缓存"
@@ -352,5 +352,26 @@
   },
   "yesterdayAt": {
     "message": "昨天 $1"
+  },
+  "carousel": {
+    "message": "轮播"
+  },
+  "unsupportedBookmark": {
+    "message": "无法从这里打开这类书签。"
+  },
+  "singleKeyShortcuts": {
+    "message": "单键快捷键"
+  },
+  "singleKeyShortcutsHint": {
+    "message": "按 F 切换全屏，按 / 跳到搜索。使用语音输入时可以关闭。"
+  },
+  "previewAccessDenied": {
+    "message": "未获得网站访问权限，封面将继续使用生成图。"
+  },
+  "loadingBookmarksLabel": {
+    "message": "正在载入书签"
+  },
+  "selectedBookmark": {
+    "message": "$1，第 $2 个，共 $3 个"
   }
 }

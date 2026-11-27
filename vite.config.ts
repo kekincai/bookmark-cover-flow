@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 export default defineConfig({
   base: './',
   build: {
-    target: 'chrome120',
+    target: 'chrome135',
     sourcemap: false,
     outDir: 'dist',
     rollupOptions: {

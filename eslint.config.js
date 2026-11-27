@@ -9,6 +9,10 @@ export default tseslint.config(
   ...tseslint.configs.recommendedTypeChecked.map((config) => ({ ...config, files: ['**/*.ts'] })),
   eslintConfigPrettier,
   {
+    files: ['public/**/*.js'],
+    languageOptions: { globals: globals.browser },
+  },
+  {
     files: ['scripts/**/*.mjs'],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser, ...globals.webextensions },

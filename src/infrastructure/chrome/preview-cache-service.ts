@@ -31,7 +31,9 @@ export function createPreviewCacheService(): PreviewCacheService {
     },
     async clear(): Promise<void> {
       if (!available) return
-      await chrome.storage.local.remove((await previewEntries()).map(([key]) => key))
+      // getKeys (Chrome 130) lists keys without reading every cached value.
+      const keys = await chrome.storage.local.getKeys()
+      await chrome.storage.local.remove(keys.filter((key) => key.startsWith(PREVIEW_CACHE_PREFIX)))
     },
   }
 }

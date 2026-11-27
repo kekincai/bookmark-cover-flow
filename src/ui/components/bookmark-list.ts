@@ -54,6 +54,7 @@ interface RowView {
   readonly element: HTMLElement
   readonly number: HTMLElement
   readonly tile: HTMLElement
+  /** The single text span inside each `.truncate` element. */
   readonly title: HTMLElement
   readonly site: HTMLElement
   readonly folder: HTMLElement
@@ -97,6 +98,14 @@ function fillHighlighted(element: HTMLElement, text: string, pattern: RegExp | n
   element.replaceChildren(...nodes)
 }
 
+/** Make `host` a `.truncate` element and return the one <span> its text goes in. */
+function truncatingText(host: HTMLElement): HTMLElement {
+  host.classList.add('truncate')
+  const text = document.createElement('span')
+  host.append(text)
+  return text
+}
+
 function cell(className: string, secondary = false): HTMLElement {
   const element = document.createElement('div')
   element.className = `bookmark-list__cell ${className}${secondary ? ' bookmark-list__cell--secondary' : ''}`
@@ -108,14 +117,15 @@ export function createBookmarkList(): BookmarkListView {
   const idPrefix = `bookmark-list-${++instanceCount}`
   const locale = currentLocale()
 
-  const element = document.createElement('section')
+  // A plain wrapper: the treegrid inside carries the name (no extra `region` landmark).
+  const element = document.createElement('div')
   element.className = 'bookmark-list'
-  element.setAttribute('aria-label', t('bookmarkList'))
 
+  // Rows, not cells, are the active item and only Up/Down move it: that is a treegrid.
   const grid = document.createElement('div')
   grid.className = 'bookmark-list__grid'
   grid.tabIndex = 0
-  grid.setAttribute('role', 'grid')
+  grid.setAttribute('role', 'treegrid')
   grid.setAttribute('aria-label', t('bookmarkList'))
   grid.setAttribute('aria-rowcount', '1')
   grid.setAttribute('aria-colcount', String(columns.length))
@@ -155,6 +165,11 @@ export function createBookmarkList(): BookmarkListView {
   let generation = 0
   let selected = -1
   let pendingTarget: { index: number; at: number } | null = null
+  /** Cached so rendering never reads layout: viewport from ResizeObserver, offset from scroll. */
+  let viewportHeight = 0
+  let scrollTop = 0
+  /** Reveal the selection on the next visible render (items changed, or changed while hidden). */
+  let revealPending = false
   const rendered = new Map<number, RowView>()
   const pool: RowView[] = []
   let selectListener: (index: number) => void = () => undefined
@@ -171,21 +186,21 @@ export function createBookmarkList(): BookmarkListView {
     const tile = document.createElement('span')
     tile.className = 'bookmark-list__tile'
     tile.setAttribute('aria-hidden', 'true')
-    const title = document.createElement('span')
-    title.className = 'bookmark-list__title'
-    name.append(tile, title)
-    const site = cell('bookmark-list__cell--site', true)
-    const folder = cell('bookmark-list__cell--folder', true)
+    const titleHost = document.createElement('span')
+    titleHost.className = 'bookmark-list__title'
+    name.append(tile, titleHost)
+    const siteCell = cell('bookmark-list__cell--site', true)
+    const folderCell = cell('bookmark-list__cell--folder', true)
     const added = cell('bookmark-list__cell--added', true)
     const opened = cell('bookmark-list__cell--opened', true)
-    row.append(number, name, site, folder, added, opened)
+    row.append(number, name, siteCell, folderCell, added, opened)
     return {
       element: row,
       number,
       tile,
-      title,
-      site,
-      folder,
+      title: truncatingText(titleHost),
+      site: truncatingText(siteCell),
+      folder: truncatingText(folderCell),
       added,
       opened,
       index: -1,
@@ -212,8 +227,8 @@ export function createBookmarkList(): BookmarkListView {
     row.classList.toggle('is-alternate', index % 2 === 1)
     view.number.textContent = String(index + 1)
     view.tile.textContent = Array.from(item.art.glyph).slice(0, 2).join('')
-    view.tile.style.background = item.art.background
-    view.tile.style.color = item.art.foreground
+    view.tile.style.setProperty('--art-bg', item.art.background)
+    view.tile.style.setProperty('--art-fg', item.art.foreground)
     fillHighlighted(view.title, item.title, pattern)
     fillHighlighted(view.site, item.subtitle, pattern)
     fillHighlighted(view.folder, item.folderTitle, pattern)
@@ -228,11 +243,37 @@ export function createBookmarkList(): BookmarkListView {
     else grid.removeAttribute('aria-activedescendant')
   }
 
+  /** Scroll just enough to reveal the row below the sticky header ("nearest"). */
+  const revealRow = (index: number): void => {
+    if (index < 0 || index >= items.length) return
+    if (viewportHeight === 0) {
+      // Hidden (Grid view): nothing to scroll yet; reveal once the list is shown again.
+      revealPending = true
+      return
+    }
+    const top = BODY_PADDING_TOP + index * LIST_ROW_HEIGHT
+    const visibleHeight = viewportHeight - HEADER_HEIGHT
+    let next = scrollTop
+    if (top < scrollTop) next = index === 0 ? 0 : top
+    else if (top + LIST_ROW_HEIGHT > scrollTop + visibleHeight) {
+      next = top + LIST_ROW_HEIGHT - visibleHeight
+    }
+    if (next === scrollTop) return
+    // The resulting scroll event re-reads the real (clamped) offset.
+    scrollTop = Math.max(0, next)
+    grid.scrollTop = scrollTop
+  }
+
   const render = (): void => {
+    if (viewportHeight === 0) return
+    if (revealPending) {
+      revealPending = false
+      revealRow(selected)
+    }
     // The sticky header covers the top of the viewport; rows start below the body's top margin.
     const { first, last } = getListWindow(
-      grid.scrollTop - BODY_PADDING_TOP,
-      grid.clientHeight - HEADER_HEIGHT,
+      scrollTop - BODY_PADDING_TOP,
+      viewportHeight - HEADER_HEIGHT,
       LIST_ROW_HEIGHT,
       items.length,
     )
@@ -256,20 +297,6 @@ export function createBookmarkList(): BookmarkListView {
     }
     if (fragment.childNodes.length > 0) body.append(fragment)
     syncActiveDescendant()
-  }
-
-  /** Scroll just enough to reveal the row below the sticky header ("nearest"). */
-  const revealRow = (index: number): void => {
-    if (index < 0 || index >= items.length) return
-    const top = BODY_PADDING_TOP + index * LIST_ROW_HEIGHT
-    const visibleTop = grid.scrollTop
-    const visibleBottom = grid.scrollTop + grid.clientHeight - HEADER_HEIGHT
-    let next = visibleTop
-    if (top < visibleTop) next = index === 0 ? 0 : top
-    else if (top + LIST_ROW_HEIGHT > visibleBottom) {
-      next = top + LIST_ROW_HEIGHT - (grid.clientHeight - HEADER_HEIGHT)
-    }
-    if (next !== visibleTop) grid.scrollTop = Math.max(0, next)
   }
 
   const setSelected = (index: number): void => {
@@ -360,6 +387,11 @@ export function createBookmarkList(): BookmarkListView {
     openListener(index, event.metaKey || event.ctrlKey)
   }
 
+  /** Double-click opens a bookmark: keep it from also selecting a word (drag-selection still works). */
+  const handleMouseDown = (event: MouseEvent): void => {
+    if (event.detail > 1) event.preventDefault()
+  }
+
   let frame = 0
   const scheduleRender = (): void => {
     if (frame) return
@@ -368,10 +400,24 @@ export function createBookmarkList(): BookmarkListView {
       render()
     })
   }
-  const resizeObserver = new ResizeObserver(scheduleRender)
+  const handleScroll = (): void => {
+    scrollTop = grid.scrollTop
+    scheduleRender()
+  }
+  const resizeObserver = new ResizeObserver((entries) => {
+    const entry = entries[entries.length - 1]
+    if (!entry) return
+    // The grid has no padding or border, so its content box is the scrollport (clientHeight).
+    viewportHeight = entry.contentRect.height
+    if (viewportHeight === 0) return
+    // Layout is fresh here; the offset may have been reset while the list was display: none.
+    scrollTop = grid.scrollTop
+    render()
+  })
 
-  grid.addEventListener('scroll', render, { passive: true })
+  grid.addEventListener('scroll', handleScroll, { passive: true })
   grid.addEventListener('keydown', handleKeydown)
+  body.addEventListener('mousedown', handleMouseDown)
   body.addEventListener('click', handleClick)
   body.addEventListener('dblclick', handleDoubleClick)
   resizeObserver.observe(grid)
@@ -386,11 +432,13 @@ export function createBookmarkList(): BookmarkListView {
       pattern = needle ? new RegExp(escapeRegExp(needle), 'giu') : null
       generation += 1
       pendingTarget = null
+      // Writes only: reveal and render read cached geometry in the next frame (one per frame
+      // however often the items change), or when the list is shown again if it is hidden.
       body.style.height = `${items.length * LIST_ROW_HEIGHT}px`
       grid.setAttribute('aria-rowcount', String(items.length + 1))
       if (selected >= items.length) selected = items.length - 1
-      revealRow(selected)
-      render()
+      revealPending = true
+      if (viewportHeight > 0) scheduleRender()
     },
     setSelected,
     onSelect(listener): void {
@@ -402,8 +450,9 @@ export function createBookmarkList(): BookmarkListView {
     destroy(): void {
       if (frame) cancelAnimationFrame(frame)
       resizeObserver.disconnect()
-      grid.removeEventListener('scroll', render)
+      grid.removeEventListener('scroll', handleScroll)
       grid.removeEventListener('keydown', handleKeydown)
+      body.removeEventListener('mousedown', handleMouseDown)
       body.removeEventListener('click', handleClick)
       body.removeEventListener('dblclick', handleDoubleClick)
       rendered.clear()

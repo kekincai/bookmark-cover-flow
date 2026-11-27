@@ -1,23 +1,40 @@
-.fullscreen {
+/*
+ * Full-screen Cover Flow: a native modal <dialog>. The browser makes the page inert, contains
+ * focus, handles Esc and returns focus to the invoker; these rules only undo the UA dialog box.
+ * `only dark` flips every light-dark() token beneath to its dark value, whatever the app theme.
+ */
+dialog.fullscreen {
   position: fixed;
-  z-index: 50;
   inset: 0;
-  overflow: hidden;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: clip;
+  border: 0;
   background: #000;
-  color: #f5f5f7;
+  color: var(--label);
+  color-scheme: only dark;
   --cover-size: 380px;
   --cover-shadow: 0 30px 60px -20px rgb(0 0 0 / 90%);
-  --shade-near: rgb(0 0 0 / 10%);
   --shade-far: rgb(0 0 0 / 60%);
   --reflection: linear-gradient(transparent 64%, rgb(255 255 255 / 26%));
-  --track: rgb(255 255 255 / 16%);
-  --thumb: rgb(255 255 255 / 75%);
-  --focus-ring: 0 0 0 3px rgb(10 132 255 / 70%);
-  --focus-ring-color: #0a84ff;
 }
-.fullscreen[hidden] {
-  display: none;
+dialog.fullscreen:modal {
+  overscroll-behavior: contain;
 }
+dialog.fullscreen::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: #000;
+}
+
+/*
+ * Two pre-blurred layers cross-fade on opacity when the centered cover's color changes, instead
+ * of transitioning the color of one 140 px blur (which re-rasterizes it every frame).
+ */
 .fullscreen__glow {
   position: absolute;
   top: 8%;
@@ -26,10 +43,13 @@
   height: 600px;
   margin-left: -450px;
   border-radius: 50%;
-  background-color: var(--glow, #1c1c1e);
+  background-color: #1c1c1e;
   filter: blur(140px);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.fullscreen__glow.is-active {
   opacity: 0.42;
-  transition: background-color 0.8s ease;
 }
 .cover-flow--fullscreen .cover-flow__stage {
   top: 15%;
@@ -50,7 +70,7 @@
   /* Dims the backdrop less, so the glass brightens under the pointer. */
   --d-bri: 0.98;
 }
-.glass-button:disabled {
+.glass-button:is(:disabled, [aria-disabled='true']) {
   opacity: 0.35;
 }
 .fullscreen__close {
@@ -73,12 +93,10 @@
   right: 80px;
   left: 80px;
   margin: 0;
-  overflow: hidden;
-  color: rgb(245 245 247 / 60%);
-  font-size: 14px;
+  color: var(--secondary);
+  font-size: 0.875rem;
+  font-weight: 400;
   text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .fullscreen__footer {
   position: absolute;
@@ -90,7 +108,7 @@
   flex-direction: column;
   align-items: center;
   gap: 18px;
-  transform: translateX(-50%);
+  translate: -50% 0;
 }
 .bookmark-meta--fullscreen {
   position: static;
@@ -98,14 +116,14 @@
   padding: 0;
 }
 .bookmark-meta--fullscreen .bookmark-meta__title {
-  color: #f5f5f7;
-  font-size: 30px;
+  color: var(--label);
+  font-size: 1.875rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 .bookmark-meta--fullscreen .bookmark-meta__subtitle {
-  color: rgb(245 245 247 / 60%);
-  font-size: 15px;
+  color: var(--secondary);
+  font-size: 0.9375rem;
 }
 .fullscreen__actions {
   display: flex;
@@ -123,18 +141,21 @@
 }
 .fullscreen__open {
   display: inline-flex;
-  height: 36px;
+  min-height: 36px;
   align-items: center;
   gap: 7px;
-  padding: 0 20px;
-  border-radius: 18px;
+  padding: 4px 20px;
+  border-radius: 999px;
   background: #f5f5f7;
   color: #1d1d1f;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 .fullscreen__open:hover {
   background: #fff;
+}
+.fullscreen__open[aria-disabled='true'] {
+  opacity: 0.5;
 }
 .fullscreen__open .icon {
   width: 11px;
@@ -144,13 +165,13 @@
 .scrubber--fullscreen {
   position: static;
   width: 100%;
-  transform: none;
+  translate: none;
 }
 .scrubber--fullscreen .scrubber__step {
   display: none;
 }
-@media (max-height: 760px) {
-  .fullscreen {
+@media (max-height: 47.5em) {
+  dialog.fullscreen {
     --cover-size: 300px;
   }
 }

@@ -1,5 +1,5 @@
 import { BASE_COVER_SIZE } from '../../application/cover-layout'
-import type { CoverItem } from '../../domain/cover'
+import type { CoverArt, CoverItem } from '../../domain/cover'
 import { t } from '../../shared/i18n'
 import { renderCoverArt } from './cover-art-view'
 
@@ -29,6 +29,8 @@ const PADDING_TOP = 20
 /** Title and website lines under each cover. */
 const CAPTION_HEIGHT = 44
 const OVERSCAN_ROWS = 2
+/** Layout before the grid has been measured (it is only measured while shown). */
+const DEFAULT_WIDTH = 900
 
 /** As many covers as fit at ≥ 168 px, stretched to fill the row exactly. */
 export function getGridLayout(width: number): GridLayout {
@@ -58,18 +60,34 @@ interface CellView {
   readonly element: HTMLElement
   readonly art: HTMLElement
   readonly cover: HTMLElement
+  /** The single text span inside each `.truncate` caption line. */
   readonly title: HTMLElement
   readonly host: HTMLElement
   item?: CoverItem
+  /** Art last drawn into `cover`; `CoverItem.art` is rebuilt on each read, so compare by value. */
+  drawnArt?: CoverArt
+}
+
+function sameArt(a: CoverArt | undefined, b: CoverArt): boolean {
+  return (
+    a !== undefined &&
+    a.template === b.template &&
+    a.background === b.background &&
+    a.foreground === b.foreground &&
+    a.accent === b.accent &&
+    a.glyph === b.glyph &&
+    a.lines[0] === b.lines[0] &&
+    a.lines[1] === b.lines[1]
+  )
 }
 
 let instanceCount = 0
 
 export function createBookmarkGrid(): BookmarkGridView {
   const idPrefix = `bookmark-grid-${++instanceCount}`
-  const element = document.createElement('section')
+  // A plain wrapper: the listbox inside carries the name (no extra `region` landmark).
+  const element = document.createElement('div')
   element.className = 'bookmark-grid'
-  element.setAttribute('aria-label', t('bookmarkGrid'))
   const scroller = document.createElement('div')
   scroller.className = 'bookmark-grid__scroller'
   scroller.tabIndex = 0
@@ -82,13 +100,28 @@ export function createBookmarkGrid(): BookmarkGridView {
 
   let items: readonly CoverItem[] = []
   let selected = 0
-  let layout = getGridLayout(element.clientWidth || 900)
+  let layout = getGridLayout(DEFAULT_WIDTH)
+  /** Cached so rendering never reads layout: size from ResizeObserver, offset from scroll. */
+  let viewportWidth = 0
+  let viewportHeight = 0
+  let scrollTop = 0
+  /** A new collection scrolls back to the top on the next relayout (now, or once shown). */
+  let resetScroll = false
   const rendered = new Map<number, CellView>()
   const pool: CellView[] = []
   let selectListener: (index: number) => void = () => undefined
   let openListener: (index: number, background: boolean) => void = () => undefined
   let rangeListener: (first: number, last: number) => void = () => undefined
   let lastRange = ''
+
+  /** A `.truncate` line with its text in exactly one inner <span>. */
+  const captionLine = (className: string): { line: HTMLElement; text: HTMLElement } => {
+    const line = document.createElement('span')
+    line.className = `${className} truncate`
+    const text = document.createElement('span')
+    line.append(text)
+    return { line, text }
+  }
 
   const createCell = (): CellView => {
     const cell = document.createElement('div')
@@ -99,12 +132,10 @@ export function createBookmarkGrid(): BookmarkGridView {
     const cover = document.createElement('span')
     cover.className = 'cover-art'
     art.append(cover)
-    const title = document.createElement('span')
-    title.className = 'grid-cell__title'
-    const host = document.createElement('span')
-    host.className = 'grid-cell__host'
-    cell.append(art, title, host)
-    return { element: cell, art, cover, title, host }
+    const title = captionLine('grid-cell__title')
+    const host = captionLine('grid-cell__host')
+    cell.append(art, title.line, host.line)
+    return { element: cell, art, cover, title: title.text, host: host.text }
   }
 
   const fillCell = (view: CellView, index: number): void => {
@@ -123,8 +154,12 @@ export function createBookmarkGrid(): BookmarkGridView {
       PADDING_TOP + row * layout.rowHeight
     }px)`
     if (view.item !== item) {
-      if (view.item?.art !== item.art)
-        renderCoverArt(view.cover, item.art, item.title, item.subtitle)
+      const art = item.art
+      const sameCaption = view.item?.title === item.title && view.item.subtitle === item.subtitle
+      if (!sameCaption || !sameArt(view.drawnArt, art)) {
+        renderCoverArt(view.cover, art, item.title, item.subtitle)
+        view.drawnArt = art
+      }
       view.title.textContent = item.title
       view.host.textContent = item.subtitle
       const existing = view.art.querySelector<HTMLImageElement>('img')
@@ -134,8 +169,8 @@ export function createBookmarkGrid(): BookmarkGridView {
           const image = document.createElement('img')
           image.alt = ''
           image.draggable = false
+          // Eager: only on-screen cells (plus overscan) exist, so lazy would only delay them.
           image.decoding = 'async'
-          image.loading = 'lazy'
           image.referrerPolicy = 'no-referrer'
           image.dataset.src = item.image
           image.addEventListener('load', () => (image.dataset.loaded = 'true'), { once: true })
@@ -151,13 +186,14 @@ export function createBookmarkGrid(): BookmarkGridView {
     cell.setAttribute('aria-selected', String(isSelected))
   }
 
+  const isShown = (): boolean => viewportWidth > 0 && viewportHeight > 0
+
+  const visibleWindow = (): { readonly first: number; readonly last: number } =>
+    getGridWindow(scrollTop, viewportHeight, layout, items.length)
+
   const render = (): void => {
-    const { first, last } = getGridWindow(
-      scroller.scrollTop,
-      scroller.clientHeight,
-      layout,
-      items.length,
-    )
+    if (!isShown()) return
+    const { first, last } = visibleWindow()
     for (const [index, view] of rendered) {
       if (index < first || index > last) {
         view.element.remove()
@@ -181,35 +217,58 @@ export function createBookmarkGrid(): BookmarkGridView {
     if (rendered.has(selected))
       scroller.setAttribute('aria-activedescendant', `${idPrefix}-${selected}`)
     else scroller.removeAttribute('aria-activedescendant')
-    const range = `${first}:${last}`
-    if (range !== lastRange && last >= first) {
-      lastRange = range
-      rangeListener(first, last)
-    }
   }
 
-  const relayout = (): void => {
-    layout = getGridLayout(scroller.clientWidth)
-    element.style.setProperty('--art-scale', String(layout.cellWidth / BASE_COVER_SIZE))
-    const rows = Math.ceil(items.length / layout.columns)
-    body.style.height = `${PADDING_TOP + rows * layout.rowHeight}px`
-    // Becoming visible (the view switched to Grid) also lands here: keep the selection in sight.
-    reveal(selected)
-    render()
+  /**
+   * Tell the caller which covers are on screen so it can fetch their previews. Only once scrolling
+   * has settled (`scrollend`) or the layout/items changed, never on every scroll frame.
+   */
+  const emitRange = (): void => {
+    if (!isShown()) return
+    const { first, last } = visibleWindow()
+    const range = `${first}:${last}`
+    if (range === lastRange || last < first) return
+    lastRange = range
+    rangeListener(first, last)
+  }
+
+  const scrollToOffset = (value: number): void => {
+    // The resulting scroll event re-reads the real (clamped) offset.
+    scrollTop = Math.max(0, value)
+    scroller.scrollTop = scrollTop
   }
 
   const reveal = (index: number): void => {
-    if (scroller.clientHeight === 0) return
+    if (!isShown()) return
     const top = PADDING_TOP + Math.floor(index / layout.columns) * layout.rowHeight
     const bottom = top + layout.rowHeight - GAP_Y
-    if (top < scroller.scrollTop) scroller.scrollTop = top - PADDING_TOP
-    else if (bottom > scroller.scrollTop + scroller.clientHeight)
-      scroller.scrollTop = bottom - scroller.clientHeight + PADDING_TOP
+    if (top < scrollTop) scrollToOffset(top - PADDING_TOP)
+    else if (bottom > scrollTop + viewportHeight)
+      scrollToOffset(bottom - viewportHeight + PADDING_TOP)
+  }
+
+  /** Only while shown: a hidden grid just keeps its items until the ResizeObserver reports a size. */
+  const relayout = (): void => {
+    if (!isShown()) return
+    layout = getGridLayout(viewportWidth)
+    element.style.setProperty('--art-scale', String(layout.cellWidth / BASE_COVER_SIZE))
+    const rows = Math.ceil(items.length / layout.columns)
+    body.style.height = `${PADDING_TOP + rows * layout.rowHeight}px`
+    if (resetScroll) {
+      resetScroll = false
+      scrollToOffset(0)
+    }
+    // Becoming visible (the view switched to Grid) also lands here: keep the selection in sight.
+    reveal(selected)
+    render()
+    emitRange()
   }
 
   const setSelected = (index: number): void => {
     if (index === selected) return
     selected = index
+    // Hidden: the relayout on becoming visible reveals and renders the selection.
+    if (!isShown()) return
     reveal(index)
     render()
   }
@@ -217,7 +276,7 @@ export function createBookmarkGrid(): BookmarkGridView {
   const handleKeydown = (event: KeyboardEvent): void => {
     if (event.isComposing || event.altKey || items.length === 0) return
     const modified = event.metaKey || event.ctrlKey
-    const rowsPerPage = Math.max(1, Math.floor(scroller.clientHeight / layout.rowHeight))
+    const rowsPerPage = Math.max(1, Math.floor(viewportHeight / layout.rowHeight))
     const target: number | undefined = (() => {
       if (modified || event.shiftKey) return undefined
       if (event.key === 'ArrowLeft') return selected - 1
@@ -254,17 +313,35 @@ export function createBookmarkGrid(): BookmarkGridView {
     if (index !== null) openListener(index, event.metaKey || event.ctrlKey)
   }
 
+  /** Double-click opens a bookmark: keep it from also selecting a word (drag-selection still works). */
+  const handleMouseDown = (event: MouseEvent): void => {
+    if (event.detail > 1) event.preventDefault()
+  }
+
   let frame = 0
   const onScroll = (): void => {
+    scrollTop = scroller.scrollTop
     if (frame) return
     frame = requestAnimationFrame(() => {
       frame = 0
       render()
     })
   }
-  const resizeObserver = new ResizeObserver(relayout)
+  const resizeObserver = new ResizeObserver((entries) => {
+    const entry = entries[entries.length - 1]
+    if (!entry) return
+    // The scroller has no padding: its content box is the scrollport (stable gutter excluded).
+    viewportWidth = entry.contentRect.width
+    viewportHeight = entry.contentRect.height
+    if (!isShown()) return
+    // Layout is fresh here; the offset may have been reset while the grid was display: none.
+    scrollTop = scroller.scrollTop
+    relayout()
+  })
   scroller.addEventListener('scroll', onScroll, { passive: true })
+  scroller.addEventListener('scrollend', emitRange)
   scroller.addEventListener('keydown', handleKeydown)
+  body.addEventListener('mousedown', handleMouseDown)
   body.addEventListener('click', handleClick)
   body.addEventListener('dblclick', handleDoubleClick)
   resizeObserver.observe(scroller)
@@ -277,7 +354,7 @@ export function createBookmarkGrid(): BookmarkGridView {
       items = nextItems
       if (selected >= items.length) selected = Math.max(0, items.length - 1)
       if (changedCollection) {
-        scroller.scrollTop = 0
+        resetScroll = true
         lastRange = ''
       }
       relayout()
@@ -296,7 +373,9 @@ export function createBookmarkGrid(): BookmarkGridView {
       if (frame) cancelAnimationFrame(frame)
       resizeObserver.disconnect()
       scroller.removeEventListener('scroll', onScroll)
+      scroller.removeEventListener('scrollend', emitRange)
       scroller.removeEventListener('keydown', handleKeydown)
+      body.removeEventListener('mousedown', handleMouseDown)
       body.removeEventListener('click', handleClick)
       body.removeEventListener('dblclick', handleDoubleClick)
       element.remove()

@@ -22,10 +22,15 @@ function parseAttributes(tag: string): ReadonlyMap<string, string> {
   return attributes
 }
 
+/**
+ * Extension pages only load images over https (see the manifest CSP), so a plain-http preview is
+ * upgraded rather than shown as a broken image.
+ */
 function resolveHttpImage(value: string, pageUrl: string): string | undefined {
   try {
     const url = new URL(value, pageUrl)
-    return ['http:', 'https:'].includes(url.protocol) ? url.href : undefined
+    if (url.protocol === 'http:') url.protocol = 'https:'
+    return url.protocol === 'https:' ? url.href : undefined
   } catch {
     return undefined
   }

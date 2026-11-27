@@ -6,7 +6,7 @@ import {
   listAllBookmarks,
   listRecentlyAdded,
 } from '../application/bookmark-folders'
-import { openBookmark } from '../application/open-bookmark'
+import { openBookmark, UnsupportedBookmarkError } from '../application/open-bookmark'
 import {
   applyPreview,
   preloadBookmarkPreviews,
@@ -26,6 +26,7 @@ import type { CoverItem } from '../domain/cover'
 import type { NavigationCommand } from '../domain/navigation'
 import { defaultPreferences, type Preferences } from '../domain/preferences'
 import { createBookmarkRepository } from '../infrastructure/chrome/bookmark-repository'
+import { createPreviewAccess } from '../infrastructure/chrome/preview-access'
 import { createPreviewCacheService } from '../infrastructure/chrome/preview-cache-service'
 import { createPreviewProvider } from '../infrastructure/chrome/preview-provider'
 import {
@@ -49,6 +50,10 @@ import { createStore, type AppState } from '../ui/state/app-store'
 import { t } from '../shared/i18n'
 
 const PREVIEW_RADIUS = 8
+/** Search counts are announced once typing pauses, not on every keystroke. */
+const COUNT_ANNOUNCE_DELAY_MS = 500
+/** Mirrors the theme for public/theme-boot.js, which applies it before first paint. */
+const THEME_MIRROR_KEY = 'bookmark-cover-flow-theme'
 
 const initialState: AppState = {
   folders: [],
@@ -70,12 +75,18 @@ const preferencesOf = (state: AppState): Preferences => ({
   coverAngle: state.coverAngle,
   reduceFlipMotion: state.reduceFlipMotion,
   view: state.view,
+  singleKeyShortcuts: state.singleKeyShortcuts,
 })
 
 function applyAppearance(preferences: Preferences): void {
   const root = document.documentElement
   if (preferences.theme === 'system') delete root.dataset.theme
   else root.dataset.theme = preferences.theme
+  try {
+    localStorage.setItem(THEME_MIRROR_KEY, preferences.theme)
+  } catch {
+    // Without the mirror the theme still applies; it may just flash on the next load.
+  }
   root.dataset.reflection = String(preferences.showReflection)
   root.dataset.reduceFlip = String(preferences.reduceFlipMotion)
 }
@@ -162,9 +173,11 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
   const repository = createBookmarkRepository()
   const previewProvider = createPreviewProvider()
   const tabService = createTabService()
+  const previewAccess = createPreviewAccess()
   const preferencesMenu = createPreferencesMenu({
     trigger: shell.sidebar.settingsButton,
     previewCache: createPreviewCacheService(),
+    previewAccess,
     clearRecent: async () => {
       await clearRecentBookmarks()
       store.update((state) => ({ ...state, recentBookmarks: [] }))
@@ -173,7 +186,19 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     },
   })
   const wallpaper = createWallpaperController(preferencesMenu.wallpaper, shell.stage)
-  void wallpaper.init()
+  void wallpaper.init().catch((error: unknown) => {
+    console.warn('Unable to restore the stage background.', error)
+  })
+
+  /** Everything outside an open modal is inert: speak through the dialog that is on top. */
+  const announcer = (): typeof shell.announcer =>
+    shell.fullscreen.isOpen ? shell.fullscreen.announcer : shell.announcer
+  let countTimer = 0
+  let lastAnnouncedSelection = ''
+  let queryFrame = 0
+  let pendingQuery: string | undefined
+  /** Index of each bookmark in `state.covers`, so a preview patches one entry, not the list. */
+  let coverIndex = new Map<string, number>()
 
   /** Learned this session: a site's theme color, else its favicon's dominant color. */
   const siteColors = new Map<string, string>()
@@ -192,18 +217,46 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
   const renderPosition = (position: number): void => {
     const state = store.value
     const items = state.visibleCovers
+    // The full-screen dialog covers the page completely: render only what can be seen.
+    if (shell.fullscreen.isOpen) {
+      shell.fullscreen.render(position, items, collectionTitle(state))
+      return
+    }
     shell.coverFlow.render(position)
     shell.meta.render(items[Math.round(position)])
     shell.scrubber.render(position, items.length)
     shell.list.setSelected(Math.round(position))
     shell.grid.setSelected(Math.round(position))
-    shell.fullscreen.render(position, items, collectionTitle(state))
+  }
+
+  /**
+   * Announce the centered bookmark once the covers come to rest, unless focus is on a cover (its
+   * name is read on focus) or inside the list/grid (they announce their own active option).
+   */
+  const announceSelection = (index: number): void => {
+    const item = store.value.visibleCovers[index]
+    if (item === undefined) return
+    const key = `${item.bookmarkId}:${index}`
+    if (key === lastAnnouncedSelection) return
+    lastAnnouncedSelection = key
+    const focused = document.activeElement
+    if (focused?.closest('.cover-card, .bookmark-list, .bookmark-grid, .search-box')) return
+    if (store.value.view !== 'coverflow' && !shell.fullscreen.isOpen) return
+    announcer().say(
+      t(
+        'selectedBookmark',
+        item.title,
+        String(index + 1),
+        String(store.value.visibleCovers.length),
+      ),
+    )
   }
 
   const motion = createMotionController(
     renderPosition,
     (selectedIndex) => {
       requestVisiblePreviews(selectedIndex)
+      announceSelection(selectedIndex)
       if (selectedIndex === store.value.selectedIndex) return
       store.update((state) => ({ ...state, selectedIndex }))
     },
@@ -224,21 +277,33 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
       const patches = pendingPatches
       pendingPatches = new Map()
       store.update((state) => {
-        const covers = state.covers.map((item) => patches.get(item.bookmarkId)?.(item) ?? item)
+        // Patch only the changed entries (Array#with) instead of re-mapping the whole collection.
+        let covers = state.covers
+        for (const [bookmarkId, patch] of patches) {
+          const index = coverIndex.get(bookmarkId)
+          const current = index === undefined ? undefined : covers[index]
+          if (index === undefined || current === undefined) continue
+          const next = patch(current)
+          if (next !== current) covers = covers.with(index, next)
+        }
+        if (covers === state.covers) return state
         return { ...state, covers, visibleCovers: searchBookmarks(covers, state.query) }
       })
     })
   }
 
-  const colorFromFavicon = (item: CoverItem, generation: number): void => {
+  const colorFromFavicon = async (item: CoverItem, generation: number): Promise<void> => {
     if (item.favicon === undefined || siteColors.has(item.subtitle)) return
-    void readFaviconColor(item.favicon).then((color) => {
+    try {
+      const color = await readFaviconColor(item.favicon)
       if (color === undefined || generation !== previewGeneration) return
       if (!siteColors.has(item.subtitle)) siteColors.set(item.subtitle, color)
       patchCover(item.bookmarkId, (current) =>
         applySiteColor(current, siteColors.get(item.subtitle)!),
       )
-    })
+    } catch (error: unknown) {
+      console.warn('Unable to read a favicon color.', error)
+    }
   }
 
   const requestVisiblePreviews = (index: number): void =>
@@ -264,8 +329,9 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     const pending = candidates.filter((item) => item.imageKind === 'pending')
     candidates
       .filter((item) => item.imageKind !== 'pending')
-      .forEach((item) => colorFromFavicon(item, generation))
+      .forEach((item) => void colorFromFavicon(item, generation))
     if (pending.length === 0) return
+    const selectedId = covers[Math.round(motion.position)]?.bookmarkId
     void preloadBookmarkPreviews(
       pending,
       previewProvider,
@@ -274,10 +340,12 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
         if (item && result.themeColor !== undefined)
           siteColors.set(item.subtitle, result.themeColor)
         patchCover(bookmarkId, (current) => applyPreview(current, result))
-        if (item && result.themeColor === undefined) colorFromFavicon(item, generation)
+        if (item && result.themeColor === undefined) void colorFromFavicon(item, generation)
       },
       () => generation === previewGeneration,
-    )
+      4,
+      (item) => (item.bookmarkId === selectedId ? 'high' : 'low'),
+    ).catch((error: unknown) => console.warn('Unable to load bookmark previews.', error))
   }
 
   const setCollection = (collectionId: string, persist = true): void => {
@@ -293,6 +361,7 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
       preferPreview: state.preferPreviewImages,
       siteColors,
     })
+    coverIndex = new Map(covers.map((item, index) => [item.bookmarkId, index]))
     store.update((current) => ({
       ...current,
       activeFolderId: collectionId,
@@ -305,42 +374,62 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     if (persist) persistPreferences()
   }
 
+  /** Filtering runs once per frame, however fast the user types; the field itself never lags. */
   const setQuery = (query: string): void => {
-    store.update((state) => ({
-      ...state,
-      query,
-      visibleCovers: searchBookmarks(state.covers, query),
-      selectedIndex: 0,
-    }))
-    requestVisiblePreviews(0)
+    pendingQuery = query
+    if (queryFrame !== 0) return
+    queryFrame = requestAnimationFrame(() => {
+      queryFrame = 0
+      const next = pendingQuery ?? ''
+      pendingQuery = undefined
+      store.update((state) => ({
+        ...state,
+        query: next,
+        visibleCovers: searchBookmarks(state.covers, next),
+        selectedIndex: 0,
+      }))
+      requestVisiblePreviews(0)
+      window.clearTimeout(countTimer)
+      countTimer = window.setTimeout(() => {
+        if (store.value.status === 'ready') announcer().say(countText(store.value))
+      }, COUNT_ANNOUNCE_DELAY_MS)
+    })
   }
 
-  const openItem = (item: CoverItem | undefined, background = false): void => {
+  const openItem = async (item: CoverItem | undefined, background = false): Promise<void> => {
     if (item === undefined) return
-    void openBookmark(tabService, item.url, { background })
-      .then(async () => {
-        const recentBookmarks = await recordRecentBookmark({
-          id: item.bookmarkId,
-          title: item.title,
-          url: item.url,
-        })
-        store.update((state) => ({ ...state, recentBookmarks }))
-        const activeFolderId = store.value.activeFolderId
-        if (
-          activeFolderId !== undefined &&
-          (activeFolderId === RECENT_COLLECTION_ID || store.value.sortMode === 'recent')
-        ) {
-          setCollection(activeFolderId, false)
-        }
+    try {
+      await openBookmark(tabService, item.url, { background })
+    } catch (error: unknown) {
+      if (error instanceof UnsupportedBookmarkError) announcer().alert(t('unsupportedBookmark'))
+      else announcer().alert(t('openFailed'))
+      console.warn(t('openFailed'), error)
+      return
+    }
+    try {
+      const recentBookmarks = await recordRecentBookmark({
+        id: item.bookmarkId,
+        title: item.title,
+        url: item.url,
       })
-      .catch((error: unknown) => console.warn(t('openFailed'), error))
+      store.update((state) => ({ ...state, recentBookmarks }))
+      const activeFolderId = store.value.activeFolderId
+      if (
+        activeFolderId !== undefined &&
+        (activeFolderId === RECENT_COLLECTION_ID || store.value.sortMode === 'recent')
+      ) {
+        setCollection(activeFolderId, false)
+      }
+    } catch (error: unknown) {
+      console.warn('Unable to record the opened bookmark.', error)
+    }
   }
 
   const openCurrent = (background = false): void => {
     const item = store.value.visibleCovers[Math.round(motion.position)]
     if (item === undefined) return
     ;(shell.fullscreen.isOpen ? shell.fullscreen.coverFlow : shell.coverFlow).showOpening()
-    openItem(item, background)
+    void openItem(item, background)
   }
 
   const toggleFullscreen = (): void => {
@@ -349,9 +438,18 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
       return
     }
     shell.fullscreen.open()
+    // The stage video is hidden behind the modal: stop decoding it.
+    wallpaper.setSuspended(true)
     shell.fullscreen.coverFlow.setItems(store.value.visibleCovers)
     renderPosition(motion.position)
   }
+  /** Esc, the close button and the back gesture all end here; catch the page up on what it missed. */
+  const onFullscreenClosed = (): void => {
+    wallpaper.setSuspended(false)
+    shell.coverFlow.setItems(store.value.visibleCovers)
+    renderPosition(motion.position)
+  }
+  shell.fullscreen.element.addEventListener('close', onFullscreenClosed)
 
   /** Covers glide in Cover Flow; the grid and list select instantly. */
   const animates = (): boolean => store.value.view === 'coverflow' || shell.fullscreen.isOpen
@@ -390,8 +488,13 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
   })
   shell.sidebar.search.onSearch((query) => dispatch({ type: 'search', query }))
   shell.titleBar.fullscreenButton.addEventListener('click', toggleFullscreen)
-  shell.status.onRetry(() => void load())
-  shell.browseStatus.onRetry(() => void load())
+  // Retry removes its own button: park focus on the title first so it never falls to <body>.
+  const retry = (): void => {
+    shell.titleBar.focusTitle()
+    void load()
+  }
+  shell.status.onRetry(retry)
+  shell.browseStatus.onRetry(retry)
   shell.titleBar.onViewChange((view) => {
     if (view === store.value.view) return
     store.update((state) => ({ ...state, view }))
@@ -403,19 +506,24 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     browser.onSelect(select)
     browser.onOpen((index, background) => {
       select(index)
-      openItem(store.value.visibleCovers[index], background)
+      void openItem(store.value.visibleCovers[index], background)
     })
   }
   shell.grid.onVisibleRange(requestPreviews)
   shell.fullscreen.onClose(() => shell.fullscreen.close())
   shell.fullscreen.onStep((delta) => motion.moveTarget(delta))
-  shell.fullscreen.onOpenBookmark(() =>
-    openItem(store.value.visibleCovers[Math.round(motion.position)]),
+  shell.fullscreen.onOpenBookmark(
+    () => void openItem(store.value.visibleCovers[Math.round(motion.position)]),
   )
   shell.fullscreen.scrubber.onSeek((index) => motion.setTarget(index))
   shell.coverFlow.onActivate(activateCover)
   shell.fullscreen.coverFlow.onActivate(activateCover)
-  preferencesMenu.onChange((change) => {
+  // Access can also be revoked from chrome://extensions: previews switch off with it.
+  const stopWatchingAccess = previewAccess.onChange((granted) => {
+    if (granted || !store.value.preferPreviewImages) return
+    applyPreferences({ preferPreviewImages: false })
+  })
+  const applyPreferences = (change: Partial<Preferences>): void => {
     const before = store.value
     store.update((state) => ({ ...state, ...change }))
     persistPreferences()
@@ -427,10 +535,16 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
     ) {
       setCollection(before.activeFolderId, false)
     }
-  })
+  }
+  preferencesMenu.onChange(applyPreferences)
 
   const cleanups = [
-    attachKeyboardController(dispatch, shell.sidebar.search.input),
+    stopWatchingAccess,
+    attachKeyboardController(
+      dispatch,
+      shell.sidebar.search.input,
+      () => store.value.singleKeyShortcuts,
+    ),
     attachWheelController(shell.coverFlow.element, motion),
     attachPointerController(shell.coverFlow.element, motion),
     attachWheelController(shell.fullscreen.coverFlow.element, motion),
@@ -451,6 +565,8 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
       shell.main.dataset.view = state.view
       shell.status.render(stageState(state))
       shell.browseStatus.render(stageState(state))
+      // The status panels are not live regions: announce state changes once, here.
+      if (changed('status') && state.status === 'error') announcer().alert(t('bookmarksFailed'))
       preferencesMenu.render(preferencesOf(state))
       if (changed('theme') || changed('showReflection') || changed('reduceFlipMotion'))
         applyAppearance(state)
@@ -487,17 +603,26 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
   const load = async (): Promise<void> => {
     store.update((state) => ({ ...state, status: 'loading' }))
     try {
-      const [folders, preferences, recentBookmarks] = await Promise.all([
+      const [folders, saved, recentBookmarks, previewsAllowed] = await Promise.all([
         loadBookmarks(repository),
         loadPreferences(),
         loadRecentBookmarks(),
+        previewAccess.has(),
       ])
+      // A stored "previews on" without the website access to back it (revoked, or saved before
+      // access became optional) falls back to generated covers.
+      const preferences =
+        saved.preferPreviewImages && !previewsAllowed
+          ? { ...saved, preferPreviewImages: false }
+          : saved
       store.update((state) => ({ ...state, folders, recentBookmarks, ...preferences }))
-      const saved = preferences.activeFolderId
+      if (preferences !== saved) persistPreferences()
+      const savedFolder = preferences.activeFolderId
       const special = [ALL_COLLECTION_ID, RECENT_COLLECTION_ID, ADDED_COLLECTION_ID]
       const collectionId =
-        saved !== undefined && (special.includes(saved) || findFolder(folders, saved))
-          ? saved
+        savedFolder !== undefined &&
+        (special.includes(savedFolder) || findFolder(folders, savedFolder))
+          ? savedFolder
           : ALL_COLLECTION_ID
       setCollection(collectionId, false)
     } catch (error: unknown) {
@@ -510,6 +635,9 @@ export async function bootstrap(root: HTMLElement): Promise<() => void> {
   return () => {
     cleanups.forEach((cleanup) => cleanup())
     cancelAnimationFrame(patchFrame)
+    cancelAnimationFrame(queryFrame)
+    window.clearTimeout(countTimer)
+    shell.fullscreen.element.removeEventListener('close', onFullscreenClosed)
     wallpaper.destroy()
     preferencesMenu.destroy()
     shell.coverFlow.destroy()

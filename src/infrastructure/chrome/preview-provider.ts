@@ -1,4 +1,8 @@
-import type { PreviewProvider, PreviewResult } from '../../application/preview-bookmarks'
+import type {
+  PreviewPriority,
+  PreviewProvider,
+  PreviewResult,
+} from '../../application/preview-bookmarks'
 import {
   isPreviewResponse,
   type PreviewRequest,
@@ -7,10 +11,10 @@ import {
 
 export function createPreviewProvider(): PreviewProvider {
   return {
-    async resolve(url: string): Promise<PreviewResult> {
+    async resolve(url: string, priority: PreviewPriority = 'low'): Promise<PreviewResult> {
       if (typeof chrome === 'undefined' || chrome.runtime?.id === undefined) return {}
       try {
-        const request: PreviewRequest = { type: 'resolve-preview', url }
+        const request: PreviewRequest = { type: 'resolve-preview', url, priority }
         const response: unknown = await chrome.runtime.sendMessage<PreviewRequest, PreviewResponse>(
           request,
         )

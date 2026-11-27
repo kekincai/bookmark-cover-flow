@@ -5,18 +5,20 @@ test('F toggles full-screen Cover Flow, which stays in sync with the stage', asy
   await openApp(page)
   const fullscreen = page.locator('.fullscreen')
   await expect(fullscreen).toBeHidden()
-  await expect(fullscreen).toHaveAttribute('role', 'dialog')
+  expect(await fullscreen.evaluate((element) => element.tagName)).toBe('DIALOG')
 
   await page.keyboard.press('f')
   await expect(fullscreen).toBeVisible()
-  await expect(page.locator('#app')).toHaveAttribute('inert', '')
+  // A native modal: the browser makes the page inert and contains focus.
+  expect(await fullscreen.evaluate((element) => element.matches(':modal'))).toBe(true)
+  await expect(page.getByRole('dialog', { name: 'Full-screen Cover Flow' })).toBeVisible()
   const close = page.getByRole('button', { name: 'Exit full screen' })
   await expect(close).toBeFocused()
   await expect(page.locator('.fullscreen__heading')).toHaveText(`All Bookmarks · 1 / ${DEMO_TOTAL}`)
   await expect(fullscreen.locator('.bookmark-meta__title')).toHaveText('Design Notes')
   await expect(fullscreen.locator('.cover-card[aria-current="true"]')).toHaveAttribute(
     'aria-label',
-    'Design Notes, notion.so',
+    `Design Notes, notion.so, 1 of ${DEMO_TOTAL}`,
   )
   const coverSize = await fullscreen
     .locator('.cover-card')
@@ -30,22 +32,24 @@ test('F toggles full-screen Cover Flow, which stays in sync with the stage', asy
   await expect(fullscreen.locator('.cover-flow')).toHaveAttribute('data-position', '1.00000')
   await fullscreen.getByRole('button', { name: 'Next bookmark' }).first().click()
   await expect(fullscreen.locator('.bookmark-meta__title')).toHaveText('Figma')
-  // Glow color comes from the current cover.
-  expect(await fullscreen.evaluate((element) => element.style.getPropertyValue('--glow'))).toMatch(
-    /^#[0-9A-F]{6}$/i,
-  )
-
-  // Tab stays inside the overlay.
-  for (let step = 0; step < 8; step += 1) await page.keyboard.press('Tab')
+  // Glow color comes from the current cover, cross-faded between two pre-blurred layers.
+  await expect(fullscreen.locator('.fullscreen__glow.is-active')).toHaveCount(1)
   expect(
-    await page.evaluate(() =>
-      document.querySelector('.fullscreen')!.contains(document.activeElement),
-    ),
-  ).toBe(true)
+    await fullscreen
+      .locator('.fullscreen__glow.is-active')
+      .evaluate((element) => getComputedStyle(element).backgroundColor),
+  ).toMatch(/^rgb\(/)
+
+  // Tab never reaches the inert page behind the modal.
+  for (let step = 0; step < 8; step += 1) {
+    await page.keyboard.press('Tab')
+    expect(
+      await page.evaluate(() => !document.querySelector('#app')!.contains(document.activeElement)),
+    ).toBe(true)
+  }
 
   await page.keyboard.press('F')
   await expect(fullscreen).toBeHidden()
-  await expect(page.locator('#app')).not.toHaveAttribute('inert', '')
   await expect(stageTitle(page)).toHaveText('Figma')
   await expect(coverFlow(page)).toHaveAttribute('data-position', '2.00000')
 })

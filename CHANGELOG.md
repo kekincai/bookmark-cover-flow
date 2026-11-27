@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+Privacy, security and accessibility refactor. Requires Chrome 135 or later.
+
+- Make website access optional: the install-time `http://*/*` and `https://*/*` host permissions are gone. **Prefer website preview images** is now off by default; turning it on asks Chrome for website access, and turning it off gives the access back.
+- Add the `alarms` permission for a daily sweep that deletes expired preview-cache entries (also on install and update) and caps the cache at 3,000 entries; image URLs over 2 KB are no longer stored, and entries are verified against the stored page URL.
+- Fetch previews only from public `http(s)` hosts: loopback, private-network, link-local, `.local`, `.internal` and single-label intranet hosts are skipped, and a redirect into a private network is dropped before its body is read. Requests send no cookies and no referrer, read the page only up to `</head>`, and prioritize the selected cover over its neighbours. Only the extension's own pages can ask for a preview.
+- Load preview images over `https` only (plain `http` image URLs are upgraded), without a referrer.
+- Tighten the extension-page Content Security Policy: add `default-src 'self'`, `base-uri 'none'`, `form-action 'none'` and `frame-ancestors 'none'`, drop `http:` from `img-src`, and require Trusted Types; all HTML strings go through a literal-only policy.
+- Use native modal dialogs for Settings and full screen.
+- Move theme colors to `light-dark()` tokens; use outline focus rings with at least 3:1 contrast; extend forced-colors support; size text in `rem`; keep short fades when motion is reduced.
+- Add a **Single-key shortcuts** switch so speech-input users can turn off `F` and `/` (WCAG 2.1.4).
+- Centralize screen-reader announcements in one live region and expose the List view as a tree grid.
+- Improve performance: cover art is built only when a cover is shown, search text is cached, the sidebar updates incrementally, and background video pauses while hidden.
+- Raise `minimum_chrome_version` from 120 to 135.
+
 ## 1.2.0 — 2026-10-31
 
 A modern Apple-style redesign. The interface is flat and neutral, and every color on screen comes from the covers.

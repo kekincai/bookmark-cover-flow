@@ -10,13 +10,18 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  outline: none;
+  overscroll-behavior: contain;
+  /* The column count depends on this width; a scrollbar appearing must not reflow the grid. */
+  scrollbar-gutter: stable;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 .bookmark-grid__scroller:focus-visible {
-  box-shadow: inset var(--focus-ring);
+  outline-offset: -2px;
 }
 .bookmark-grid__body {
   position: relative;
+  /* Cells are absolutely placed inside an explicit height: isolate their layout and paint. */
+  contain: layout paint style;
 }
 .grid-cell {
   position: absolute;
@@ -25,12 +30,11 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  user-select: none;
 }
 .grid-cell__art {
   position: relative;
   aspect-ratio: 1;
-  overflow: hidden;
+  overflow: clip;
   margin-bottom: 8px;
   border-radius: 8px;
   background: var(--fill);
@@ -55,19 +59,20 @@
   white-space: nowrap;
 }
 .grid-cell__title {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 .grid-cell__host {
   color: var(--secondary);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .grid-cell:hover .grid-cell__art {
   filter: brightness(0.96);
 }
 /* Selection ring: accent while the grid has focus, neutral otherwise (like the list). */
 .grid-cell.is-selected .grid-cell__art {
-  outline: 3px solid var(--row-selected-inactive);
+  /* ≥ 3:1 against the page even while the grid is not focused. */
+  outline: 3px solid var(--switch-off);
   outline-offset: 3px;
 }
 .bookmark-grid:focus-within .grid-cell.is-selected .grid-cell__art {

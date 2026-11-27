@@ -1,6 +1,6 @@
 import { chromium } from '@playwright/test'
 import assert from 'node:assert/strict'
-import { mkdir, mkdtemp, rm } from 'node:fs/promises'
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -13,8 +13,20 @@ import { join, resolve } from 'node:path'
  * Set SCREENSHOT_DIR to also save light/dark, full-screen and settings screenshots for review.
  */
 
-const extensionPath = resolve('dist')
 const profilePath = await mkdtemp(join(tmpdir(), 'bookmark-cover-flow-verify-'))
+/*
+ * Website previews need optional host access, which a user grants from a Chrome prompt that
+ * automation cannot click. The verification copy of the build declares that access up front; the
+ * shipped manifest keeps it optional.
+ */
+const extensionPath = await mkdtemp(join(tmpdir(), 'bookmark-cover-flow-extension-'))
+await cp(resolve('dist'), extensionPath, { recursive: true })
+{
+  const manifestPath = join(extensionPath, 'manifest.json')
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
+  manifest.host_permissions = manifest.optional_host_permissions
+  await writeFile(manifestPath, JSON.stringify(manifest))
+}
 const storeScreenshotPath = resolve('docs/assets/store-screenshot-1280x800.png')
 const readmeScreenshotPath = resolve('docs/assets/screenshot.png')
 const settingsScreenshotPath = resolve('docs/assets/settings.png')
@@ -112,7 +124,9 @@ async function sampleFrames(page, drive) {
 let context
 try {
   context = await chromium.launchPersistentContext(profilePath, {
-    headless: false,
+    // HEADLESS=1 runs without a window: the `chromium` channel's new headless mode loads
+    // extensions (the default headless shell does not).
+    ...(process.env.HEADLESS ? { channel: 'chromium', headless: true } : { headless: false }),
     args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`],
   })
 
@@ -140,7 +154,10 @@ try {
         'enterFullscreen',
         'exitFullscreen',
         'bookmarkList',
-      ].map((key) => [key, chrome.i18n.getMessage(key)]),
+      ]
+        .map((key) => [key, chrome.i18n.getMessage(key)])
+        // Substitutions are dropped without arguments: keep markers to rebuild the pattern.
+        .concat([['positionValue', chrome.i18n.getMessage('positionValue', ['@1@', '@2@'])]]),
     ),
   )
 
@@ -159,10 +176,31 @@ try {
           await chrome.bookmarks.create({ parentId: folder.id, title, url })
         }
       }
+      // Previews are opt-in; turn them on as the user would after granting access.
+      await chrome.storage.local.set({
+        'bookmark-cover-flow-preferences': { preferPreviewImages: true },
+      })
       return { qaRootId: qaRoot.id }
     },
     { folders: publicFolders },
   )
+
+  // Covers end their accessible name with the localized "N of M" (positionValue): read M back.
+  const positionPattern = new RegExp(
+    labels.positionValue
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      .replace('@1@', '\\d+')
+      .replace('@2@', '(\\d+)') + '$',
+  )
+  const coverTotal = (label) => Number(positionPattern.exec(label ?? '')?.[1])
+  const waitForCoverTotal = (total) =>
+    page.waitForFunction(
+      ({ source, expected }) => {
+        const label = document.querySelector('.stage .cover-card')?.getAttribute('aria-label')
+        return Number(new RegExp(source).exec(label ?? '')?.[1]) === expected
+      },
+      { source: positionPattern.source, expected: total },
+    )
 
   const extensionId = new URL(worker.url()).host
   const appUrl = `chrome-extension://${extensionId}/index.html`
@@ -188,9 +226,12 @@ try {
   const initialRenderMs = Math.round(performance.now() - startedAt)
   await page.locator('.title-bar__title', { hasText: labels.allBookmarks }).waitFor()
   assert.equal(await stageTitle(page).innerText(), 'OpenAI Codex')
+  // The position is part of each cover's accessible name ("Title, site, 1 of N").
+  const firstLabel = await stageCovers(page).first().getAttribute('aria-label')
   assert.equal(
-    await stageCovers(page).first().getAttribute('aria-setsize'),
-    String(publicBookmarks),
+    coverTotal(firstLabel),
+    publicBookmarks,
+    `Cover label "${firstLabel}" should end with ${labels.positionValue} (${positionPattern})`,
   )
 
   /* ---------- Real previews from the background service worker ---------- */
@@ -360,20 +401,14 @@ try {
   await sidebarItem(page, labels.allBookmarks).click()
   const reloadStartedAt = performance.now()
   await page.reload()
-  await page
-    .locator('.stage .cover-card[aria-setsize="' + String(STRESS_COUNT + publicBookmarks) + '"]')
-    .first()
-    .waitFor({ state: 'visible' })
+  await waitForCoverTotal(STRESS_COUNT + publicBookmarks)
   const allBookmarksRenderMs = Math.round(performance.now() - reloadStartedAt)
 
   const stressStartedAt = performance.now()
   await sidebarItem(page, 'Stress 5000').click()
-  await page
-    .locator('.stage .cover-card[aria-setsize="5000"]')
-    .first()
-    .waitFor({ state: 'visible' })
+  await waitForCoverTotal(STRESS_COUNT)
   const stressRenderMs = Math.round(performance.now() - stressStartedAt)
-  const stressTotal = Number(await stageCovers(page).first().getAttribute('aria-setsize'))
+  const stressTotal = coverTotal(await stageCovers(page).first().getAttribute('aria-label'))
 
   // Continuous wheel input over the stage while sampling frame intervals.
   const stageBox = await page.locator('.stage').boundingBox()
@@ -489,4 +524,5 @@ try {
 } finally {
   await context?.close()
   await rm(profilePath, { recursive: true, force: true })
+  await rm(extensionPath, { recursive: true, force: true })
 }

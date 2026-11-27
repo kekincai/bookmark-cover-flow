@@ -1,4 +1,5 @@
 import { t } from '../../shared/i18n'
+import { fragment, type Markup } from '../dom/markup'
 import { icons } from './icons'
 
 export type StageState =
@@ -11,6 +12,11 @@ export type StageState =
 export interface StageStatusView {
   readonly element: HTMLElement
   render(state: StageState): void
+  /**
+   * Called when Retry is pressed. The retry re-renders this panel, which removes the focused
+   * button; the listener must move focus somewhere stable first (bootstrap focuses the page
+   * title via `TitleBarView.focusTitle()`) so it never falls back to <body>.
+   */
   onRetry(listener: () => void): void
   destroy(): void
 }
@@ -18,19 +24,37 @@ export interface StageStatusView {
 /** Brief loads should not flash a spinner. */
 const LOADING_DELAY_MS = 400
 
+/**
+ * The visible loading / empty / error panel.
+ *
+ * Deliberately not a live region: a region that is unhidden or filled together with its text is
+ * not announced reliably, and a second region would repeat what bootstrap's page-level announcer
+ * already says. Bootstrap announces state changes; this panel only shows them.
+ */
 export function createStageStatus(): StageStatusView {
   const element = document.createElement('div')
   element.className = 'stage-status'
-  element.setAttribute('role', 'status')
   element.hidden = true
   let retry: () => void = () => undefined
   let loadingTimer = 0
   let renderedKey = ''
 
-  const show = (icon: string, title: string, detail: string, action?: HTMLElement): void => {
-    element.innerHTML = `<span class="stage-status__icon">${icon}</span><p class="stage-status__title"></p><p class="stage-status__detail"></p>`
-    element.querySelector('.stage-status__title')!.textContent = title
-    element.querySelector('.stage-status__detail')!.textContent = detail
+  const paragraph = (className: string, text: string): HTMLParagraphElement => {
+    const node = document.createElement('p')
+    node.className = className
+    node.textContent = text
+    return node
+  }
+
+  const show = (icon: Markup, title: string, detail: string, action?: HTMLElement): void => {
+    const iconWrap = document.createElement('span')
+    iconWrap.className = 'stage-status__icon'
+    iconWrap.append(fragment(icon))
+    element.replaceChildren(
+      iconWrap,
+      paragraph('stage-status__title', title),
+      paragraph('stage-status__detail', detail),
+    )
     if (action) element.append(action)
     element.hidden = false
   }
@@ -47,8 +71,15 @@ export function createStageStatus(): StageStatusView {
       element.replaceChildren()
       if (state.kind === 'loading') {
         loadingTimer = window.setTimeout(() => {
-          element.innerHTML = `<span class="spinner" aria-hidden="true">${'<i></i>'.repeat(12)}</span><p class="stage-status__detail"></p>`
-          element.querySelector('.stage-status__detail')!.textContent = t('loadingBookmarks')
+          // No `value`: an indeterminate <progress> is both the spinner and its semantics.
+          const spinner = document.createElement('progress')
+          spinner.className = 'spinner'
+          spinner.setAttribute('aria-label', t('loadingBookmarksLabel'))
+          // The progress bar already carries the name; hide the visible caption from AT so it
+          // is not read twice.
+          const detail = paragraph('stage-status__detail', t('loadingBookmarks'))
+          detail.setAttribute('aria-hidden', 'true')
+          element.replaceChildren(spinner, detail)
           element.hidden = false
         }, LOADING_DELAY_MS)
       } else if (state.kind === 'empty') {
@@ -60,12 +91,11 @@ export function createStageStatus(): StageStatusView {
         button.type = 'button'
         button.className = 'pill-button'
         button.textContent = t('retry')
+        // The listener is responsible for moving focus off this button before the panel
+        // re-renders (see `onRetry`).
         button.addEventListener('click', () => retry())
         show(icons.warning, t('bookmarksFailed'), t('bookmarksFailedHint'), button)
-        element.setAttribute('role', 'alert')
-        return
       }
-      element.setAttribute('role', 'status')
     },
     onRetry(listener): void {
       retry = listener

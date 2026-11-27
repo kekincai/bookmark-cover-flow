@@ -63,6 +63,11 @@ type Rect = [x: number, y: number, width: number, height: number]
 interface Tiles {
   readonly size: number
   readonly urls: readonly string[]
+  /** Live lenses drawing with these tiles. */
+  users: number
+  /** Still reachable from the cache, so more lenses may use them. */
+  cached: boolean
+  revoked: boolean
 }
 interface Lens {
   readonly id: string
@@ -71,6 +76,8 @@ interface Lens {
   readonly pieces: readonly SVGElement[]
   readonly passes: readonly SVGElement[]
   readonly tiles: Tiles
+  /** Removes the filter and lets go of its tiles; safe to call twice. */
+  remove(): void
 }
 
 /** Only Chromium draws url() in backdrop-filter. */
@@ -216,6 +223,74 @@ function tilePixels(radius: number, bezel: number, corner: number, power: number
 const tileCache = new Map<string, Promise<Tiles>>()
 const TILE_CACHE_MAX = 48
 
+function revokeTiles(tiles: Tiles): void {
+  if (tiles.revoked) return
+  tiles.revoked = true
+  for (const url of tiles.urls) if (url.startsWith('blob:')) URL.revokeObjectURL(url)
+}
+
+/** Blob URLs go once the tiles are out of the cache and no lens draws with them. */
+function releaseTiles(tiles: Tiles): void {
+  tiles.users = Math.max(0, tiles.users - 1)
+  if (!tiles.cached && tiles.users === 0) revokeTiles(tiles)
+}
+
+/** A failed build leaves the cache, so the next fit tries again. */
+async function forgetOnFailure(key: string, entry: Promise<Tiles>): Promise<void> {
+  try {
+    await entry
+  } catch {
+    if (tileCache.get(key) === entry) tileCache.delete(key)
+  }
+}
+
+async function evictTiles(entry: Promise<Tiles>): Promise<void> {
+  try {
+    const tiles = await entry
+    tiles.cached = false
+    if (tiles.users === 0) revokeTiles(tiles)
+  } catch {
+    // A failed build made no URLs to revoke.
+  }
+}
+
+async function tileUrl(tile: { width: number; height: number; data: Uint8ClampedArray }) {
+  const canvas = document.createElement('canvas')
+  canvas.width = tile.width
+  canvas.height = tile.height
+  const context = canvas.getContext('2d')
+  if (context === null) throw new Error('No 2D canvas for the lens map.')
+  const image = context.createImageData(tile.width, tile.height)
+  image.data.set(tile.data)
+  context.putImageData(image, 0, 0)
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+  const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png')
+  const decoded = new Image()
+  decoded.src = url
+  try {
+    await decoded.decode()
+  } catch {
+    // An undecodable tile still works; it just may draw one frame without its blur.
+  }
+  return url
+}
+
+async function buildTiles(
+  radius: number,
+  bezel: number,
+  corner: number,
+  power: number,
+): Promise<Tiles> {
+  const { size, tiles } = tilePixels(radius, bezel, corner, power)
+  const settled = await Promise.allSettled(tiles.map(tileUrl))
+  const urls = settled.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []))
+  if (urls.length !== settled.length) {
+    for (const url of urls) if (url.startsWith('blob:')) URL.revokeObjectURL(url)
+    throw new Error('Unable to build the lens map.')
+  }
+  return { size, urls, users: 0, cached: true, revoked: false }
+}
+
 function lensTiles(radius: number, bezel: number, corner: number, power: number): Promise<Tiles> {
   const key = `${radius}:${bezel}:${corner.toFixed(3)}:${power.toFixed(3)}`
   const cached = tileCache.get(key)
@@ -224,29 +299,14 @@ function lensTiles(radius: number, bezel: number, corner: number, power: number)
     tileCache.set(key, cached)
     return cached
   }
-  const { size, tiles } = tilePixels(radius, bezel, corner, power)
-  const entry = Promise.all(
-    tiles.map(async (tile) => {
-      const canvas = document.createElement('canvas')
-      canvas.width = tile.width
-      canvas.height = tile.height
-      const context = canvas.getContext('2d')!
-      const image = context.createImageData(tile.width, tile.height)
-      image.data.set(tile.data)
-      context.putImageData(image, 0, 0)
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
-      const url = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png')
-      const decoded = new Image()
-      decoded.src = url
-      await decoded.decode().catch(() => undefined)
-      return url
-    }),
-  ).then((urls) => ({ size, urls }))
+  const entry = buildTiles(radius, bezel, corner, power)
   tileCache.set(key, entry)
+  void forgetOnFailure(key, entry)
   while (tileCache.size > TILE_CACHE_MAX) {
-    const oldest = tileCache.keys().next().value
+    const oldest = tileCache.entries().next().value
     if (oldest === undefined) break
-    tileCache.delete(oldest)
+    tileCache.delete(oldest[0])
+    void evictTiles(oldest[1])
   }
   return entry
 }
@@ -273,7 +333,8 @@ function buildFilter(width: number, height: number, tiles: Tiles, split: boolean
     'aria-hidden': 'true',
     width: 0,
     height: 0,
-    style: 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none',
+    // Styled from glass.css: the extension CSP blocks inline style attributes.
+    class: 'glass-lens-host',
   })
   const filter = node(
     'filter',
@@ -340,7 +401,15 @@ function buildFilter(width: number, height: number, tiles: Tiles, split: boolean
     pass()
   }
   document.body.append(host)
-  return { id, host, filter, pieces, passes, tiles }
+  tiles.users += 1
+  let removed = false
+  const remove = (): void => {
+    if (removed) return
+    removed = true
+    host.remove()
+    releaseTiles(tiles)
+  }
+  return { id, host, filter, pieces, passes, tiles, remove }
 }
 
 function placeFilter(lens: Lens, width: number, height: number): void {
@@ -380,7 +449,7 @@ export function liquidGlass(el: HTMLElement, options: Partial<LensOptions> = {})
   const clear = (): void => {
     token += 1
     el.style.removeProperty(opts.property)
-    current?.lens.host.remove()
+    current?.lens.remove()
     current = null
   }
 
@@ -403,18 +472,29 @@ export function liquidGlass(el: HTMLElement, options: Partial<LensOptions> = {})
     setScale(current.lens, bezel)
   }
 
+  // Sizes come from the ResizeObserver, so a fit never forces layout. The corner style is
+  // read where style is already clean (the observer callback), or again after update/refresh.
+  let box: { width: number; height: number } | null = null
+  let shape: { cssRadius: number; corner: number } | null = null
+  const readShape = (): { cssRadius: number; corner: number } => {
+    const style = getComputedStyle(el)
+    return {
+      cssRadius: Number.parseFloat(style.borderTopLeftRadius) || 0,
+      corner: cornerExponent(style.getPropertyValue('corner-top-left-shape')),
+    }
+  }
+
   const fit = async (): Promise<void> => {
     frame = 0
-    const width = Math.round(el.offsetWidth)
-    const height = Math.round(el.offsetHeight)
+    if (box === null) return
+    const { width, height } = box
     if (!opts.enabled || width < LENS_MIN_PX || height < LENS_MIN_PX) {
       clear()
       return
     }
-    const style = getComputedStyle(el)
-    const cssRadius = Number.parseFloat(style.borderTopLeftRadius) || 0
-    const radius = Math.round(Math.min(opts.radius ?? cssRadius, width / 2, height / 2))
-    const corner = opts.corner ?? cornerExponent(style.getPropertyValue('corner-top-left-shape'))
+    shape ??= readShape()
+    const radius = Math.round(Math.min(opts.radius ?? shape.cssRadius, width / 2, height / 2))
+    const corner = opts.corner ?? shape.corner
     const bezel = Math.round(Math.max(4, Math.min(opts.rim, Math.min(width, height) / 3.5)))
     const split = opts.dispersion > 0
     const key = `${radius}:${bezel}:${corner.toFixed(3)}:${opts.power.toFixed(3)}:${split}`
@@ -434,8 +514,19 @@ export function liquidGlass(el: HTMLElement, options: Partial<LensOptions> = {})
     // Until new tiles are ready, the lens in use covers the new size.
     resize(width, height, bezel)
     const mine = ++token
-    const tiles = await lensTiles(radius, bezel, corner, opts.power)
+    let tiles: Tiles
+    try {
+      tiles = await lensTiles(radius, bezel, corner, opts.power)
+    } catch {
+      // No map: the CSS glass (and any lens already in use) stays.
+      return
+    }
     if (mine !== token) return
+    if (tiles.revoked) {
+      // Evicted while this fit waited; build afresh.
+      schedule()
+      return
+    }
     const lens = buildFilter(width, height, tiles, split)
     setScale(lens, bezel)
     const previous = current
@@ -443,17 +534,37 @@ export function liquidGlass(el: HTMLElement, options: Partial<LensOptions> = {})
     el.style.setProperty(opts.property, `url(#${lens.id})`)
     // Let the new filter draw before the old one goes.
     if (previous) {
-      requestAnimationFrame(() => requestAnimationFrame(() => previous.lens.host.remove()))
+      requestAnimationFrame(() => requestAnimationFrame(() => previous.lens.remove()))
+    }
+  }
+
+  /** Never rejects: if fitting fails outright, the element falls back to its CSS glass. */
+  const fitSafely = async (): Promise<void> => {
+    try {
+      await fit()
+    } catch {
+      clear()
     }
   }
 
   function schedule(): void {
-    if (!frame) frame = requestAnimationFrame(() => void fit())
+    if (!frame) {
+      frame = requestAnimationFrame(() => {
+        void fitSafely()
+      })
+    }
   }
 
-  const observer = new ResizeObserver(schedule)
+  const observer = new ResizeObserver((entries) => {
+    const size = entries.at(-1)?.borderBoxSize[0]
+    if (size === undefined) return
+    // Border box, as offsetWidth/offsetHeight measured; the lens assumes horizontal writing.
+    box = { width: Math.round(size.inlineSize), height: Math.round(size.blockSize) }
+    shape = readShape()
+    schedule()
+  })
+  // Fires once on observe, which gives the first size.
   observer.observe(el)
-  schedule()
 
   return {
     supported,
@@ -461,7 +572,10 @@ export function liquidGlass(el: HTMLElement, options: Partial<LensOptions> = {})
       opts = { ...opts, ...next }
       schedule()
     },
-    refresh: schedule,
+    refresh(): void {
+      shape = null
+      schedule()
+    },
     destroy(): void {
       observer.disconnect()
       cancelAnimationFrame(frame)

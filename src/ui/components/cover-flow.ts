@@ -1,6 +1,12 @@
 import { BASE_COVER_SIZE, coverStackOrder, getCoverTransform } from '../../application/cover-layout'
 import type { CoverItem } from '../../domain/cover'
-import { createCoverCard, setCoverHint, updateCoverCard } from './cover-card'
+import {
+  createCoverCard,
+  getCoverShade,
+  setCoverHint,
+  setCoverPriority,
+  updateCoverCard,
+} from './cover-card'
 import { t } from '../../shared/i18n'
 
 export interface CoverFlowView {
@@ -17,6 +23,8 @@ export interface CoverFlowView {
 }
 const VIRTUAL_RADIUS = 7
 const OPENING_LABEL_MS = 1400
+/** `data-moving` clears once no position change has arrived for this long. */
+const MOVING_IDLE_MS = 100
 export function getVirtualRange(
   itemCount: number,
   position: number,
@@ -28,10 +36,12 @@ export function getVirtualRange(
   }
 }
 export function createCoverFlow(className = ''): CoverFlowView {
-  const element = document.createElement('section')
+  // A named region; the role description says what kind of widget it is, not its name again.
+  const element = document.createElement('div')
   element.className = `cover-flow ${className}`.trim()
+  element.setAttribute('role', 'region')
   element.setAttribute('aria-label', t('coverFlow'))
-  element.setAttribute('aria-roledescription', t('coverFlow'))
+  element.setAttribute('aria-roledescription', t('carousel'))
   const stage = document.createElement('div')
   stage.className = 'cover-flow__stage'
   element.append(stage)
@@ -41,25 +51,58 @@ export function createCoverFlow(className = ''): CoverFlowView {
   let size = BASE_COVER_SIZE
   let angle = 70
   let lastRange = ''
+  let lastMoveAt = 0
   let movingTimer = 0
   let openingTimer = 0
+  let measuredCard: HTMLButtonElement | null = null
   let activate: (index: number) => void = () => undefined
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-  const measure = (): void => {
-    size = stage.querySelector<HTMLElement>('.cover-card')?.offsetWidth || size
-    element.style.setProperty('--art-scale', String(size / BASE_COVER_SIZE))
-  }
-  const observer = new ResizeObserver(() => {
-    measure()
+
+  // Sizes come from ResizeObserver entries only, so writing the DOM never forces a layout: the
+  // flow itself (re-render on resize) and one card (its border box is the cover size).
+  const observer = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.target !== measuredCard) continue
+      const width = entry.borderBoxSize[0]?.inlineSize ?? 0
+      // A hidden flow (closed full screen) reports 0; keep the last real size.
+      if (width > 0 && width !== size) {
+        size = width
+        element.style.setProperty('--art-scale', String(size / BASE_COVER_SIZE))
+      }
+    }
     render(currentPosition)
   })
   observer.observe(element)
+  /** Observing a new card delivers its size in the next observer callback, after layout. */
+  const watchCardSize = (): void => {
+    if (measuredCard?.isConnected) return
+    if (measuredCard) observer.unobserve(measuredCard)
+    measuredCard = cards.values().next().value ?? null
+    if (measuredCard) observer.observe(measuredCard)
+  }
+
+  /** One pending timer that re-arms itself while moves keep arriving, not one per frame. */
+  const settle = (): void => {
+    const idle = performance.now() - lastMoveAt
+    if (idle < MOVING_IDLE_MS) {
+      movingTimer = window.setTimeout(settle, MOVING_IDLE_MS - idle)
+      return
+    }
+    movingTimer = 0
+    delete element.dataset.moving
+  }
+  const markMoving = (): void => {
+    lastMoveAt = performance.now()
+    if (element.dataset.moving !== 'true') element.dataset.moving = 'true'
+    if (movingTimer === 0) movingTimer = window.setTimeout(settle, MOVING_IDLE_MS)
+  }
 
   const reconcile = (force = false): void => {
     const { first, last } = getVirtualRange(items.length, currentPosition)
     const range = `${first}:${last}`
     if (!force && range === lastRange) return
     lastRange = range
+    const selected = Math.round(currentPosition)
     // Recycle cards that leave the window: creating reflected covers is costly when scrubbing
     // jumps the whole window every frame.
     const spare: HTMLButtonElement[] = []
@@ -72,32 +115,36 @@ export function createCoverFlow(className = ''): CoverFlowView {
     for (let index = first; index <= last; index += 1) {
       const item = items[index]
       if (!item) continue
+      const distance = Math.abs(index - selected)
       const existing = cards.get(index)
-      if (existing) updateCoverCard(existing, item, index, items.length)
-      else {
-        const recycled = spare.pop()
-        if (recycled) {
-          if (recycled.dataset.opening === 'true') setCoverHint(recycled, false)
-          updateCoverCard(recycled, item, index, items.length)
-          cards.set(index, recycled)
-          continue
-        }
-        const card = createCoverCard(item, index, items.length)
-        card.addEventListener('click', () => {
-          if (element.dataset.suppressClick !== 'true') activate(Number(card.dataset.index))
-        })
-        cards.set(index, card)
-        stage.append(card)
+      if (existing) {
+        setCoverPriority(existing, distance)
+        updateCoverCard(existing, item, index, items.length)
+        continue
       }
+      const recycled = spare.pop()
+      if (recycled) {
+        if (recycled.dataset.opening === 'true') setCoverHint(recycled, false)
+        // Before the update, so a new preview request starts at the right priority.
+        setCoverPriority(recycled, distance)
+        updateCoverCard(recycled, item, index, items.length)
+        cards.set(index, recycled)
+        continue
+      }
+      const card = createCoverCard(item, index, items.length)
+      // The preview fetch starts after this task, so the priority still applies to it.
+      setCoverPriority(card, distance)
+      card.addEventListener('click', () => {
+        if (element.dataset.suppressClick !== 'true') activate(Number(card.dataset.index))
+      })
+      cards.set(index, card)
+      stage.append(card)
     }
     spare.forEach((card) => card.remove())
+    watchCardSize()
   }
   const render = (position: number): void => {
-    if (Math.abs(currentPosition - position) > 0.00001) {
-      element.dataset.moving = 'true'
-      window.clearTimeout(movingTimer)
-      movingTimer = window.setTimeout(() => delete element.dataset.moving, 100)
-    }
+    if (Math.abs(currentPosition - position) > 0.00001) markMoving()
     currentPosition = position
     const focused = document.activeElement
     const hadFocus = focused instanceof HTMLElement && stage.contains(focused)
@@ -110,9 +157,14 @@ export function createCoverFlow(className = ''): CoverFlowView {
       card.style.transform = `translate3d(${transform.x}px, 0, ${transform.z}px) rotateY(${transform.rotateY}deg)`
       card.style.opacity = String(transform.opacity)
       card.style.zIndex = String(coverStackOrder(offset))
-      card.style.setProperty('--shade-amount', Math.min(1, Math.abs(offset)).toFixed(3))
+      // On the shade leaf: a non-inherited property there restyles one element, not the card.
+      const shade = getCoverShade(card)
+      const shadeAmount = Math.min(1, Math.abs(offset)).toFixed(3)
+      if (shade.style.getPropertyValue('--shade-amount') !== shadeAmount)
+        shade.style.setProperty('--shade-amount', shadeAmount)
       card.dataset.side = offset > 0.001 ? 'right' : offset < -0.001 ? 'left' : 'center'
       card.style.pointerEvents = transform.opacity < 0.05 ? 'none' : ''
+      setCoverPriority(card, Math.abs(index - selected))
       const active = index === selected
       if (card.getAttribute('aria-current') !== String(active)) {
         card.tabIndex = active ? 0 : -1
@@ -132,7 +184,6 @@ export function createCoverFlow(className = ''): CoverFlowView {
       items = nextItems
       if (!preservesPosition) currentPosition = 0
       reconcile(true)
-      measure()
     },
     setAngle(nextAngle): void {
       if (nextAngle === angle) return

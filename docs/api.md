@@ -12,7 +12,7 @@ Bookmark Cover Flow v1.0 keeps browser-specific behavior behind typed ports. UI 
 
 ## Preview provider
 
-`PreviewProvider.resolve(url)` returns `{ imageUrl?, themeColor? }`: an optional HTTP(S) preview-image URL and the page's validated `theme-color`. The background implementation applies timeouts, credential omission, metadata parsing, and local caching. It is never called when **Prefer website preview images** is off.
+`PreviewProvider.resolve(url)` returns `{ imageUrl?, themeColor? }`: an optional HTTP(S) preview-image URL and the page's validated `theme-color`. The background implementation accepts only public `http(s)` URLs, fetches the page without cookies or a referrer, applies an 8-second timeout, reads only up to `</head>`, parses the metadata, and caches the result locally. `resolve(url, priority?)` takes `high` for the selected cover and `low` (default) for neighbours. It is never called when **Prefer website preview images** is off, and the Settings switch turns it on only after the user grants the optional website access.
 
 ## Preferences
 
@@ -22,9 +22,11 @@ Bookmark Cover Flow v1.0 keeps browser-specific behavior behind typed ports. UI 
 - `sortMode: bookmark | title | domain | recent`
 - `theme: system | light | dark`
 - `showReflection: boolean`
-- `preferPreviewImages: boolean` (default `true`)
+- `preferPreviewImages: boolean` (default `false`; turning it on requests optional website access)
 - `coverAngle: number` (45–80, default 70)
 - `reduceFlipMotion: boolean` (default `false`)
+- `view: coverflow | grid | list` (default `coverflow`)
+- `singleKeyShortcuts: boolean` (default `true`; turns `F` and `/` on or off)
 
 Unknown or malformed values are ignored and replaced with conservative defaults. New optional fields may be added in minor releases; existing meanings will not change before v2.
 

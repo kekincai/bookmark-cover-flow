@@ -168,7 +168,7 @@
     "message": "Web サイトのプレビュー画像を優先"
   },
   "preferPreviewHint": {
-    "message": "プレビュー画像がない場合は、サイト名とテーマカラーからカバーを生成します。"
+    "message": "オンにすると Web サイトへのアクセス許可を求めます。プレビュー画像がない場合は、サイト名とテーマカラーからカバーを生成します。"
   },
   "coverAngle": {
     "message": "カバーの角度"
@@ -222,7 +222,7 @@
     "message": "プレビューは各 Web サイトから取得"
   },
   "privacyPreviewsBody": {
-    "message": "カバーには各サイトが公開しているプレビュー画像（Open Graph）を使用します。取得時にそのサイトにアクセスし、結果はこのコンピュータにキャッシュされます。"
+    "message": "オンにして Web サイトへのアクセスを許可するまでは無効です。有効にすると、カバーには各サイトが公開しているプレビュー画像（Open Graph）を使います。取得時は Cookie なしでその公開サイトにアクセスし、ローカルや社内ネットワークのアドレスにはアクセスしません。結果はこのコンピュータに最大 1 週間キャッシュされます。"
   },
   "previewCache": {
     "message": "プレビューのキャッシュ"
@@ -352,5 +352,26 @@
   },
   "yesterdayAt": {
     "message": "昨日 $1"
+  },
+  "carousel": {
+    "message": "カルーセル"
+  },
+  "unsupportedBookmark": {
+    "message": "この種類のブックマークはここから開けません。"
+  },
+  "singleKeyShortcuts": {
+    "message": "シングルキーのショートカット"
+  },
+  "singleKeyShortcutsHint": {
+    "message": "F で全画面表示を切り替え、/ で検索に移動します。音声入力を使う場合はオフにしてください。"
+  },
+  "previewAccessDenied": {
+    "message": "Web サイトへのアクセスが許可されなかったため、生成したカバーを使います。"
+  },
+  "loadingBookmarksLabel": {
+    "message": "ブックマークを読み込み中"
+  },
+  "selectedBookmark": {
+    "message": "$1、$3 件中 $2 件目"
   }
 }

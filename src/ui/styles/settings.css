@@ -1,50 +1,41 @@
-/* Settings dialog: segmented tabs over grouped rows, in the style of macOS System Settings. */
+/*
+ * Settings: a native modal <dialog> with segmented tabs over grouped rows, in the style of macOS
+ * System Settings. The browser supplies the backdrop, inert page, focus containment and Esc.
+ */
 
-.settings-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 3000;
-  display: grid;
-  place-items: center;
-  padding: 16px;
-  background: var(--scrim);
-}
-.settings-overlay[hidden] {
-  display: none;
-}
+dialog.settings-dialog {
+  --tile-outline: color-mix(in oklab, var(--label) 10%, transparent);
+  --dash: color-mix(in oklab, var(--label) 22%, transparent);
 
-.settings-dialog {
-  --tile-outline: color-mix(in srgb, var(--label) 10%, transparent);
-  --dash: color-mix(in srgb, var(--label) 22%, transparent);
-  --focus-ring-wide: 0 0 0 6px rgb(0 113 227 / 45%);
-
-  display: flex;
-  flex-direction: column;
-  width: min(760px, calc(100vw - 32px));
-  height: min(600px, calc(100dvh - 32px));
-  overflow: hidden;
+  width: min(760px, 100% - 32px);
+  max-width: none;
+  height: min(600px, 100dvh - 32px);
+  max-height: none;
+  padding: 0;
+  overflow: clip;
+  border: 0;
   border-radius: 12px;
   background: var(--panel);
   box-shadow:
     0 0 0 0.5px rgb(0 0 0 / 20%),
     0 24px 64px rgb(0 0 0 / 24%);
   color: var(--label);
-  font-family: var(--font);
-  font-size: 14px;
+  font-size: 0.875rem;
   -webkit-font-smoothing: antialiased;
+  container-type: inline-size;
 }
-
-.settings-dialog :focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+/* display only while open: an unconditional display would override the closed state. */
+dialog.settings-dialog[open] {
+  display: flex;
+  flex-direction: column;
 }
-
-.settings-dialog .icon {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+dialog.settings-dialog:modal {
+  overscroll-behavior: contain;
+}
+dialog.settings-dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: var(--scrim);
 }
 
 /* ---------- Header ---------- */
@@ -58,7 +49,7 @@
 }
 .settings-dialog__title {
   margin: 0;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   letter-spacing: -0.015em;
 }
@@ -71,28 +62,35 @@
   background: var(--fill);
 }
 .settings-tab {
-  height: 24px;
+  position: relative;
+  min-height: 24px;
   margin: 0;
-  padding: 0 16px;
+  padding: 2px 16px;
   border: 0;
   border-radius: 6px;
   background: transparent;
   color: var(--icon);
   font: inherit;
-  font-size: 14px;
   white-space: nowrap;
   cursor: default;
 }
+/* Same weight in both states, so selecting a tab never changes its width. */
 .settings-tab[aria-selected='true'] {
   background: var(--segment-on);
   color: var(--label);
-  font-weight: 600;
   box-shadow:
     0 1px 3px rgb(0 0 0 / 14%),
     0 0 0 0.5px rgb(0 0 0 / 6%);
 }
-.settings-dialog .settings-tab:focus-visible {
-  box-shadow: var(--focus-ring);
+/* Forced colors remove the background and shadow: draw the selection as a border instead. */
+@media (forced-colors: active) {
+  .settings-tab[aria-selected='true']::after {
+    position: absolute;
+    inset: 0;
+    border: 2px solid Highlight;
+    border-radius: inherit;
+    content: '';
+  }
 }
 
 /* ---------- Body ---------- */
@@ -109,18 +107,15 @@
   flex-direction: column;
   gap: 22px;
 }
-.settings-pane[hidden] {
-  display: none;
-}
 .settings-heading {
   margin: 0 0 8px 4px;
   color: var(--label);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
 .settings-group {
-  overflow: hidden;
+  overflow: clip;
   border: 1px solid var(--group-border);
   border-radius: 10px;
   background: var(--group);
@@ -156,7 +151,7 @@
 .settings-row__sub,
 .settings-note {
   color: var(--secondary);
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 .settings-row.is-disabled .settings-row__title {
@@ -183,7 +178,7 @@
   background: transparent;
   color: var(--label);
   font: inherit;
-  font-size: 13px;
+  font-size: 0.8125rem;
   cursor: default;
 }
 .settings-tile__thumb {
@@ -193,29 +188,33 @@
   gap: 3px;
   width: 96px;
   height: 62px;
-  overflow: hidden;
+  overflow: clip;
   border-radius: 8px;
   box-shadow: 0 0 0 1px var(--tile-outline);
 }
+/* Selection is an outline, so it survives forced-colors mode. */
 .settings-tile[aria-checked='true'] .settings-tile__thumb {
-  box-shadow: 0 0 0 3px var(--accent);
+  outline: 3px solid var(--accent);
+  outline-offset: 0;
 }
 .settings-tile[aria-checked='true'] .settings-tile__label {
   font-weight: 600;
 }
-/* The ring sits on the thumbnail, outside the selection ring. */
-.settings-dialog .settings-tile:focus-visible {
-  box-shadow: none;
+/* The focus ring sits on the thumbnail, outside the selection ring. */
+.settings-tile:focus-visible {
+  outline: none;
 }
 .settings-tile:focus-visible .settings-tile__thumb {
   box-shadow:
     0 0 0 1px var(--tile-outline),
-    var(--focus-ring-wide);
+    0 0 0 5px var(--panel),
+    0 0 0 7px var(--focus-ring-color);
 }
-.settings-tile[aria-checked='true']:focus-visible .settings-tile__thumb {
-  box-shadow:
-    0 0 0 3px var(--accent),
-    var(--focus-ring-wide);
+@media (forced-colors: active) {
+  .settings-tile:focus-visible .settings-tile__thumb {
+    outline: 2px solid Highlight;
+    outline-offset: 4px;
+  }
 }
 .settings-tiles--themes {
   gap: 28px;
@@ -258,14 +257,15 @@
   background: var(--cover);
 }
 
+/* The default preset is the stage gradient of the current theme. */
 .wallpaper-thumb--default {
-  background: linear-gradient(#ffffff, #f2f2f5);
+  background: var(--stage-bg);
 }
 .wallpaper-thumb--mist {
-  background: linear-gradient(160deg, #e8f0fb, #c9d8ee);
+  background: var(--wallpaper-mist);
 }
 .wallpaper-thumb--night {
-  background: linear-gradient(160deg, #2a2d3a, #0e0f14);
+  background: var(--wallpaper-night);
 }
 .wallpaper-thumb--media {
   background: var(--fill);
@@ -287,7 +287,6 @@
   margin: 0;
   border-radius: 11px;
   background: var(--switch-off);
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 6%);
   cursor: default;
   appearance: none;
 }
@@ -298,20 +297,24 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--control-thumb);
   box-shadow: 0 1px 3px rgb(0 0 0 / 28%);
   content: '';
+  translate: 0;
 }
 .settings-switch:checked {
   background: var(--accent);
 }
 .settings-switch:checked::after {
-  transform: translateX(16px);
+  translate: 16px;
 }
-.settings-dialog .settings-switch:focus-visible {
-  box-shadow:
-    inset 0 0 0 1px rgb(0 0 0 / 6%),
-    var(--focus-ring);
+@media (forced-colors: active) {
+  .settings-switch {
+    border: 1px solid CanvasText;
+  }
+  .settings-switch:checked {
+    background: Highlight;
+  }
 }
 
 /* ---------- Select ---------- */
@@ -322,17 +325,48 @@
   flex: 0 0 auto;
 }
 .settings-select__control {
-  height: 24px;
+  min-height: 24px;
   margin: 0;
-  padding: 0 28px 0 10px;
+  padding: 2px 28px 2px 10px;
   border: 0;
   border-radius: 6px;
   background: var(--fill);
   color: var(--label);
   font: inherit;
-  font-size: 14px;
   cursor: default;
   appearance: none;
+}
+/* Customizable select: the picker matches the panel instead of the OS menu. */
+@supports (appearance: base-select) {
+  .settings-select__control,
+  .settings-select__control::picker(select) {
+    appearance: base-select;
+  }
+  .settings-select__control::picker(select) {
+    padding: 4px;
+    border: 1px solid var(--group-border);
+    border-radius: 8px;
+    background: var(--group);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 20%);
+  }
+  .settings-select__control option {
+    padding: 4px 10px;
+    border-radius: 5px;
+  }
+  .settings-select__control option:checked {
+    font-weight: 600;
+  }
+  /* base-select draws its own ::picker-icon; the overlaid chevron is the fallback. */
+  .settings-select .icon {
+    display: none;
+  }
+  .settings-select__control {
+    padding-inline-end: 8px;
+  }
+  .settings-select__control option:is(:hover, :focus-visible) {
+    background: var(--accent-fill);
+    color: var(--on-accent);
+  }
 }
 .settings-select .icon {
   position: absolute;
@@ -365,19 +399,11 @@
   height: 20px;
   margin-top: -8px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--control-thumb);
   box-shadow:
     0 1px 4px rgb(0 0 0 / 30%),
-    0 0 0 0.5px rgb(0 0 0 / 8%);
+    0 0 0 1px var(--switch-off);
   appearance: none;
-}
-.settings-dialog .settings-range:focus-visible {
-  box-shadow: none;
-}
-.settings-range:focus-visible::-webkit-slider-thumb {
-  box-shadow:
-    0 1px 4px rgb(0 0 0 / 30%),
-    var(--focus-ring);
 }
 .settings-range:disabled {
   opacity: 0.4;
@@ -393,15 +419,14 @@
 
 .settings-button {
   flex: 0 0 auto;
-  height: 26px;
+  min-height: 26px;
   margin: 0;
-  padding: 0 14px;
+  padding: 3px 14px;
   border: 0;
   border-radius: 7px;
   background: var(--fill);
   color: var(--label);
   font: inherit;
-  font-size: 14px;
   white-space: nowrap;
   cursor: default;
 }
@@ -417,7 +442,8 @@
 
 .settings-dialog__footer {
   display: flex;
-  flex: 0 0 60px;
+  flex: 0 0 auto;
+  min-height: 60px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
@@ -426,18 +452,17 @@
 }
 .settings-dialog__note {
   color: var(--secondary);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .settings-done {
-  height: 30px;
+  min-height: 30px;
   margin: 0;
-  padding: 0 20px;
+  padding: 4px 20px;
   border: 0;
-  border-radius: 15px;
+  border-radius: 999px;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
   font: inherit;
-  font-size: 14px;
   font-weight: 600;
   cursor: default;
 }
@@ -456,24 +481,24 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 92px;
+  min-height: 92px;
+  padding: 8px;
   border: 1.5px dashed var(--dash);
   border-radius: 8px;
 }
 .wallpaper-dropzone.is-dragging {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
 }
 .wallpaper-dropzone__text {
   color: var(--icon);
-  font-size: 14px;
 }
 .wallpaper-media .settings-note,
 .wallpaper-current,
 .wallpaper-status,
 .wallpaper-error {
   margin: 8px 0 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 .wallpaper-current {
@@ -486,21 +511,14 @@
 .wallpaper-status {
   color: var(--secondary);
 }
+/* Live regions stay in the DOM and only change text; empty ones collapse. */
 .wallpaper-status:empty,
-.wallpaper-current[hidden],
-.wallpaper-error[hidden] {
+.wallpaper-error:empty,
+.wallpaper-current[hidden] {
   display: none;
 }
 .wallpaper-error {
-  color: #d70015;
-}
-:root[data-theme='dark'] .wallpaper-error {
-  color: #ff6961;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .wallpaper-error {
-    color: #ff6961;
-  }
+  color: var(--danger);
 }
 
 /* ---------- Privacy pane ---------- */
@@ -520,13 +538,13 @@
   color: #ffffff;
 }
 .settings-statement__icon--success {
-  background: var(--success);
+  background: var(--success-strong);
 }
 .settings-statement__icon--accent {
   background: var(--accent);
 }
 .settings-statement__icon--warning {
-  background: var(--warning);
+  background: var(--warning-strong);
 }
 .settings-statement__icon .icon {
   width: 14px;
@@ -537,9 +555,9 @@
   font-weight: 600;
 }
 
-/* ---------- Narrow windows ---------- */
+/* ---------- Narrow dialogs ---------- */
 
-@media (max-width: 560px) {
+@container (max-width: 35em) {
   .settings-dialog__header {
     grid-template-columns: 1fr;
     justify-items: start;
@@ -554,33 +572,44 @@
 
 /* ---------- Motion ---------- */
 
+/*
+ * Entry and exit both transition: `display` and `overlay` keep the dialog in the top layer until
+ * the fade-out finishes, and @starting-style supplies the values it enters from.
+ */
 @media (prefers-reduced-motion: no-preference) {
-  .settings-overlay:not([hidden]) {
-    animation: settings-fade 160ms ease-out;
+  dialog.settings-dialog,
+  dialog.settings-dialog::backdrop {
+    opacity: 0;
+    transition-property: opacity, scale, display, overlay;
+    transition-duration: 200ms;
+    transition-timing-function: var(--ease);
+    transition-behavior: allow-discrete;
   }
-  .settings-overlay:not([hidden]) .settings-dialog {
-    animation: settings-rise 220ms var(--ease);
+  dialog.settings-dialog {
+    scale: 0.98;
   }
-  .settings-switch {
-    transition: background-color 200ms;
+  dialog.settings-dialog[open],
+  dialog.settings-dialog[open]::backdrop {
+    opacity: 1;
+    scale: 1;
+  }
+  @starting-style {
+    dialog.settings-dialog[open],
+    dialog.settings-dialog[open]::backdrop {
+      opacity: 0;
+      scale: 0.98;
+    }
   }
   .settings-switch::after {
-    transition: transform 200ms cubic-bezier(0.3, 0.7, 0.3, 1);
-  }
-  .settings-tab,
-  .settings-button,
-  .settings-done {
-    transition: background-color 120ms;
+    transition: translate 200ms cubic-bezier(0.3, 0.7, 0.3, 1);
   }
 }
-@keyframes settings-fade {
-  from {
-    opacity: 0;
-  }
+/* Color feedback is not motion: it stays when motion is reduced. */
+.settings-switch {
+  transition: background-color 200ms;
 }
-@keyframes settings-rise {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
+.settings-tab,
+.settings-button,
+.settings-done {
+  transition: background-color 120ms;
 }

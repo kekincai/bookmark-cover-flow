@@ -1,4 +1,4 @@
-import { translate, type Locale } from './i18n'
+import { resolveLocale, translate, uiLanguage, type Locale } from './i18n'
 
 /** Labels for the relative "last opened" branches; injectable for tests. */
 export interface RelativeDateLabels {
@@ -9,6 +9,15 @@ export interface RelativeDateLabels {
 
 export function toLanguageTag(locale: Locale): string {
   return locale.replace('_', '-')
+}
+
+/**
+ * Format with the user's full language tag when it matches the catalog locale, so en-GB keeps its
+ * day-month order and a `-u-ca-…` calendar preference survives; otherwise fall back to the catalog.
+ */
+function formattingTag(locale: Locale): string {
+  const language = uiLanguage()
+  return resolveLocale(language) === locale ? language : toLanguageTag(locale)
 }
 
 export function defaultRelativeLabels(locale: Locale): RelativeDateLabels {
@@ -22,6 +31,7 @@ export function defaultRelativeLabels(locale: Locale): RelativeDateLabels {
 type FormatKind = 'added' | 'time' | 'weekday' | 'monthDay'
 const formatOptions: Record<FormatKind, Intl.DateTimeFormatOptions> = {
   added: { year: 'numeric', month: '2-digit', day: '2-digit' },
+  // Finder-style 24-hour times are a deliberate design choice (see tests).
   time: { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' },
   weekday: { weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' },
   monthDay: { month: 'short', day: 'numeric' },
@@ -33,7 +43,7 @@ export function getDateFormatter(locale: Locale, kind: FormatKind): Intl.DateTim
   const key = `${locale}:${kind}`
   let formatter = formatters.get(key)
   if (!formatter) {
-    formatter = new Intl.DateTimeFormat(toLanguageTag(locale), formatOptions[kind])
+    formatter = new Intl.DateTimeFormat(formattingTag(locale), formatOptions[kind])
     formatters.set(key, formatter)
   }
   return formatter

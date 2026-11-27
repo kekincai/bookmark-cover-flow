@@ -48,7 +48,7 @@ async function writeValue(value: readonly RecentBookmark[]): Promise<void> {
 
 export async function loadRecentBookmarks(): Promise<readonly RecentBookmark[]> {
   try {
-    return [...parseRecentBookmarks(await readValue())].sort(
+    return parseRecentBookmarks(await readValue()).toSorted(
       (left, right) => right.openedAt - left.openedAt,
     )
   } catch (error: unknown) {

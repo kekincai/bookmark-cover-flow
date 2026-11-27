@@ -17,6 +17,9 @@ export function attachPointerController(
   let frame = 0
   let revision = -1
   let suppressTimer = 0
+  const lifetime = new AbortController()
+  // Move/up/cancel listeners exist only for the length of one gesture.
+  let gesture: AbortController | undefined
   const flush = (): void => {
     frame = 0
     if (revision === motion.revision) {
@@ -41,6 +44,13 @@ export function attachPointerController(
     distance = gestureDistance(element)
     didDrag = false
     delete element.dataset.suppressClick
+    gesture?.abort()
+    gesture = new AbortController()
+    const options = { signal: AbortSignal.any([lifetime.signal, gesture.signal]) }
+    window.addEventListener('pointermove', onPointerMove, options)
+    window.addEventListener('pointerup', finish, options)
+    window.addEventListener('pointercancel', finish, options)
+    element.addEventListener('lostpointercapture', finish, options)
   }
   const onPointerMove = (event: PointerEvent): void => {
     if (pointerId !== event.pointerId || revision !== motion.revision) return
@@ -61,6 +71,8 @@ export function attachPointerController(
   const finish = (event: PointerEvent): void => {
     if (pointerId !== event.pointerId) return
     pointerId = undefined
+    gesture?.abort()
+    gesture = undefined
     if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId)
     delete element.dataset.dragging
     if (frame) {
@@ -78,19 +90,11 @@ export function attachPointerController(
     }
   }
   const preventNativeDrag = (event: DragEvent): void => event.preventDefault()
-  element.addEventListener('pointerdown', onPointerDown)
-  element.addEventListener('dragstart', preventNativeDrag)
-  window.addEventListener('pointermove', onPointerMove)
-  window.addEventListener('pointerup', finish)
-  window.addEventListener('pointercancel', finish)
-  element.addEventListener('lostpointercapture', finish)
+  element.addEventListener('pointerdown', onPointerDown, { signal: lifetime.signal })
+  element.addEventListener('dragstart', preventNativeDrag, { signal: lifetime.signal })
   return () => {
-    element.removeEventListener('pointerdown', onPointerDown)
-    element.removeEventListener('dragstart', preventNativeDrag)
-    window.removeEventListener('pointermove', onPointerMove)
-    window.removeEventListener('pointerup', finish)
-    window.removeEventListener('pointercancel', finish)
-    element.removeEventListener('lostpointercapture', finish)
+    lifetime.abort()
+    pointerId = undefined
     cancelAnimationFrame(frame)
     window.clearTimeout(suppressTimer)
   }

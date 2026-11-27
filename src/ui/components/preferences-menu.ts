@@ -5,9 +5,12 @@ import {
   type SortMode,
   type ThemeMode,
 } from '../../domain/preferences'
+import type { PreviewAccess } from '../../infrastructure/chrome/preview-access'
 import type { PreviewCacheService } from '../../infrastructure/chrome/preview-cache-service'
 import { t } from '../../shared/i18n'
-import { trapTab } from '../focus-trap'
+import { createAnnouncer } from '../dom/announcer'
+import { isUnavailable } from '../dom/controls'
+import { fragment, html } from '../dom/markup'
 import { icons } from './icons'
 import {
   createButton,
@@ -27,27 +30,31 @@ import {
 
 export interface PreferencesMenuView {
   readonly wallpaper: WallpaperControls
+  /** Fires after the dialog opens and after it closes. */
+  onToggle(listener: (open: boolean) => void): void
   render(preferences: Preferences): void
   onChange(listener: (change: Partial<Preferences>) => void): void
   destroy(): void
 }
 
 export interface PreferencesMenuOptions {
-  /** Gear button in the sidebar; the menu owns its click handler and aria-expanded. */
+  /** Gear button in the sidebar; it opens the dialog declaratively (command="show-modal"). */
   readonly trigger: HTMLButtonElement
   readonly previewCache: PreviewCacheService
+  readonly previewAccess: PreviewAccess
   readonly clearRecent: () => Promise<void>
 }
 
 const SORT_MODES: readonly SortMode[] = ['bookmark', 'title', 'domain', 'recent']
 const CLEARED_MS = 2000
 /** A miniature Cover Flow: two angled side covers around a centre cover. */
-const THEME_THUMB =
-  '<span class="theme-thumb__side"></span><span class="theme-thumb__cover"></span><span class="theme-thumb__side"></span>'
+const THEME_THUMB = html`<span class="theme-thumb__side"></span
+  ><span class="theme-thumb__cover"></span><span class="theme-thumb__side"></span>`
 
 export function createPreferencesMenu(options: PreferencesMenuOptions): PreferencesMenuView {
-  const { trigger, previewCache, clearRecent } = options
+  const { trigger, previewCache, previewAccess, clearRecent } = options
   let change: (next: Partial<Preferences>) => void = () => undefined
+  let toggled: (open: boolean) => void = () => undefined
   const timers = new Set<number>()
 
   /* ---------- Appearance ---------- */
@@ -59,19 +66,19 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
         value: 'light',
         label: t('light'),
         thumbClass: 'theme-thumb theme-thumb--light',
-        thumbHtml: THEME_THUMB,
+        thumb: THEME_THUMB,
       },
       {
         value: 'dark',
         label: t('dark'),
         thumbClass: 'theme-thumb theme-thumb--dark',
-        thumbHtml: THEME_THUMB,
+        thumb: THEME_THUMB,
       },
       {
         value: 'system',
         label: t('system'),
         thumbClass: 'theme-thumb theme-thumb--system',
-        thumbHtml: THEME_THUMB,
+        thumb: THEME_THUMB,
       },
     ],
     (theme) => change({ theme }),
@@ -92,6 +99,7 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
   const preferPreview = createSwitch('prefer-preview')
   const angle = createRange('angle', MIN_COVER_ANGLE, MAX_COVER_ANGLE)
   const reduceFlip = createSwitch('reduce-flip')
+  const shortcuts = createSwitch('single-key-shortcuts')
   const coverGroup = settingsGroup(
     settingsRow(t('sortBookmarks'), [sort.wrapper], { labelFor: sort.select }).row,
     settingsRow(t('reflection'), [reflection], { labelFor: reflection }).row,
@@ -107,17 +115,39 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
       labelFor: reduceFlip,
     }).row,
   )
+  const keyboardGroup = settingsGroup(
+    settingsRow(t('singleKeyShortcuts'), [shortcuts], {
+      sub: t('singleKeyShortcutsHint'),
+      labelFor: shortcuts,
+    }).row,
+  )
   const appearance = createElement('section', 'settings-pane')
-  appearance.append(themeSection, coverGroup, motionGroup)
+  appearance.append(themeSection, coverGroup, motionGroup, keyboardGroup)
 
   sort.select.addEventListener('change', () => {
     const sortMode = SORT_MODES.find((mode) => mode === sort.select.value)
     if (sortMode) change({ sortMode })
   })
   reflection.addEventListener('change', () => change({ showReflection: reflection.checked }))
-  preferPreview.addEventListener('change', () =>
-    change({ preferPreviewImages: preferPreview.checked }),
-  )
+  // Website access is requested here, inside the user's gesture: nothing may be awaited before
+  // `request()`. Turning previews off hands the access back.
+  preferPreview.addEventListener('change', () => {
+    if (!preferPreview.checked) {
+      change({ preferPreviewImages: false })
+      void previewAccess.release()
+      return
+    }
+    const granted = previewAccess.request()
+    void (async () => {
+      if (await granted) {
+        change({ preferPreviewImages: true })
+      } else {
+        preferPreview.checked = false
+        announcer.say(t('previewAccessDenied'))
+      }
+    })()
+  })
+  shortcuts.addEventListener('change', () => change({ singleKeyShortcuts: shortcuts.checked }))
   const showAngle = (): void => {
     angle.value.textContent = `${angle.input.value}°`
     angle.input.setAttribute('aria-valuetext', `${angle.input.value}°`)
@@ -144,7 +174,7 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
       'span',
       `settings-statement__icon settings-statement__icon--${tone}`,
     )
-    badge.innerHTML = icon
+    badge.append(fragment(icon))
     const text = createElement('div', 'settings-row__text')
     text.append(
       createElement('span', 'settings-statement__title', t(title)),
@@ -169,14 +199,19 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
     run: () => Promise<void>,
     restore: () => void,
   ): void => {
-    button.addEventListener('click', () => {
-      if (button.hasAttribute('aria-disabled')) return
+    const clear = async (): Promise<void> => {
+      if (isUnavailable(button)) return
       setUnavailable(button, true)
-      run()
-        .then(() => flashCleared(sub, restore))
-        .catch((error: unknown) => console.warn('Unable to clear local data.', error))
-        .finally(() => setUnavailable(button, false))
-    })
+      try {
+        await run()
+        flashCleared(sub, restore)
+      } catch (error: unknown) {
+        console.warn('Unable to clear local data.', error)
+      } finally {
+        setUnavailable(button, false)
+      }
+    }
+    button.addEventListener('click', () => void clear())
   }
 
   const dataRows: HTMLElement[] = []
@@ -188,18 +223,19 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
       describe: [clearCache],
     })
     const cacheSub = cacheRow.sub!
-    cacheSub.setAttribute('aria-live', 'polite')
+    cacheSub.setAttribute('role', 'status')
     let generation = 0
     refreshCache = (): void => {
       const current = ++generation
-      previewCache
-        .count()
-        .then((count) => {
-          if (current === generation) cacheSub.textContent = t('previewCacheCount', String(count))
-        })
-        .catch(() => {
-          if (current === generation) cacheSub.textContent = ''
-        })
+      void (async () => {
+        let text = ''
+        try {
+          text = t('previewCacheCount', String(await previewCache.count()))
+        } catch {
+          // An unreadable cache just shows no count.
+        }
+        if (current === generation) cacheSub.textContent = text
+      })()
     }
     clearAction(clearCache, cacheSub, () => previewCache.clear(), refreshCache)
     dataRows.push(cacheRow.row)
@@ -210,7 +246,7 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
     describe: [clearHistory],
   })
   const historySub = historyRow.sub!
-  historySub.setAttribute('aria-live', 'polite')
+  historySub.setAttribute('role', 'status')
   clearAction(clearHistory, historySub, clearRecent, () => {
     historySub.textContent = t('recentHistoryHint')
   })
@@ -220,13 +256,12 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
   privacy.append(settingsGroup(...statements), settingsGroup(...dataRows))
 
   /* ---------- Dialog chrome ---------- */
-  const overlay = createElement('div', 'settings-overlay')
-  overlay.hidden = true
-  const dialog = createElement('div', 'settings-dialog')
+  // A native modal <dialog>: the browser makes the page inert, contains focus, closes on Esc (and,
+  // with closedby="any", on a backdrop click) and returns focus to the gear button.
+  const dialog = createElement('dialog', 'settings-dialog')
   dialog.id = settingsId('dialog')
-  dialog.setAttribute('role', 'dialog')
-  dialog.setAttribute('aria-modal', 'true')
-  const title = createElement('h2', 'settings-dialog__title', t('settings'))
+  dialog.setAttribute('closedby', 'any')
+  const title = createElement('h1', 'settings-dialog__title', t('settings'))
   title.id = settingsId('dialog-title')
   dialog.setAttribute('aria-labelledby', title.id)
 
@@ -244,7 +279,8 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
     pane.id = `settings-pane-${key}`
     pane.setAttribute('role', 'tabpanel')
     pane.setAttribute('aria-labelledby', tab.id)
-    tab.setAttribute('aria-controls', pane.id)
+    // Find-in-page can reveal text on a hidden tab: select that tab when it does.
+    pane.addEventListener('beforematch', () => selectTab(index))
     tab.addEventListener('click', () => selectTab(index))
     tablist.append(tab)
     return tab
@@ -256,7 +292,11 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
       const active = tabIndex === index
       tab.setAttribute('aria-selected', String(active))
       tab.tabIndex = active ? 0 : -1
-      panes[tabIndex]!.hidden = !active
+      // The dialog focuses the selected tab when it opens.
+      tab.autofocus = active
+      // until-found keeps inactive panes searchable with Ctrl+F.
+      if (active) panes[tabIndex]!.removeAttribute('hidden')
+      else panes[tabIndex]!.setAttribute('hidden', 'until-found')
     })
     body.scrollTop = 0
   }
@@ -289,54 +329,35 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
   const footer = createElement('footer', 'settings-dialog__footer')
   const done = createElement('button', 'settings-done', t('done'))
   done.type = 'button'
+  done.setAttribute('command', 'close')
+  done.setAttribute('commandfor', dialog.id)
   footer.append(createElement('span', 'settings-dialog__note', t('changesApplyNow')), done)
-  dialog.append(header, body, footer)
-  overlay.append(dialog)
-  document.body.append(overlay)
+  // The page behind a modal is inert, so the dialog carries its own live region.
+  const announcer = createAnnouncer({ assertive: false })
+  dialog.append(header, body, footer, announcer.element)
+  document.body.append(dialog)
   selectTab(0)
 
   /* ---------- Open / close ---------- */
-  let open = false
-  let appWasInert = false
-  const setOpen = (next: boolean): void => {
-    if (next === open) return
-    open = next
-    const app = document.querySelector<HTMLElement>('#app')
-    if (next) {
-      appWasInert = app?.inert ?? false
-      if (app) app.inert = true
-      overlay.hidden = false
-      refreshCache()
-      tabs[selected]?.focus()
-    } else {
-      overlay.hidden = true
-      if (app) app.inert = appWasInert
-      trigger.focus()
-    }
-    trigger.setAttribute('aria-expanded', String(next))
-  }
-  const onTrigger = (): void => setOpen(!open)
   trigger.setAttribute('aria-haspopup', 'dialog')
-  trigger.setAttribute('aria-controls', dialog.id)
-  trigger.setAttribute('aria-expanded', 'false')
-  trigger.addEventListener('click', onTrigger)
-  done.addEventListener('click', () => setOpen(false))
-  overlay.addEventListener('click', (event) => {
-    if (event.target === overlay) setOpen(false)
-  })
-  // Every key handled here stays here: arrows adjust controls and must never move covers.
-  overlay.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      event.preventDefault()
-      setOpen(false)
-    } else {
-      trapTab(dialog, event)
-    }
-    event.stopPropagation()
-  })
+  trigger.setAttribute('command', 'show-modal')
+  trigger.setAttribute('commandfor', dialog.id)
+  const onToggleEvent = (event: Event): void => {
+    const open = (event as ToggleEvent).newState === 'open'
+    if (open) refreshCache()
+    toggled(open)
+  }
+  dialog.addEventListener('toggle', onToggleEvent)
+  // Keys pressed in Settings adjust its controls and must never move the covers behind it. Esc
+  // still closes: the close request is the key's default action, not its propagation.
+  const stopKeys = (event: KeyboardEvent): void => event.stopPropagation()
+  dialog.addEventListener('keydown', stopKeys)
 
   return {
     wallpaper,
+    onToggle(listener): void {
+      toggled = listener
+    },
     render(preferences): void {
       themes.setChecked(preferences.theme)
       sort.select.value = preferences.sortMode
@@ -346,18 +367,21 @@ export function createPreferencesMenu(options: PreferencesMenuOptions): Preferen
       if (angle.input.value !== coverAngle) angle.input.value = coverAngle
       showAngle()
       reduceFlip.checked = preferences.reduceFlipMotion
+      shortcuts.checked = preferences.singleKeyShortcuts
     },
     onChange(listener): void {
       change = listener
     },
     destroy(): void {
-      if (open) setOpen(false)
+      if (dialog.open) dialog.close()
       timers.forEach((timer) => window.clearTimeout(timer))
       timers.clear()
-      trigger.removeEventListener('click', onTrigger)
-      trigger.removeAttribute('aria-controls')
+      dialog.removeEventListener('toggle', onToggleEvent)
+      dialog.removeEventListener('keydown', stopKeys)
+      trigger.removeAttribute('command')
+      trigger.removeAttribute('commandfor')
       wallpaper.destroy()
-      overlay.remove()
+      dialog.remove()
     },
   }
 }

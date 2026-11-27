@@ -109,3 +109,13 @@
     backdrop-filter: none;
   }
 }
+
+/* Hidden host for each lens's SVG filter (lens.ts). A stylesheet rule, not a style attribute:
+   the extension CSP (default-src 'self') blocks inline styles. */
+.glass-lens-host {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}

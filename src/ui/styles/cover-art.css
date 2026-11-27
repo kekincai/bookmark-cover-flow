@@ -2,7 +2,7 @@
 .cover-art {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  overflow: clip;
   background: var(--art-bg);
   color: var(--art-fg);
 }
@@ -12,8 +12,8 @@
   left: 0;
   width: 240px;
   height: 240px;
-  overflow: hidden;
-  transform: scale(var(--art-scale, 1));
+  overflow: clip;
+  scale: var(--art-scale, 1);
   transform-origin: 0 0;
   font-family:
     -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', 'PingFang SC',
@@ -129,6 +129,7 @@
   white-space: normal;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 .cover-art__bands {
   position: absolute;
@@ -151,4 +152,5 @@
   white-space: normal;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
 }

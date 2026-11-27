@@ -3,17 +3,17 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  overflow: hidden;
+  overflow: clip;
   border-radius: inherit;
   pointer-events: none;
 }
 
 /* Built-in gradients. `default` stays transparent so the stage token shows through in both themes. */
 .wallpaper-surface[data-kind='gradient'][data-preset='mist'] {
-  background: linear-gradient(160deg, #e8f0fb, #c9d8ee);
+  background: var(--wallpaper-mist);
 }
 .wallpaper-surface[data-kind='gradient'][data-preset='night'] {
-  background: linear-gradient(160deg, #2a2d3a, #0e0f14);
+  background: var(--wallpaper-night);
 }
 
 .wallpaper-surface__media {

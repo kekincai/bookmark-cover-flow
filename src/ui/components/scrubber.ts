@@ -1,4 +1,6 @@
 import { t } from '../../shared/i18n'
+import { isUnavailable, setUnavailable } from '../dom/controls'
+import { fragment } from '../dom/markup'
 import { icons } from './icons'
 
 export interface ScrubberView {
@@ -25,7 +27,7 @@ export function createScrubber(className = ''): ScrubberView {
     button.type = 'button'
     button.className = 'icon-button scrubber__step'
     button.setAttribute('aria-label', label)
-    button.innerHTML = icon
+    button.append(fragment(icon))
   }
   const input = document.createElement('input')
   input.type = 'range'
@@ -39,18 +41,29 @@ export function createScrubber(className = ''): ScrubberView {
   let step: (delta: number) => void = () => undefined
   let rendered = ''
   let count = 0
+  /** From ResizeObserver entries only, so rendering never forces a synchronous layout. */
+  let width = 0
   const sizeThumb = (): void => {
-    const width = input.clientWidth
     const ratio = count === 0 ? 1 : Math.min(1, VISIBLE_COVERS / count)
     element.style.setProperty(
       '--thumb-width',
       `${Math.max(MIN_THUMB, Math.round(width * ratio))}px`,
     )
   }
-  new ResizeObserver(sizeThumb).observe(input)
+  new ResizeObserver((entries) => {
+    const entry = entries.at(-1)
+    if (entry === undefined) return
+    width = entry.contentRect.width
+    sizeThumb()
+  }).observe(input)
   input.addEventListener('input', () => seek(Number(input.value)))
-  previous.addEventListener('click', () => step(-1))
-  next.addEventListener('click', () => step(1))
+  // Unavailable steps keep focus (aria-disabled), so presses are ignored here instead.
+  previous.addEventListener('click', () => {
+    if (!isUnavailable(previous)) step(-1)
+  })
+  next.addEventListener('click', () => {
+    if (!isUnavailable(next)) step(1)
+  })
 
   return {
     element,
@@ -72,8 +85,8 @@ export function createScrubber(className = ''): ScrubberView {
         'aria-valuetext',
         count === 0 ? t('noBookmarks') : t('positionValue', String(index + 1), String(count)),
       )
-      previous.disabled = index <= 0
-      next.disabled = index >= count - 1
+      setUnavailable(previous, index <= 0)
+      setUnavailable(next, index >= count - 1)
     },
     onSeek(listener): void {
       seek = listener

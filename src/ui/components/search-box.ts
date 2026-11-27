@@ -1,4 +1,5 @@
 import { t } from '../../shared/i18n'
+import { fragment } from '../dom/markup'
 import { icons } from './icons'
 
 export interface SearchBoxView {
@@ -9,9 +10,10 @@ export interface SearchBoxView {
 }
 
 export function createSearchBox(): SearchBoxView {
-  const element = document.createElement('div')
+  // <search> exposes the search landmark natively.
+  const element = document.createElement('search')
   element.className = 'search-box'
-  element.innerHTML = icons.search
+  element.append(fragment(icons.search))
   const input = document.createElement('input')
   input.type = 'search'
   input.className = 'search-box__input'
@@ -23,7 +25,7 @@ export function createSearchBox(): SearchBoxView {
   clearButton.type = 'button'
   clearButton.className = 'search-box__clear'
   clearButton.setAttribute('aria-label', t('clearSearch'))
-  clearButton.innerHTML = icons.clear
+  clearButton.append(fragment(icons.clear))
   clearButton.hidden = true
   element.append(input, clearButton)
 

@@ -1,8 +1,8 @@
 body {
   background: var(--bg);
   color: var(--label);
-  font-family: var(--font);
-  font-size: 14px;
+  /* rem, so Chrome's font-size setting scales the whole interface. */
+  font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -15,12 +15,16 @@ button {
   border: 0;
   background: none;
 }
+/*
+ * One focus indicator everywhere: a real outline, which forced-colors mode keeps (box-shadow
+ * rings vanish there), drawn in a color with ≥ 3:1 contrast on every surface.
+ */
 :focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 ::selection {
-  background: rgb(0 113 227 / 22%);
+  background: var(--selection);
 }
 mark {
   border-radius: 3px;
@@ -62,19 +66,92 @@ mark {
 .icon-button:active {
   background: var(--fill);
 }
-.icon-button:disabled {
+/* aria-disabled keeps the control focusable, so focus is never dropped onto <body>. */
+.icon-button:is(:disabled, [aria-disabled='true']) {
   opacity: 0.35;
   background: none;
 }
 .pill-button {
-  height: 30px;
-  padding: 0 18px;
-  border-radius: 15px;
+  min-height: 30px;
+  padding: 4px 18px;
+  border-radius: 999px;
   background: var(--accent);
-  color: #fff;
-  font-size: 14px;
+  color: var(--on-accent);
+  font-size: 0.875rem;
   font-weight: 600;
 }
 .pill-button:hover {
   background: var(--accent-hover);
+}
+/* Present to assistive technology, invisible on screen. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: clip;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+/*
+ * Single-line truncation that can still be read in full. `.truncate` wraps its text in one <span>.
+ * While the owning control is hovered or focused, a scroll-timeline animation (active only if the
+ * text overflows) sets --truncated, and the hidden end scrolls into view (motion permitting).
+ */
+@property --truncated {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+.truncate {
+  min-width: 0;
+  overflow: hidden; /* hidden, not clip: the scroll timeline needs a scroll container */
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes truncated {
+  from,
+  to {
+    --truncated: 1;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :is(
+    .truncate:hover,
+    .sidebar-item:is(:hover, :focus-visible) .truncate,
+    .grid-cell:hover .truncate,
+    .bookmark-grid__scroller:focus-visible .grid-cell.is-selected .truncate,
+    .bookmark-list__row:hover .truncate,
+    .bookmark-list__grid:focus-visible .bookmark-list__row.is-selected .truncate,
+    .stage:has(.cover-card[aria-current='true']:is(:hover, :focus-visible)) .truncate,
+    .fullscreen:has(.cover-card[aria-current='true']:is(:hover, :focus-visible)) .truncate
+  ) {
+    text-overflow: clip;
+    /*
+     * Truncation is detected only while the text is being revealed: a scroll-timeline animation
+     * on every truncated cell at rest cost ~8 ms a frame while scrubbing 5,000 bookmarks.
+     */
+    animation: truncated linear both;
+    animation-timeline: scroll(self inline);
+  }
+  @container style(--truncated: 1) {
+    :is(
+        .truncate:hover,
+        .sidebar-item:is(:hover, :focus-visible) .truncate,
+        .grid-cell:hover .truncate,
+        .bookmark-grid__scroller:focus-visible .grid-cell.is-selected .truncate,
+        .bookmark-list__row:hover .truncate,
+        .bookmark-list__grid:focus-visible .bookmark-list__row.is-selected .truncate,
+        .stage:has(.cover-card[aria-current='true']:is(:hover, :focus-visible)) .truncate,
+        .fullscreen:has(.cover-card[aria-current='true']:is(:hover, :focus-visible)) .truncate
+      )
+      > span {
+      display: inline-block;
+      margin-inline-start: 100%;
+      translate: calc(1px - 100%);
+      transition:
+        margin-inline-start 2s ease-in,
+        translate 2s ease-in;
+    }
+  }
 }
