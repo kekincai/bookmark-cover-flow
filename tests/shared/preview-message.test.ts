@@ -36,6 +36,12 @@ describe('isPreviewableUrl', () => {
     expect(isPreviewableUrl('https://localhost.example.com/')).toBe(true)
   })
 
+  it('accepts public IPv6 literals, which have no dot but are not intranet names', () => {
+    expect(isPreviewableUrl('https://[2606:4700:4700::1111]/')).toBe(true)
+    expect(isPreviewableUrl('http://[2001:4860:4860::8888]:8080/path')).toBe(true)
+    expect(isPreviewableUrl('http://[ff02::1]/')).toBe(false)
+  })
+
   it('rejects other schemes, credentials and oversized URLs', () => {
     expect(isPreviewableUrl('javascript:alert(1)')).toBe(false)
     expect(isPreviewableUrl('file:///etc/passwd')).toBe(false)

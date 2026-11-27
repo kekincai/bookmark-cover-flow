@@ -48,7 +48,9 @@ function isPrivateIPv6(hostname: string): boolean {
     address === '::1' ||
     address.startsWith('::ffff:') ||
     /^f[cd]/.test(address) ||
-    /^fe[89ab]/.test(address)
+    /^fe[89ab]/.test(address) ||
+    // Multicast: never a web page.
+    /^ff/.test(address)
   )
 }
 
@@ -72,7 +74,9 @@ export function isPreviewableUrl(value: string): boolean {
   if (hostname === 'localhost' || LOCAL_SUFFIXES.some((suffix) => hostname.endsWith(suffix)))
     return false
   if (isPrivateIPv4(hostname) || isPrivateIPv6(hostname)) return false
-  return hostname.includes('.')
+  // A bracketed IPv6 literal that passed the private-address check is public. The single-label
+  // test (no dot, e.g. `http://intranet/`) only applies to DNS names.
+  return hostname.startsWith('[') || hostname.includes('.')
 }
 
 export function isPreviewRequest(value: unknown): value is PreviewRequest {
